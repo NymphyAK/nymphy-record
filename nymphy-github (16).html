@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nymphy — Nicheknights Clear Log</title>
+<link rel="icon" type="image/png" href="logo.png">
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#161014; --panel2:#1d1518; --border:#3a1218;
+    --red:#e5233d; --red-dim:#8f1526; --text:#f3e9ea; --muted:#a98a8e;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;}
+  header{background:linear-gradient(90deg,#1a0508,#000); border-bottom:2px solid var(--red);
+    padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  header .left{display:flex; align-items:center; gap:10px;}
+  header .logo{font-size:22px; font-weight:800; letter-spacing:1px; color:var(--red); text-shadow:0 0 12px rgba(229,35,61,.5);}
+  header .sub{color:var(--muted); font-size:12px;}
+  header .who{font-size:12px; color:var(--muted);}
+  main{max-width:960px; margin:0 auto; padding:18px 14px 60px;}
+  .grid{display:grid; grid-template-columns:1fr; gap:16px;}
+  @media(min-width:820px){ .grid{grid-template-columns:1.1fr 1fr;} }
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:16px; box-shadow:0 4px 18px rgba(0,0,0,.4);}
+  .card h2{margin:0 0 12px; font-size:15px; color:var(--red); text-transform:uppercase; letter-spacing:.5px;}
+  label{display:block; font-size:12px; color:var(--muted); margin:10px 0 4px;}
+  input,textarea,select{width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:9px 10px; font-size:14px; outline:none;}
+  input:focus,textarea:focus,select:focus{border-color:var(--red);}
+  select{appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a98a8e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center; background-size:16px; padding-right:32px;}
+  select option{background:var(--panel2); color:var(--text);}
+  textarea{min-height:64px; resize:vertical; font-family:inherit;}
+  .hint{font-size:11px; color:var(--muted); margin-top:2px;}
+  button{margin-top:14px; width:100%; padding:11px; border:none; border-radius:8px;
+    background:var(--red); color:#fff; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.4px;}
+  button:hover{background:#ff2e4a;}
+  button.ghost{background:transparent; border:1px solid var(--border); color:var(--muted); width:auto; padding:5px 10px; font-size:11px; margin:0;}
+  .stat-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row b{color:var(--red);}
+  .total{font-size:28px; font-weight:800; color:var(--red);}
+  .entry{background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; margin-bottom:10px; font-size:13px;}
+  .entry .top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .entry .tag{background:var(--red-dim); color:#fff; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:700;}
+  .entry .meta{color:var(--muted); margin-top:6px; line-height:1.5;}
+  .empty{color:var(--muted); font-size:13px; text-align:center; padding:20px 0;}
+
+  .shell{display:flex; min-height:100vh;}
+  .sidebar{width:200px; flex-shrink:0; background:#0d0709; border-right:1px solid var(--border);
+    padding:18px 14px; display:flex; flex-direction:column; gap:4px;}
+  .sidebar .brand{font-size:20px; font-weight:800; color:var(--red); letter-spacing:1px;
+    text-shadow:0 0 12px rgba(229,35,61,.5); margin-bottom:22px;}
+  .nav-item{padding:10px 12px; border-radius:8px; color:var(--muted); font-size:13px; cursor:pointer;}
+  .nav-item:hover{background:var(--panel2); color:var(--text);}
+  .nav-item.active{background:var(--red); color:#fff; font-weight:700;}
+  .content{flex:1; min-width:0;}
+  .topbar{padding:16px 22px; border-bottom:1px solid var(--border); display:flex;
+    justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+    background:linear-gradient(90deg,#150507,#000);}
+  .topbar h1{margin:0; font-size:18px;}
+  .topbar .sub{color:var(--muted); font-size:12px; margin-top:2px;}
+  .view{padding:20px;}
+  .stat-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px;}
+  .stat-cards-2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
+  @media(max-width:480px){ .stat-cards-2{grid-template-columns:1fr;} }
+  .quad-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
+  .quad-grid > div{min-height:180px; max-height:260px; display:flex; flex-direction:column;}
+  .quad-grid .stat-card{justify-content:center;}
+  .quad-grid .card > div:last-child{overflow-y:auto; flex:1;}
+  @media(max-width:600px){ .quad-grid{grid-template-columns:1fr;} }
+  .stat-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px;}
+  .stat-card .num{font-size:24px; font-weight:800; color:var(--red);}
+  .stat-card .lbl{font-size:11px; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:.4px;}
+  .act-item{font-size:13px; padding:8px 0; border-bottom:1px solid var(--border);}
+  .act-item:last-child{border-bottom:none;}
+  .act-item .t{color:var(--muted); font-size:11px;}
+
+  @media(max-width:720px){
+    .shell{flex-direction:column;}
+    .sidebar{width:100%; flex-direction:row; overflow-x:auto; gap:6px;}
+    .sidebar .brand{display:none;}
+  }
+
+  #login-screen{position:fixed; inset:0; background:#000; display:flex; align-items:center; justify-content:center; z-index:50;}
+  #login-box{width:100%; max-width:320px; background:var(--panel); border:1px solid var(--border);
+    border-radius:14px; padding:26px 22px; text-align:center;}
+  #login-box .logo{font-size:26px; font-weight:800; color:var(--red); letter-spacing:1px; text-shadow:0 0 12px rgba(229,35,61,.5);}
+  #login-box .sub{color:var(--muted); font-size:12px; margin-bottom:18px;}
+  #login-error{color:var(--red); font-size:12px; min-height:16px; margin-top:6px;}
+  .logo-img{display:block; margin:0 auto; border-radius:50%; object-fit:cover;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div id="login-box">
+    <img src="logo.png" alt="Nymphy" class="logo-img" style="width:96px; height:96px; margin-bottom:8px;">
+    <div class="logo">NYMPHY</div>
+    <div class="sub">Admin Login — Nicheknights Clear Log</div>
+    <label>Username</label>
+    <input id="li-user" autocomplete="username">
+    <label>Password</label>
+    <input id="li-pass" type="password" autocomplete="current-password">
+    <div id="login-error"></div>
+    <button id="btn-login">Masuk</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="shell">
+    <aside class="sidebar">
+      <img src="logo.png" alt="Nymphy" class="logo-img" style="width:64px; height:64px; margin-bottom:8px;">
+      <div class="brand" style="text-align:center;">NYMPHY</div>
+      <div class="nav-item active" data-view="dashboard">📊 Dashboard</div>
+      <div class="nav-item" data-view="input">➕ Input Clear</div>
+      <div class="nav-item" data-view="riwayat">📜 Riwayat Data</div>
+      <div class="nav-item" data-view="niche">🔎 Niche Stat</div>
+      <div class="nav-item" data-view="profile">👤 Profil</div>
+    </aside>
+    <div class="content">
+      <div class="topbar">
+        <div>
+          <h1 id="welcome-title">Welcome back</h1>
+          <div class="sub">Nicheknights Clear Log</div>
+        </div>
+        <div>
+          <span class="who" id="who"></span>
+          <button class="ghost" id="btn-logout" style="margin-left:8px;">Logout</button>
+        </div>
+      </div>
+
+      <div id="view-dashboard" class="view">
+        <div class="stat-cards">
+          <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Total Clear</div></div>
+          <div class="stat-card"><div class="num" id="stat-niche-count">0</div><div class="lbl">Niche Aktif</div></div>
+          <div class="stat-card"><div class="num" id="stat-stage-count">0</div><div class="lbl">Stage Clear</div></div>
+          <div class="stat-card"><div class="num" id="stat-op-count">0</div><div class="lbl">Total Slot Operator</div></div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h2>Aktivitas Terakhir</h2>
+            <div id="recent-activity"><div class="empty">Belum ada data.</div></div>
+          </div>
+          <div class="card">
+            <h2>Top Niche</h2>
+            <div id="stat-niche"></div>
+            <h2 style="margin-top:16px;">Top Stage</h2>
+            <div id="stat-stage"></div>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:16px;">
+          <div class="card">
+            <h2>Distribusi Clear per Niche</h2>
+            <canvas id="chart-niche-bar" height="180"></canvas>
+          </div>
+          <div class="card">
+            <h2>Proporsi Niche</h2>
+            <canvas id="chart-niche-donut" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-input" class="view hidden">
+        <div class="card" style="max-width:520px;">
+          <h2>Input Data Clear</h2>
+          <label>Stage</label>
+          <input id="f-stage" placeholder="mis. 1-7">
+          <label>Niche</label>
+          <input id="f-niche" placeholder="mis. 1P Relay">
+          <label>Jumlah Operator</label>
+          <input id="f-opcount" type="number" min="0" placeholder="mis. 4">
+          <label>Nama Operator</label>
+          <textarea id="f-ops" placeholder="satu nama per baris"></textarea>
+          <div class="hint">Pisahkan tiap operator dengan baris baru.</div>
+          <label>Player</label>
+          <textarea id="f-players" placeholder="satu nama per baris"></textarea>
+          <div class="hint">Pisahkan tiap player dengan baris baru.</div>
+          <label>Link Clear</label>
+          <input id="f-bukti" type="url" placeholder="https://...">
+          <div class="hint">Link screenshot/video bukti clear (opsional).</div>
+          <button id="btn-submit">Simpan Data</button>
+        </div>
+      </div>
+
+      <div id="view-riwayat" class="view hidden">
+        <div class="card">
+          <h2>Riwayat Data</h2>
+          <div id="list"><div class="empty">Belum ada data.</div></div>
+        </div>
+      </div>
+
+      <div id="view-niche" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Pilih Niche</h2>
+          <select id="niche-select"><option value="">-- pilih niche --</option></select>
+          <label>Cari (stage / operator / player)</label>
+          <input id="niche-search" placeholder="ketik buat filter...">
+        </div>
+        <div id="niche-detail"><div class="empty">Pilih niche dulu.</div></div>
+      </div>
+
+      <div id="view-profile" class="view hidden">
+        <div id="profile-setup" class="card" style="max-width:420px;">
+          <h2>Lengkapi Profil</h2>
+          <label>Niche Utama yang Dimainkan</label>
+          <select id="profile-niche-select"><option value="">-- pilih niche --</option></select>
+          <div class="hint">Wajib dipilih sebelum bisa melihat statistik profil kamu.</div>
+          <button id="btn-save-niche">Simpan</button>
+        </div>
+        <div id="profile-stats" class="hidden">
+          <div class="card" style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h2 style="margin:0;">Profil: <span id="profile-username"></span></h2>
+              <div class="hint">Niche utama: <b id="profile-niche-label" style="color:var(--red);"></b></div>
+            </div>
+            <button class="ghost" id="btn-change-niche" style="width:auto;">Ganti Niche Utama</button>
+          </div>
+          <div class="quad-grid">
+            <div class="stat-card"><div class="num" id="profile-total">0</div><div class="lbl">Total Clear di Niche Ini</div></div>
+            <div class="stat-card"><div class="num" id="profile-stage-count">0</div><div class="lbl">Stage Diselesaikan</div></div>
+            <div class="card"><h2>Stage yang Diselesaikan</h2><div id="profile-stage-list"></div></div>
+            <div class="card"><h2>Operator yang Dipakai</h2><div id="profile-op-list"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK (compat build, tinggal <script> tag, tanpa bundler) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script>
+/* Username diketik apa adanya (mis. "admin1"), lalu dipetakan ke email
+   Firebase Auth dengan menambah domain tetap ini. Password TIDAK
+   pernah ditulis di kode -- diverifikasi langsung oleh Firebase Auth. */
+const EMAIL_DOMAIN = '@nymphy.com';
+
+let liveData = [];
+let unsubscribe = null;
+let clearsRef = null;   // diisi setelah Firebase berhasil diinisialisasi
+let profilesRef = null;
+let myProfile = null;
+let authRef = null;
+let barChart = null, donutChart = null;
+
+function esc(s){ return (s||'').toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function lines(s){ return (s||'').split('\n').map(x=>x.trim()).filter(Boolean); }
+
+/* ---------- LOGIN (dipasang paling awal) ---------- */
+function currentUser(){
+  const email = authRef && authRef.currentUser ? authRef.currentUser.email : null;
+  return email ? email.replace(EMAIL_DOMAIN, '') : null;
+}
+
+function showApp(user){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('who').textContent = 'Login sebagai: ' + user;
+  document.getElementById('welcome-title').textContent = 'Welcome back, ' + user;
+  startListening();
+  loadProfile();
+}
+
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    ['dashboard','input','riwayat','niche','profile'].forEach(v=>{
+      document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
+    });
+    if(item.dataset.view === 'profile') renderProfileView();
+  });
+});
+
+function showLoginScreen(){
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+function tryLogin(){
+  const u = document.getElementById('li-user').value.trim();
+  const p = document.getElementById('li-pass').value;
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if(!authRef){ err.textContent = 'Firebase belum terhubung.'; return; }
+  if(!u || !p){ err.textContent = 'Isi username dan password.'; return; }
+
+  authRef.signInWithEmailAndPassword(u + EMAIL_DOMAIN, p)
+    .catch((e)=>{
+      console.error(e);
+      err.textContent = 'Username atau password salah.';
+    });
+  // Kalau berhasil, onAuthStateChanged di bawah yang akan memindahkan ke homescreen.
+}
+
+document.getElementById('btn-login').addEventListener('click', tryLogin);
+document.getElementById('li-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+document.getElementById('li-user').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+
+document.getElementById('btn-logout').addEventListener('click', ()=>{
+  if(authRef) authRef.signOut();
+});
+
+/* ---------- FIREBASE (dibungkus try/catch supaya error di sini TIDAK
+   ikut menghentikan tombol login di atas) ---------- */
+try{
+  const firebaseConfig = {
+    apiKey: "AIzaSyAlQ9FDa6jpXBK0TQPGAVs1vob5M8zWZXM",
+    authDomain: "nymphy-1fac3.firebaseapp.com",
+    projectId: "nymphy-1fac3",
+    storageBucket: "nymphy-1fac3.firebasestorage.app",
+    messagingSenderId: "415141979960",
+    appId: "1:415141979960:web:fd8c47870564ac742243cd",
+    measurementId: "G-56G3WT1JQF"
+  };
+  firebase.initializeApp(firebaseConfig);
+  clearsRef = firebase.firestore().collection('clears');
+  profilesRef = firebase.firestore().collection('profiles');
+  authRef = firebase.auth();
+
+  authRef.onAuthStateChanged((user)=>{
+    if(user){ showApp(user.email.replace(EMAIL_DOMAIN, '')); }
+    else{ if(unsubscribe){ unsubscribe(); unsubscribe = null; } showLoginScreen(); }
+  });
+}catch(e){
+  console.error('Firebase gagal diinisialisasi:', e);
+}
+
+function startListening(){
+  if(!clearsRef){
+    document.getElementById('list').innerHTML = '<div class="empty">Firebase belum terhubung. Cek konfigurasi & koneksi.</div>';
+    return;
+  }
+  if(unsubscribe) return;
+  unsubscribe = clearsRef.orderBy('createdAt','desc').limit(500).onSnapshot(
+    (snap)=>{
+      liveData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderStats(liveData);
+      renderList(liveData);
+      populateNicheSelect(liveData);
+      renderNicheDetail();
+      if(myProfile && myProfile.mainNiche) renderProfileView();
+    },
+    (err)=>{ console.error('Firestore error', err); alert('Gagal memuat data dari Firebase. Cek konfigurasi & rules.'); }
+  );
+}
+
+/* ---------- DATA / STATS / LIST ---------- */
+function renderStats(all){
+  document.getElementById('stat-total').textContent = all.length;
+  const byNiche = {}, byStage = {};
+  let opTotal = 0;
+  all.forEach(d=>{
+    const n = d.niche || '(kosong)', s = d.stage || '(kosong)';
+    byNiche[n] = (byNiche[n]||0)+1;
+    byStage[s] = (byStage[s]||0)+1;
+    opTotal += d.operatorCount || (d.operators||[]).length || 0;
+  });
+  document.getElementById('stat-niche-count').textContent = Object.keys(byNiche).length;
+  document.getElementById('stat-stage-count').textContent = Object.keys(byStage).length;
+  document.getElementById('stat-op-count').textContent = opTotal;
+
+  const nicheHtml = Object.entries(byNiche).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="stat-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('') || '<div class="hint">-</div>';
+  const stageHtml = Object.entries(byStage).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="stat-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('') || '<div class="hint">-</div>';
+  document.getElementById('stat-niche').innerHTML = nicheHtml;
+  document.getElementById('stat-stage').innerHTML = stageHtml;
+
+  const recentEl = document.getElementById('recent-activity');
+  if(!all.length){ recentEl.innerHTML = '<div class="empty">Belum ada data.</div>'; }
+  else{
+    recentEl.innerHTML = all.slice(0,5).map(d=>{
+      const t = d.createdAt ? new Date(d.createdAt).toLocaleString('id-ID') : '';
+      return `<div class="act-item"><b>${esc(d.stage)}</b> — ${esc(d.niche)} <span class="t">oleh ${esc(d.admin||'-')} · ${t}</span></div>`;
+    }).join('');
+  }
+
+  renderNicheCharts(byNiche);
+}
+
+function renderNicheCharts(byNiche){
+  if(typeof Chart === 'undefined') return; // Chart.js gagal dimuat (mis. offline)
+  const labels = Object.keys(byNiche);
+  const values = Object.values(byNiche);
+  const palette = ['#e5233d','#ff6b81','#c2185b','#ff8a80','#b71c3c','#ff4569','#8f1526','#ff9aa8'];
+
+  const barCtx = document.getElementById('chart-niche-bar');
+  if(barChart){ barChart.data.labels = labels; barChart.data.datasets[0].data = values; barChart.update(); }
+  else if(barCtx){
+    barChart = new Chart(barCtx, {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Total Clear', data:values, backgroundColor:'#e5233d', borderRadius:6, maxBarThickness:36 }] },
+      options:{ responsive:true, plugins:{ legend:{ display:false } },
+        scales:{
+          x:{ ticks:{ color:'#a98a8e' }, grid:{ color:'#3a1218' } },
+          y:{ beginAtZero:true, ticks:{ color:'#a98a8e', precision:0 }, grid:{ color:'#3a1218' } }
+        } }
+    });
+  }
+
+  const donutCtx = document.getElementById('chart-niche-donut');
+  if(donutChart){ donutChart.data.labels = labels; donutChart.data.datasets[0].data = values; donutChart.update(); }
+  else if(donutCtx){
+    donutChart = new Chart(donutCtx, {
+      type:'doughnut',
+      data:{ labels, datasets:[{ data:values, backgroundColor:labels.map((_,i)=>palette[i % palette.length]), borderColor:'#0a0a0a', borderWidth:2 }] },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom', labels:{ color:'#a98a8e', boxWidth:12 } } } }
+    });
+  }
+}
+
+function renderList(all){
+  const el = document.getElementById('list');
+  if(!all.length){ el.innerHTML = '<div class="empty">Belum ada data.</div>'; return; }
+  el.innerHTML = all.map(d=>`
+    <div class="entry">
+      <div class="top">
+        <span><b>${esc(d.stage)}</b> — <span class="tag">${esc(d.niche)}</span></span>
+        <button class="ghost" onclick="removeEntry('${d.id}')">Hapus</button>
+      </div>
+      <div class="meta">
+        Operator (${d.operatorCount ?? (d.operators||[]).length}): ${esc((d.operators||[]).join(', ')) || '-'}<br>
+        Player: ${esc((d.players||[]).join(', ')) || '-'}<br>
+        Diinput oleh: ${esc(d.admin || '-')}
+        ${d.buktiLink ? `<br>Bukti: <a href="${esc(d.buktiLink)}" target="_blank" rel="noopener noreferrer" style="color:var(--red);">Buka link ↗</a>
+          <br><img src="${esc(d.buktiLink)}" loading="lazy" style="max-width:220px;max-height:160px;border-radius:8px;margin-top:6px;border:1px solid var(--border);cursor:pointer;display:block;" onclick="window.open('${esc(d.buktiLink)}','_blank')" onerror="this.style.display='none'">` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function populateNicheSelect(all){
+  const sel = document.getElementById('niche-select');
+  const niches = [...new Set(all.map(d=>d.niche).filter(Boolean))].sort();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">-- pilih niche --</option>' + niches.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if(niches.includes(current)) sel.value = current;
+}
+
+function renderNicheDetail(){
+  const niche = document.getElementById('niche-select').value;
+  const search = document.getElementById('niche-search').value.trim().toLowerCase();
+  const box = document.getElementById('niche-detail');
+  if(!niche){ box.innerHTML = '<div class="empty">Pilih niche dulu.</div>'; return; }
+
+  let entries = liveData.filter(d => d.niche === niche);
+  if(search){
+    entries = entries.filter(d =>
+      (d.stage||'').toLowerCase().includes(search) ||
+      (d.operators||[]).some(o=>o.toLowerCase().includes(search)) ||
+      (d.players||[]).some(p=>p.toLowerCase().includes(search))
+    );
+  }
+
+  const byStage = {}, opCount = {};
+  entries.forEach(d=>{
+    const s = d.stage || '(kosong)';
+    byStage[s] = (byStage[s]||0)+1;
+    (d.operators||[]).forEach(o=>{ opCount[o] = (opCount[o]||0)+1; });
+  });
+  const total = entries.length;
+
+  const stageHtml = Object.entries(byStage).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="stat-row"><span>${esc(k)}</span><b>${v}x</b></div>`).join('') || '<div class="hint">Tidak ada data cocok.</div>';
+  const opHtml = Object.entries(opCount).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>{
+      const pct = total ? Math.round(v/total*100) : 0;
+      return `<div class="stat-row"><span>${esc(k)}</span><b>${v}x (${pct}%)</b></div>`;
+    }).join('') || '<div class="hint">Tidak ada data cocok.</div>';
+
+  box.innerHTML = `
+    <div class="quad-grid">
+      <div class="stat-card"><div class="num">${total}</div><div class="lbl">Total Clear (${esc(niche)})</div></div>
+      <div class="stat-card"><div class="num">${Object.keys(byStage).length}</div><div class="lbl">Stage Unik Diselesaikan</div></div>
+      <div class="card"><h2>Stage Diselesaikan</h2><div>${stageHtml}</div></div>
+      <div class="card"><h2>Pick Rate Operator</h2><div>${opHtml}</div></div>
+    </div>`;
+}
+
+document.getElementById('niche-select').addEventListener('change', renderNicheDetail);
+document.getElementById('niche-search').addEventListener('input', renderNicheDetail);
+
+function loadProfile(){
+  if(!profilesRef){ myProfile = null; renderProfileView(); return; }
+  profilesRef.doc(currentUser()).get().then(doc=>{
+    myProfile = doc.exists ? doc.data() : null;
+    renderProfileView();
+  }).catch(e=>{ console.error(e); myProfile = null; renderProfileView(); });
+}
+
+function populateProfileNicheSelect(){
+  const sel = document.getElementById('profile-niche-select');
+  const niches = [...new Set(liveData.map(d=>d.niche).filter(Boolean))].sort();
+  const keep = myProfile && myProfile.mainNiche;
+  sel.innerHTML = '<option value="">-- pilih niche --</option>' + niches.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if(keep && niches.includes(keep)) sel.value = keep;
+}
+
+function renderProfileView(){
+  const setup = document.getElementById('profile-setup');
+  const stats = document.getElementById('profile-stats');
+  if(!myProfile || !myProfile.mainNiche){
+    setup.classList.remove('hidden');
+    stats.classList.add('hidden');
+    populateProfileNicheSelect();
+    return;
+  }
+  setup.classList.add('hidden');
+  stats.classList.remove('hidden');
+  document.getElementById('profile-username').textContent = currentUser();
+  document.getElementById('profile-niche-label').textContent = myProfile.mainNiche;
+
+  const niche = myProfile.mainNiche, user = currentUser();
+  const entries = liveData.filter(d => d.niche === niche && d.admin === user);
+  const total = entries.length;
+  const byStage = {}, opCount = {};
+  entries.forEach(d=>{
+    const s = d.stage || '(kosong)';
+    byStage[s] = (byStage[s]||0)+1;
+    (d.operators||[]).forEach(o=>{ opCount[o] = (opCount[o]||0)+1; });
+  });
+  document.getElementById('profile-total').textContent = total;
+  document.getElementById('profile-stage-count').textContent = Object.keys(byStage).length;
+  document.getElementById('profile-stage-list').innerHTML = Object.entries(byStage).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="stat-row"><span>${esc(k)}</span><b>${v}x</b></div>`).join('') || '<div class="hint">Belum ada data clear kamu di niche ini.</div>';
+  document.getElementById('profile-op-list').innerHTML = Object.entries(opCount).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>{
+      const pct = total ? Math.round(v/total*100) : 0;
+      return `<div class="stat-row"><span>${esc(k)}</span><b>${v}x (${pct}%)</b></div>`;
+    }).join('') || '<div class="hint">Belum ada data.</div>';
+}
+
+document.getElementById('btn-save-niche').addEventListener('click', async ()=>{
+  const val = document.getElementById('profile-niche-select').value;
+  if(!val){ alert('Niche utama wajib dipilih.'); return; }
+  if(!profilesRef){ alert('Firebase belum terhubung, tidak bisa menyimpan profil.'); return; }
+  try{
+    await profilesRef.doc(currentUser()).set({ mainNiche: val }, { merge:true });
+    myProfile = { mainNiche: val };
+    renderProfileView();
+  }catch(e){ console.error(e); alert('Gagal menyimpan profil.'); }
+});
+
+document.getElementById('btn-change-niche').addEventListener('click', ()=>{
+  document.getElementById('profile-setup').classList.remove('hidden');
+  document.getElementById('profile-stats').classList.add('hidden');
+  populateProfileNicheSelect();
+});
+
+window.removeEntry = async function(id){
+  if(!clearsRef){ alert('Firebase belum terhubung.'); return; }
+  try{ await clearsRef.doc(id).delete(); }
+  catch(e){ console.error(e); alert('Gagal menghapus data.'); }
+};
+
+document.getElementById('btn-submit').addEventListener('click', async ()=>{
+  const stage = document.getElementById('f-stage').value.trim();
+  const niche = document.getElementById('f-niche').value.trim();
+  const opcount = parseInt(document.getElementById('f-opcount').value,10) || 0;
+  const operators = lines(document.getElementById('f-ops').value);
+  const players = lines(document.getElementById('f-players').value);
+  const buktiLink = document.getElementById('f-bukti').value.trim();
+  if(!stage || !niche){ alert('Stage dan Niche wajib diisi.'); return; }
+  if(!clearsRef){ alert('Firebase belum terhubung, data tidak bisa disimpan.'); return; }
+
+  try{
+    await clearsRef.add({
+      stage, niche, operatorCount: opcount, operators, players, buktiLink,
+      admin: currentUser(),
+      createdAt: Date.now()
+    });
+    document.getElementById('f-stage').value='';
+    document.getElementById('f-niche').value='';
+    document.getElementById('f-opcount').value='';
+    document.getElementById('f-ops').value='';
+    document.getElementById('f-players').value='';
+    document.getElementById('f-bukti').value='';
+  }catch(e){
+    console.error(e);
+    alert('Gagal menyimpan data. Cek koneksi & konfigurasi Firebase.');
+  }
+});
+
+/* ---------- INIT ---------- */
+(function init(){
+  const u = currentUser();
+  if(u) showApp(u);
+})();
+</script>
+</body>
+</html>
