@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nymphy — Nicheknights Clear Log</title>
+<link rel="icon" type="image/png" href="logo.png">
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#161014; --panel2:#1d1518; --border:#3a1218;
+    --red:#e5233d; --red-dim:#8f1526; --text:#f3e9ea; --muted:#a98a8e;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;}
+  header{background:linear-gradient(90deg,#1a0508,#000); border-bottom:2px solid var(--red);
+    padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  header .left{display:flex; align-items:center; gap:10px;}
+  header .logo{font-size:22px; font-weight:800; letter-spacing:1px; color:var(--red); text-shadow:0 0 12px rgba(229,35,61,.5);}
+  header .sub{color:var(--muted); font-size:12px;}
+  header .who{font-size:12px; color:var(--muted);}
+  main{max-width:960px; margin:0 auto; padding:18px 14px 60px;}
+  .grid{display:grid; grid-template-columns:1fr; gap:16px;}
+  @media(min-width:820px){ .grid{grid-template-columns:1.1fr 1fr;} }
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:16px; box-shadow:0 4px 18px rgba(0,0,0,.4);}
+  .card h2{margin:0 0 12px; font-size:15px; color:var(--red); text-transform:uppercase; letter-spacing:.5px;}
+  label{display:block; font-size:12px; color:var(--muted); margin:10px 0 4px;}
+  input,textarea,select{width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:9px 10px; font-size:14px; outline:none;}
+  input:focus,textarea:focus,select:focus{border-color:var(--red);}
+  select{appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a98a8e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center; background-size:16px; padding-right:32px;}
+  select option{background:var(--panel2); color:var(--text);}
+  textarea{min-height:64px; resize:vertical; font-family:inherit;}
+  .hint{font-size:11px; color:var(--muted); margin-top:2px;}
+  button{margin-top:14px; width:100%; padding:11px; border:none; border-radius:8px;
+    background:var(--red); color:#fff; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.4px;}
+  button:hover{background:#ff2e4a;}
+  button.ghost{background:transparent; border:1px solid var(--border); color:var(--muted); width:auto; padding:5px 10px; font-size:11px; margin:0;}
+  .stat-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row b{color:var(--red);}
+  .total{font-size:28px; font-weight:800; color:var(--red);}
+  .entry{background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; margin-bottom:10px; font-size:13px;}
+  .entry .top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .entry .tag{background:var(--red-dim); color:#fff; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:700;}
+  .entry .meta{color:var(--muted); margin-top:6px; line-height:1.5;}
+  .empty{color:var(--muted); font-size:13px; text-align:center; padding:20px 0;}
+
+  .shell{display:flex; min-height:100vh;}
+  .sidebar{width:200px; flex-shrink:0; background:#0d0709; border-right:1px solid var(--border);
+    padding:18px 14px; display:flex; flex-direction:column; gap:4px;
+    position:sticky; top:0; height:100vh; height:100dvh; align-self:flex-start; overflow-y:auto;}
+  .sidebar .brand{font-size:20px; font-weight:800; color:var(--red); letter-spacing:1px;
+    text-shadow:0 0 12px rgba(229,35,61,.5); margin-bottom:22px;}
+  .nav-item{padding:10px 12px; border-radius:8px; color:var(--muted); font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;}
+  .nav-item:hover{background:var(--panel2); color:var(--text);}
+  .nav-item.active{background:var(--red); color:#fff; font-weight:700;}
+  .avatar{width:38px; height:38px; border-radius:50%; background:var(--red-dim) center/cover no-repeat;
+    display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; flex-shrink:0; overflow:hidden;}
+  .avatar-lg{width:72px; height:72px; font-size:28px; border:2px solid var(--red);}
+  .profile-item{margin-top:auto; display:flex; align-items:center; gap:10px; background:var(--panel2); border:1px solid var(--border);}
+  .pi-name{font-weight:700; font-size:13px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:110px;}
+  .pi-sub{font-size:11px; color:var(--muted);}
+  .nav-item.active .pi-name{color:#fff;} .nav-item.active .pi-sub{color:#ffd9de;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  .chip{background:var(--red-dim); color:#fff; border-radius:14px; padding:3px 6px 3px 10px; font-size:12px; display:flex; align-items:center; gap:6px;}
+  .chip-x{cursor:pointer; opacity:.85; padding:0 4px;} .chip-x:hover{opacity:1;}
+  .member-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px;}
+  .member-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 10px; text-align:center; min-width:0;}
+  .member-card .avatar{width:64px; height:64px; font-size:24px; margin:0 auto 10px; border:2px solid var(--red);}
+  .member-name{font-weight:800; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .member-nick{font-size:12px; color:var(--muted); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .member-nick.empty-v{font-style:italic; opacity:.7;}
+  .member-niche{display:inline-block; margin-top:10px; background:var(--red-dim); color:#fff; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:700; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .member-niche.none{background:transparent; border:1px dashed var(--border); color:var(--muted); font-weight:400;}
+  .member-card{cursor:pointer; transition:border-color .15s, transform .15s;}
+  .member-card:hover{border-color:var(--red); transform:translateY(-2px);}
+  .member-role{display:inline-block; margin-top:4px; border:1px solid var(--red); color:var(--red); border-radius:6px; padding:1px 8px; font-size:11px; font-weight:800; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle;}
+  .member-more{margin-top:10px; font-size:11px; color:var(--red); font-weight:700;}
+  .member-card *{pointer-events:none;}
+  .member-card:focus-visible{outline:2px solid var(--red); outline-offset:2px;}
+  .modal-back{position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:40; display:flex; align-items:center; justify-content:center; padding:14px;}
+  .modal-box{width:100%; max-width:560px; max-height:90vh; max-height:90dvh; overflow-y:auto; background:var(--panel); border:1px solid var(--border);
+    border-radius:14px; padding:18px; box-shadow:0 10px 40px rgba(0,0,0,.6); position:relative;}
+  .modal-close{position:absolute; top:10px; right:10px; margin:0; width:32px; height:32px; padding:0; font-size:18px; line-height:1;}
+  .mm-head{display:flex; align-items:center; gap:14px; margin-bottom:16px; padding-right:34px;}
+  .mm-head .avatar{width:72px; height:72px; font-size:28px; border:2px solid var(--red);}
+  .mm-head .info{min-width:0;}
+  .mm-name{font-weight:800; font-size:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mm-mini-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;}
+  @media(max-width:480px){ .mm-mini-grid{grid-template-columns:1fr 1fr;} }
+  .mm-list{max-height:200px; overflow-y:auto;}
+  .content{flex:1; min-width:0;}
+  .topbar{padding:16px 22px; border-bottom:1px solid var(--border); display:flex;
+    justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+    background:linear-gradient(90deg,#150507,#000);}
+  .topbar h1{margin:0; font-size:18px;}
+  .topbar .sub{color:var(--muted); font-size:12px; margin-top:2px;}
+  .view{padding:20px;}
+  .stat-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px;}
+  .stat-cards-2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
+  @media(max-width:480px){ .stat-cards-2{grid-template-columns:1fr;} }
+  .quad-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
+  .quad-grid > div{min-height:180px; max-height:260px; display:flex; flex-direction:column;}
+  .quad-grid .stat-card{justify-content:center;}
+  .quad-grid .card > div:last-child{overflow-y:auto; flex:1;}
+  @media(max-width:600px){ .quad-grid{grid-template-columns:1fr;} }
+  .stat-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px;}
+  .stat-card .num{font-size:24px; font-weight:800; color:var(--red);}
+  .stat-card .lbl{font-size:11px; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:.4px;}
+  .act-item{font-size:13px; padding:8px 0; border-bottom:1px solid var(--border);}
+  .act-item:last-child{border-bottom:none;}
+  .act-item .t{color:var(--muted); font-size:11px;}
+
+  @media(max-width:720px){
+    .sidebar{width:62px; padding:12px 6px; align-items:center;}
+    .sidebar .logo-img{width:40px !important; height:40px !important; margin-bottom:10px !important;}
+    .sidebar .brand{display:none;}
+    .nav-item{width:100%; padding:11px 0; justify-content:center; font-size:19px;}
+    .nav-item .nl{display:none;}
+    .profile-item{padding:8px 0; background:transparent; border:none;}
+    .profile-item .pi-text{display:none;}
+    .topbar{padding:12px 14px;}
+    .topbar h1{font-size:15px;}
+    .topbar .who{display:none;}
+    .view{padding:12px;}
+    .card{padding:14px;}
+  }
+
+  #login-screen{position:fixed; inset:0; background:#000; display:flex; align-items:center; justify-content:center; z-index:50;}
+  #login-box{width:100%; max-width:320px; background:var(--panel); border:1px solid var(--border);
+    border-radius:14px; padding:26px 22px; text-align:center;}
+  #login-box .logo{font-size:26px; font-weight:800; color:var(--red); letter-spacing:1px; text-shadow:0 0 12px rgba(229,35,61,.5);}
+  #login-box .sub{color:var(--muted); font-size:12px; margin-bottom:18px;}
+  #login-error{color:var(--red); font-size:12px; min-height:16px; margin-top:6px;}
+  .logo-img{display:block; margin:0 auto; border-radius:50%; object-fit:cover;}
+  .grid > *, .quad-grid > *{min-width:0;}
+  canvas{max-width:100%;}
+  .hidden{display:none !important;}
+  .stage-list{max-height:260px; overflow-y:auto; margin-top:10px;}
+  .stage-row{display:flex; justify-content:space-between; gap:8px; padding:8px 10px; border-bottom:1px solid var(--border); cursor:pointer; font-size:13px;}
+  .stage-row:hover{background:var(--panel2);}
+  .stage-row .code{color:var(--red); font-weight:700; flex-shrink:0;}
+  .stage-img{display:block; width:100%; max-height:460px; object-fit:contain; background:var(--panel2); border:1px solid var(--border); border-radius:8px; margin-top:10px;}
+
+  .op-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-top:10px; max-height:300px; overflow-y:auto;}
+  .op-row{display:flex; align-items:center; gap:8px; padding:6px 8px; background:var(--panel2); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-size:12px; min-width:0;}
+  .op-row:hover{border-color:var(--red);}
+  .op-row img{width:34px; height:34px; border-radius:6px; object-fit:cover; background:#000; flex-shrink:0;}
+  .op-row .n{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;}
+  .op-row .c{color:var(--muted); font-size:10px;}
+  .r6{color:#ff9a3d}.r5{color:#f5d35c}.r4{color:#c9a7ff}.r3{color:#6ec3ff}.r2{color:#9fe27a}.r1{color:#ddd}
+  .op-head{display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;}
+  .op-art{width:140px; max-width:100%; border-radius:10px; background:#000; border:1px solid var(--border); object-fit:contain;}
+  .op-info{flex:1; min-width:240px;}
+  .op-title{font-size:24px; font-weight:800; margin:0;}
+  .op-stars{letter-spacing:2px; font-size:16px;}
+  .kv{display:grid; grid-template-columns:100px 1fr; gap:4px 10px; margin-top:10px; font-size:13px;}
+  .kv b{color:var(--muted); font-weight:600;}
+  .op-tabs{display:flex; gap:6px; flex-wrap:wrap; margin:10px 0;}
+  .op-tabs button{margin:0; width:auto; padding:5px 12px; font-size:12px; background:var(--panel2); border:1px solid var(--border); color:var(--muted);}
+  .op-tabs button.on{background:var(--red); color:#fff; border-color:var(--red);}
+  table.tb{width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;}
+  table.tb th,table.tb td{border:1px solid var(--border); padding:6px 8px; text-align:left; vertical-align:top;}
+  table.tb th{background:var(--panel2); color:var(--muted); font-weight:600; font-size:12px;}
+  .tbwrap{overflow-x:auto;}
+  .range{display:inline-grid; gap:2px; margin-top:6px;}
+  .range i{width:22px; height:22px; border-radius:3px; background:#1a1a1a; display:block;}
+  .range i.on{background:var(--red-dim); border:1px solid var(--red);}
+  .range i.me{background:var(--red);}
+  .sub-h{margin:16px 0 6px; font-size:14px; color:var(--red); font-weight:700;}
+  .pill{display:inline-block; background:var(--red-dim); color:#fff; border-radius:12px; padding:1px 9px; font-size:11px; margin-right:4px;}
+  .skill-head{display:flex; gap:10px; align-items:center; margin-top:14px;}
+  .skill-head img{width:48px; height:48px; border-radius:8px; background:#000;}
+  .skill-name{font-weight:800; font-size:15px;}
+  .lv-slider{width:100%; margin:6px 0;}
+  .muted{color:var(--muted);}
+
+  .pick-wrap{position:relative;}
+  .pick-list{position:absolute; left:0; right:0; top:100%; z-index:30; margin-top:4px; background:var(--panel2); border:1px solid var(--border); border-radius:8px; max-height:300px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.6);}
+  .pick-row{display:flex; align-items:center; gap:10px; padding:6px 10px; cursor:pointer; font-size:13px;}
+  .pick-row:hover{background:var(--red-dim);}
+  .pick-row img{width:32px; height:32px; border-radius:6px; object-fit:cover; background:#000; flex-shrink:0;}
+  .pick-row .c{color:var(--muted); font-size:11px;}
+  .mn-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px;}
+  .mn-card{position:relative; display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--panel); border:1px solid var(--border); border-radius:12px; cursor:pointer; min-width:0;}
+  .mn-card:hover{border-color:var(--red);}
+  .mn-card img{width:64px; height:64px; border-radius:10px; object-fit:cover; background:#000; flex-shrink:0;}
+  .mn-card .n{font-weight:800; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mn-card .c{font-size:11px; color:var(--muted); margin-top:2px;}
+  .mn-card .u{font-size:11px; color:var(--red); margin-top:4px; font-weight:700;}
+  .mn-x{position:absolute; top:6px; right:8px; cursor:pointer; color:var(--muted); font-size:12px; padding:2px 5px;}
+  .mn-x:hover{color:#fff;}
+
+  .rw-filter{display:flex; gap:8px; flex-wrap:wrap;}
+  .rw-filter input{flex:1 1 220px; min-width:0;}
+  .rw-filter select{flex:0 1 200px; min-width:0;}
+  .entry .meta a{word-break:break-all;}
+  .entry img{max-width:100%;}
+
+  /* ===== MOBILE ===== */
+  @media(max-width:720px){
+    .shell{display:block;}
+    .content{min-width:0; padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+    .sidebar{position:fixed; left:0; right:0; bottom:0; top:auto; width:100%; height:auto; align-self:auto;
+      flex-direction:row; align-items:stretch; justify-content:flex-start; gap:2px;
+      padding:6px 6px calc(6px + env(safe-area-inset-bottom)); border-right:none; border-top:1px solid var(--border);
+      background:rgba(13,7,9,.96); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+      overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; z-index:40;}
+    .sidebar::-webkit-scrollbar{display:none;}
+    .sidebar .logo-img, .sidebar .brand{display:none !important;}
+    .nav-item{flex:0 0 auto; width:auto; min-width:62px; flex-direction:column; gap:2px; padding:6px 8px; font-size:20px; line-height:1.1; border-radius:10px;}
+    .nav-item .nl{display:block; font-size:10px; white-space:nowrap;}
+    .profile-item{margin-top:0; min-width:56px; padding:6px 8px;}
+    .profile-item .pi-text{display:none;}
+    .topbar{flex-wrap:wrap; gap:6px;}
+    .topbar button.ghost{min-height:34px;}
+    .view{padding:12px 10px;}
+    .card{padding:14px 12px;}
+    input, textarea, select{font-size:16px;}
+    button{min-height:44px;}
+    button.ghost{min-height:34px;}
+    .rw-filter select{flex:1 1 100%;}
+    .entry .top{flex-wrap:wrap;}
+    .op-head{flex-direction:column; align-items:center;}
+    .op-info{width:100%; min-width:0;}
+    .op-title{font-size:20px;}
+    .kv{grid-template-columns:84px 1fr;}
+    .op-list{grid-template-columns:1fr 1fr; max-height:360px;}
+    .mn-grid{grid-template-columns:1fr;}
+    table.tb th, table.tb td{padding:5px 6px; font-size:12px;}
+    .pick-list{max-height:240px;}
+  }
+
+  .cc-hero{position:relative;} .cc-hero img{width:100%; display:block; border-radius:12px; border:1px solid var(--border);}
+  .cc-mute{position:absolute; top:10px; right:10px; background:rgba(0,0,0,.6); font-size:16px; padding:6px 10px;}
+  .cc-stage img{width:100%; border-radius:10px; border:1px solid var(--border); margin-top:8px;}
+  .cc-stage .nm{font-size:18px; font-weight:800;}
+  .cc-cons{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px;}
+  .cc-con{padding:8px 10px; border:1px solid var(--border); background:var(--panel2); border-radius:10px; cursor:pointer; font-size:13px; user-select:none;}
+  .cc-con.on{border-color:var(--red); background:var(--red-dim);}
+  .cc-con .d{font-size:11px; color:var(--muted); margin-top:3px;} .cc-con.on .d{color:#f3d0d4;}
+  .cc-rank{display:flex; gap:10px; align-items:flex-start;} .cc-rank .n{font-size:20px; font-weight:800; min-width:34px; color:var(--red);}
+  .cc-row{display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .cc-row .g{flex:1; min-width:0;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div id="login-box">
+    <img src="logo.png" alt="Nymphy" class="logo-img" style="width:96px; height:96px; margin-bottom:8px;">
+    <div class="logo">NYMPHY</div>
+    <div class="sub">Admin Login — Nicheknights Clear Log</div>
+    <label>Username</label>
+    <input id="li-user" autocomplete="username">
+    <label>Password</label>
+    <input id="li-pass" type="password" autocomplete="current-password">
+    <div id="login-error"></div>
+    <button id="btn-login">Masuk</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="shell">
+    <aside class="sidebar">
+      <img src="logo.png" alt="Nymphy" class="logo-img" style="width:64px; height:64px; margin-bottom:8px;">
+      <div class="brand" style="text-align:center;">NYMPHY</div>
+      <div class="nav-item active" data-view="dashboard" title="Dashboard"><span class="ni">📊</span><span class="nl">Dashboard</span></div>
+      <div class="nav-item" data-view="input" title="Input Clear"><span class="ni">➕</span><span class="nl">Input Clear</span></div>
+      <div class="nav-item" data-view="riwayat" title="Riwayat Data"><span class="ni">📜</span><span class="nl">Riwayat Data</span></div>
+      <div class="nav-item" data-view="niche" title="Niche Stat"><span class="ni">🔎</span><span class="nl">Niche Stat</span></div>
+      <div class="nav-item" data-view="members" title="Member List"><span class="ni">👥</span><span class="nl">Member List</span></div>
+      <div class="nav-item" data-view="stage" title="Stage Info"><span class="ni">🗺️</span><span class="nl">Stage Info</span></div>
+      <div class="nav-item" data-view="operators" title="Operators"><span class="ni">🎖️</span><span class="nl">Operators</span></div>
+      <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
+      <div class="nav-item" data-view="cc" title="Contingency Contract"><span class="ni">⚔️</span><span class="nl">Contingency</span></div>
+      <div class="nav-item profile-item" data-view="profile" title="Profil">
+        <div class="avatar" id="sidebar-avatar"></div>
+        <div class="pi-text"><div class="pi-name" id="sidebar-username"></div><div class="pi-sub">Lihat profil</div></div>
+      </div>
+    </aside>
+    <div class="content">
+      <div class="topbar">
+        <div>
+          <h1 id="welcome-title">Welcome back</h1>
+          <div class="sub">Nicheknights Clear Log</div>
+        </div>
+        <div>
+          <span class="who" id="who"></span>
+          <button class="ghost" id="btn-logout" style="margin-left:8px;">Logout</button>
+          
+        </div>
+      </div>
+
+      <div id="view-dashboard" class="view">
+        <div class="stat-cards">
+          <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Total Clear</div></div>
+          <div class="stat-card"><div class="num" id="stat-niche-count">0</div><div class="lbl">Niche Aktif</div></div>
+          <div class="stat-card"><div class="num" id="stat-stage-count">0</div><div class="lbl">Stage Clear</div></div>
+          <div class="stat-card"><div class="num" id="stat-op-top" style="font-size:16px; line-height:1.3; word-break:break-word;">-</div><div class="lbl">Most Used Operator</div></div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h2>Aktivitas Terakhir</h2>
+            <div id="recent-activity"><div class="empty">Belum ada data.</div></div>
+          </div>
+          <div class="card">
+            <h2>Top Niche</h2>
+            <div id="stat-niche"></div>
+            <h2 style="margin-top:16px;">Top Stage</h2>
+            <div id="stat-stage"></div>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:16px;">
+          <div class="card">
+            <h2>Distribusi Clear per Niche</h2>
+            <canvas id="chart-niche-bar" height="180"></canvas>
+          </div>
+          <div class="card">
+            <h2>Proporsi Niche</h2>
+            <canvas id="chart-niche-donut" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-input" class="view hidden">
+        <div class="card" style="max-width:520px;">
+          <h2>Input Data Clear</h2>
+          <label>Stage</label>
+          <input id="f-stage" placeholder="mis. 1-7">
+          <label>Niche</label>
+          <select id="f-niche"><option value="">-- pilih niche --</option><option value="__new__">+ Niche Baru...</option></select>
+          <input id="f-niche-new" type="text" placeholder="Nama niche baru" class="hidden" style="margin-top:8px;">
+          <label>Jumlah Operator</label>
+          <input id="f-opcount" type="number" min="0" placeholder="mis. 4">
+          <label>Nama Operator</label>
+          <div class="pick-wrap"><input id="f-ops-search" placeholder="cari operator dari database..." autocomplete="off"><div id="f-ops-list" class="pick-list hidden"></div></div>
+          <div id="f-ops-chips" class="chips"></div>
+          <div class="hint">Ketik nama lalu pilih dari database (Enter = pilih hasil pertama). Kalau tidak ada di database, Enter memakai nama yang diketik.</div>
+          <label>Player</label>
+          <select id="f-player-select"><option value="">-- tambah player --</option></select>
+          <div id="f-player-chips" class="chips"></div>
+          <div class="hint">Pilih dari username yang terdaftar. Bisa lebih dari satu.</div>
+          <label>Link Clear</label>
+          <input id="f-bukti" type="url" placeholder="https://...">
+          <div class="hint">Link screenshot/video bukti clear (opsional).</div>
+          <button id="btn-submit">Simpan Data</button>
+        </div>
+      </div>
+
+      <div id="view-riwayat" class="view hidden">
+        <div class="card">
+          <h2>Riwayat Data</h2>
+          <div class="rw-filter">
+            <input id="rw-search" type="search" placeholder="cari stage, niche, operator, player, admin..." autocomplete="off">
+            <select id="rw-niche"><option value="">Semua niche</option></select>
+          </div>
+          <div class="hint" id="rw-count" style="margin-bottom:10px;"></div>
+          <div id="list"><div class="empty">Belum ada data.</div></div>
+        </div>
+      </div>
+
+      <div id="view-niche" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Pilih Niche</h2>
+          <select id="niche-select"><option value="">-- pilih niche --</option></select>
+          <label>Cari (stage / operator / player)</label>
+          <input id="niche-search" placeholder="ketik buat filter...">
+        </div>
+        <div id="niche-detail"><div class="empty">Pilih niche dulu.</div></div>
+      </div>
+
+      <div id="view-members" class="view hidden">
+        <div class="card" style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <div><h2 style="margin:0;">Member List</h2><div class="hint" style="margin-top:4px;">👆 Klik kartu member untuk lihat statistiknya</div></div><span class="hint" id="member-count"></span>
+        </div>
+        <div id="member-grid" class="member-grid"></div>
+      </div>
+
+      <div id="view-stage" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Stage Info</h2>
+          <input id="stage-search" placeholder="cari nama / kode stage, mis. 4-4 atau Nerves">
+          <div class="hint" id="stage-status">Memuat daftar stage...</div>
+          <div id="stage-list" class="stage-list"></div>
+        </div>
+        <div class="card" id="stage-detail" style="margin-bottom:16px;"><div class="empty">Klik stage untuk melihat mapnya.</div></div>
+        <div class="card">
+          <h2>Randomizer</h2>
+          <div class="hint">Kalau kolom cari terisi, acak hanya dari hasil pencarian.</div>
+          <button id="btn-stage-random">🎲 Acak Stage</button>
+        </div>
+      </div>
+
+      <div id="view-operators" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Operators</h2>
+          <input id="op-search" placeholder="cari operator, mis. Zima, Guard, Earthshaker, Ursus...">
+          <div class="hint" id="op-status">Memuat daftar operator...</div>
+          <div id="op-list" class="op-list"></div>
+        </div>
+        <div id="op-detail"><div class="card"><div class="empty">Klik operator untuk melihat detailnya.</div></div></div>
+      </div>
+
+      <div id="view-myniche" class="view hidden">
+        <div id="mn-empty" class="card hidden" style="max-width:520px;">
+          <h2>My Niche</h2>
+          <div class="hint">Kamu belum memilih niche utama. Pilih dulu di tab Profil, nanti operator My Niche-mu muncul di sini.</div>
+          <button class="ghost" id="mn-go-profile" style="margin-top:12px;">Ke Profil</button>
+        </div>
+        <div id="mn-main" class="hidden">
+          <div class="card" style="margin-bottom:16px;">
+            <h2>My Niche: <span id="mn-niche" style="color:#fff;"></span></h2>
+            <label>Tambah operator</label>
+            <div class="pick-wrap"><input id="mn-search" placeholder="cari operator dari database..." autocomplete="off"><div id="mn-list" class="pick-list hidden"></div></div>
+            <div class="hint" id="mn-count"></div>
+          </div>
+          <div id="mn-grid" class="mn-grid"></div>
+        </div>
+      </div>
+
+      <div id="view-cc" class="view hidden">
+        <div class="cc-hero"><img src="NYMPHY_S_CONTINGENCY_CONTRACT.png" alt="Nymphy's Contingency Contract"><button class="ghost cc-mute" id="cc-mute" title="Musik">🔊</button></div>
+        <div class="hint" id="cc-note" style="margin:8px 0;"></div>
+        <div class="op-tabs" id="cc-tabs"><button class="on" data-sec="submit">Submit Clear</button><button data-sec="board">Leaderboard</button><button data-sec="admin" id="cc-tab-admin" class="hidden">Admin</button></div>
+
+        <div class="cc-sec" data-sec="submit">
+          <div class="card" style="margin-bottom:16px;"><h2>Stage</h2><div id="cc-stage-view" class="cc-stage"></div></div>
+          <div class="card">
+            <h2>Submit Clear</h2>
+            <label>Kontrak <span id="cc-total" class="pill" style="margin-left:6px;">Risk 0</span></label>
+            <div id="cc-pick" class="cc-cons"></div>
+            <label>Nama Operator</label>
+            <div class="pick-wrap"><input id="cc-ops-search" placeholder="cari operator dari database..." autocomplete="off"><div id="cc-ops-list" class="pick-list hidden"></div></div>
+            <div id="cc-ops-chips" class="chips"></div>
+            <label>Player</label>
+            <select id="cc-player-select"><option value="">-- tambah player --</option></select>
+            <div id="cc-player-chips" class="chips"></div>
+            <label>Link Clear</label>
+            <input id="cc-bukti" type="url" placeholder="https://...">
+            <div class="hint">Link screenshot/video bukti clear. Clear baru tampil di leaderboard setelah disetujui adminbadag.</div>
+            <button id="cc-submit">Kirim Clear</button>
+          </div>
+        </div>
+
+        <div class="cc-sec hidden" data-sec="board"><div class="card"><h2>Leaderboard</h2><div id="cc-board"></div></div></div>
+
+        <div class="cc-sec hidden" data-sec="admin">
+          <div class="card" style="margin-bottom:16px;"><h2>Stage</h2>
+            <label>Nama stage</label><input id="cc-stage-name" placeholder="mis. Operation Horizons">
+            <label>Gambar stage (upload)</label><input id="cc-stage-file" type="file" accept="image/*">
+            <label>atau link gambar</label><input id="cc-stage-url" type="url" placeholder="https://...">
+            <div class="hint">Leaderboard mengikuti nama stage: ganti nama = leaderboard baru. Kosongkan gambar untuk mempertahankan yang lama.</div>
+            <button id="cc-stage-save">Simpan Stage</button></div>
+          <div class="card" style="margin-bottom:16px;"><h2>Kontrak</h2>
+            <label>Tambah kontrak (satu per baris)</label>
+            <textarea id="cc-con-bulk" placeholder="Nama | Risk | Deskripsi (opsional)"></textarea>
+            <button id="cc-con-add">Tambah Kontrak</button>
+            <div class="hint" style="margin-top:10px;">Centang = tersedia untuk dipilih user.</div>
+            <div id="cc-con-list"></div></div>
+          <div class="card"><h2>Menunggu Persetujuan</h2><div id="cc-pending"></div></div>
+        </div>
+      </div>
+
+      <div id="view-profile" class="view hidden">
+        <div class="card" style="max-width:420px; margin-bottom:16px; display:flex; align-items:center; gap:14px;">
+          <div class="avatar avatar-lg" id="profile-avatar"></div>
+          <div>
+            <h2 style="margin:0 0 6px;">Foto Profil</h2>
+            <button class="ghost" id="btn-change-photo" style="width:auto;">Pilih / Ganti Foto</button>
+            <input type="file" id="photo-input" accept="image/*" class="hidden">
+          </div>
+        </div>
+        <div class="card" style="max-width:420px; margin-bottom:16px;">
+          <h2>Nickname In-Game</h2>
+          <input id="profile-nick" maxlength="30" placeholder="nama kamu di game">
+          <div class="hint">Nickname ini tampil di tab Member List.</div>
+          <button id="btn-save-nick">Simpan Nickname</button>
+        </div>
+        <div id="profile-setup" class="card" style="max-width:420px;">
+          <h2>Lengkapi Profil</h2>
+          <label>Niche Utama yang Dimainkan</label>
+          <select id="profile-niche-select"><option value="">-- pilih niche --</option></select>
+          <div class="hint">Wajib dipilih sebelum bisa melihat statistik profil kamu.</div>
+          <button id="btn-save-niche">Simpan</button>
+        </div>
+        <div id="profile-stats" class="hidden">
+          <div class="card" style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h2 style="margin:0;">Profil: <span id="profile-username"></span></h2>
+              <div class="hint">Niche utama: <b id="profile-niche-label" style="color:var(--red);"></b></div>
+            </div>
+            <button class="ghost" id="btn-change-niche" style="width:auto;">Ganti Niche Utama</button>
+          </div>
+          <div class="quad-grid">
+            <div class="stat-card"><div class="num" id="profile-total">0</div><div class="lbl">Total Clear di Niche Ini</div></div>
+            <div class="stat-card"><div class="num" id="profile-stage-count">0</div><div class="lbl">Stage Diselesaikan</div></div>
+            <div class="card"><h2>Stage yang Diselesaikan</h2><div id="profile-stage-list"></div></div>
+            <div class="card"><h2>Operator yang Dipakai</h2><div id="profile-op-list"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="member-modal" class="modal-back hidden">
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <button class="ghost modal-close" id="member-modal-close" title="Tutup">✕</button>
+    <div id="member-modal-body"></div>
+  </div>
+</div>
+
+<!-- Firebase SDK (compat build, tinggal <script> tag, tanpa bundler) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script>
+/* Username diketik apa adanya (mis. "admin1"), lalu dipetakan ke email
+   Firebase Auth dengan menambah domain tetap ini. Password TIDAK
+   pernah ditulis di kode -- diverifikasi langsung oleh Firebase Auth. */
+const EMAIL_DOMAIN = '@nymphy.com';
+/* User yang boleh menghapus SEMUA data. User lain cuma boleh menghapus data yang dia input sendiri.
+   (Aturan yang sama juga dipasang di Firestore Rules, jadi tidak bisa ditembus lewat console browser.) */
+const SUPER_ADMIN = 'adminbadag';
+function canDelete(d){
+  const me = currentUser();
+  return !!me && (me === SUPER_ADMIN || d.admin === me);
+}
+
+let liveData = [];
+let unsubscribe = null;
+let clearsRef = null;   // diisi setelah Firebase berhasil diinisialisasi
+let profilesRef = null;
+let myProfile = null;
+let authRef = null;
+let barChart = null, donutChart = null;
+
+function esc(s){ return (s||'').toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function lines(s){ return (s||'').split('\n').map(x=>x.trim()).filter(Boolean); }
+
+/* ---------- LOGIN (dipasang paling awal) ---------- */
+function currentUser(){
+  const email = authRef && authRef.currentUser ? authRef.currentUser.email : null;
+  return email ? email.replace(EMAIL_DOMAIN, '') : null;
+}
+
+function showApp(user){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('who').textContent = 'Login sebagai: ' + user;
+    document.getElementById('welcome-title').textContent = 'Welcome back, ' + user;
+  document.getElementById('sidebar-username').textContent = user;
+  startListening();
+  startProfilesListener();
+  applyAvatars();
+  loadProfile();
+}
+
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    ['dashboard','input','riwayat','niche','members','stage','operators','myniche','cc','profile'].forEach(v=>{
+      document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
+    });
+    if(item.dataset.view === 'profile') renderProfileView();
+    if(item.dataset.view === 'members') renderMembers();
+    if(item.dataset.view === 'stage') initStageView();
+    if(item.dataset.view === 'operators') initOperatorView();
+    if(item.dataset.view === 'myniche') renderMyNiche();
+    if(item.dataset.view === 'cc') ccEnter(); else ccLeave();
+  });
+});
+
+function showLoginScreen(){
+  if(typeof closeMemberModal === 'function') closeMemberModal();
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+function tryLogin(){
+  const u = document.getElementById('li-user').value.trim();
+  const p = document.getElementById('li-pass').value;
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if(!authRef){ err.textContent = 'Firebase belum terhubung.'; return; }
+  if(!u || !p){ err.textContent = 'Isi username dan password.'; return; }
+
+  authRef.signInWithEmailAndPassword(u + EMAIL_DOMAIN, p)
+    .catch((e)=>{
+      console.error(e);
+      err.textContent = 'Username atau password salah.';
+    });
+  // Kalau berhasil, onAuthStateChanged di bawah yang akan memindahkan ke homescreen.
+}
+
+document.getElementById('btn-login').addEventListener('click', tryLogin);
+document.getElementById('li-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+document.getElementById('li-user').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+
+document.getElementById('btn-logout').addEventListener('click', ()=>{
+  if(authRef) authRef.signOut();
+});
+
+/* ---------- FIREBASE (dibungkus try/catch supaya error di sini TIDAK
+   ikut menghentikan tombol login di atas) ---------- */
+try{
+  const firebaseConfig = {
+    apiKey: "AIzaSyAlQ9FDa6jpXBK0TQPGAVs1vob5M8zWZXM",
+    authDomain: "nymphy-1fac3.firebaseapp.com",
+    projectId: "nymphy-1fac3",
+    storageBucket: "nymphy-1fac3.firebasestorage.app",
+    messagingSenderId: "415141979960",
+    appId: "1:415141979960:web:fd8c47870564ac742243cd",
+    measurementId: "G-56G3WT1JQF"
+  };
+  firebase.initializeApp(firebaseConfig);
+  clearsRef = firebase.firestore().collection('clears');
+  profilesRef = firebase.firestore().collection('profiles');
+  authRef = firebase.auth();
+
+  authRef.onAuthStateChanged((user)=>{
+    if(user){ showApp(user.email.replace(EMAIL_DOMAIN, '')); }
+    else{ if(unsubscribe){ unsubscribe(); unsubscribe = null; } if(unsubProfiles){ unsubProfiles(); unsubProfiles = null; } showLoginScreen(); }
+  });
+
+}catch(e){
+  console.error('Firebase gagal diinisialisasi:', e);
+}
+
+function startListening(){
+  if(!clearsRef){
+    document.getElementById('list').innerHTML = '<div class="empty">Firebase belum terhubung. Cek konfigurasi & koneksi.</div>';
+    return;
+  }
+  if(unsubscribe) return;
+  unsubscribe = clearsRef.orderBy('createdAt','desc').limit(500).onSnapshot(
+    (snap)=>{
+      liveData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderStats(liveData);
+      renderList(liveData);
+      populateNicheSelect(liveData);
+      populateInputNicheSelect(liveData);
+      populatePlayerSelect();
+      renderMembers();
+      renderNicheDetail();
+      if(myProfile && myProfile.mainNiche) renderProfileView();
+      refreshMyNicheIfVisible();
+    },
+    (err)=>{ console.error('Firestore error', err); alert('Gagal memuat data dari Firebase. Cek konfigurasi & rules.'); }
+  );
+}
+
+/* ---------- DATA / STATS / LIST ---------- */
+function renderStats(all){
+  document.getElementById('stat-total').textContent = all.length;
+  const byNiche = {}, byStage = {};
+  const opUse = {};
+  all.forEach(d=>{
+    const n = d.niche || '(kosong)', s = d.stage || '(kosong)';
+    byNiche[n] = (byNiche[n]||0)+1;
+    byStage[s] = (byStage[s]||0)+1;
+    (d.operators||[]).forEach(o=>{ opUse[o] = (opUse[o]||0)+1; });
+  });
+  document.getElementById('stat-niche-count').textContent = Object.keys(byNiche).length;
+  document.getElementById('stat-stage-count').textContent = Object.keys(byStage).length;
+  const topOp = Object.entries(opUse).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stat-op-top').textContent = topOp ? `${topOp[0]} (${topOp[1]}x)` : '-';
+
+  const nicheHtml = Object.entries(byNiche).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="stat-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('') || '<div class="hint">-</div>';
+  const stageHtml = Object.entries(byStage).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="stat-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('') || '<div class="hint">-</div>';
+  document.getElementById('stat-niche').innerHTML = nicheHtml;
+  document.getElementById('stat-stage').innerHTML = stageHtml;
+
+  const recentEl = document.getElementById('recent-activity');
+  if(!all.length){ recentEl.innerHTML = '<div class="empty">Belum ada data.</div>'; }
+  else{
+    recentEl.innerHTML = all.slice(0,5).map(d=>{
+      const t = d.createdAt ? new Date(d.createdAt).toLocaleString('id-ID') : '';
+      return `<div class="act-item"><b>${esc(d.stage)}</b> — ${esc(d.niche)} <span class="t">oleh ${esc(d.admin||'-')} · ${t}</span></div>`;
+    }).join('');
+  }
+
+  renderNicheCharts(byNiche);
+}
+
+function renderNicheCharts(byNiche){
+  if(typeof Chart === 'undefined') return; // Chart.js gagal dimuat (mis. offline)
+  const labels = Object.keys(byNiche);
+  const values = Object.values(byNiche);
+  const palette = ['#e5233d','#ff6b81','#c2185b','#ff8a80','#b71c3c','#ff4569','#8f1526','#ff9aa8'];
+
+  const barCtx = document.getElementById('chart-niche-bar');
+  if(barChart){ barChart.data.labels = labels; barChart.data.datasets[0].data = values; barChart.update(); }
+  else if(barCtx){
+    barChart = new Chart(barCtx, {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Total Clear', data:values, backgroundColor:'#e5233d', borderRadius:6, maxBarThickness:36 }] },
+      options:{ responsive:true, plugins:{ legend:{ display:false } },
+        scales:{
+          x:{ ticks:{ color:'#a98a8e' }, grid:{ color:'#3a1218' } },
+          y:{ beginAtZero:true, ticks:{ color:'#a98a8e', precision:0 }, grid:{ color:'#3a1218' } }
+        } }
+    });
+  }
+
+  const donutCtx = document.getElementById('chart-niche-donut');
+  if(donutChart){ donutChart.data.labels = labels; donutChart.data.datasets[0].data = values; donutChart.update(); }
+  else if(donutCtx){
+    donutChart = new Chart(donutCtx, {
+      type:'doughnut',
+      data:{ labels, datasets:[{ data:values, backgroundColor:labels.map((_,i)=>palette[i % palette.length]), borderColor:'#0a0a0a', borderWidth:2 }] },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom', labels:{ color:'#a98a8e', boxWidth:12 } } } }
+    });
+  }
+}
+
+function renderList(allData){
+  const el = document.getElementById('list');
+  const terms = document.getElementById('rw-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const nf = document.getElementById('rw-niche').value;
+  const all = allData.filter(d => {
+    if(nf && d.niche !== nf) return false;
+    if(!terms.length) return true;
+    const hay = [d.stage, d.niche, d.admin, ...(d.operators||[]), ...(d.players||[])].join(' ').toLowerCase();
+    return terms.every(t => hay.includes(t));
+  });
+  document.getElementById('rw-count').textContent = allData.length ? (all.length === allData.length ? allData.length + ' data' : all.length + ' dari ' + allData.length + ' data cocok') : '';
+  if(!allData.length){ el.innerHTML = '<div class="empty">Belum ada data.</div>'; return; }
+  if(!all.length){ el.innerHTML = '<div class="empty">Tidak ada data yang cocok dengan pencarian.</div>'; return; }
+  el.innerHTML = all.map(d=>`
+    <div class="entry">
+      <div class="top">
+        <span><b>${esc(d.stage)}</b> — <span class="tag">${esc(d.niche)}</span></span>
+        ${canDelete(d) ? `<button class="ghost" onclick="removeEntry('${d.id}')">Hapus</button>` : ''}
+      </div>
+      <div class="meta">
+        Operator (${d.operatorCount ?? (d.operators||[]).length}): ${esc((d.operators||[]).join(', ')) || '-'}<br>
+        Player: ${esc((d.players||[]).join(', ')) || '-'}<br>
+        Diinput oleh: ${esc(d.admin || '-')}
+        ${d.buktiLink ? `<br>Bukti: <a href="${esc(d.buktiLink)}" target="_blank" rel="noopener noreferrer" style="color:var(--red);">Buka link ↗</a>
+          <br><img src="${esc(d.buktiLink)}" loading="lazy" style="max-width:220px;max-height:160px;border-radius:8px;margin-top:6px;border:1px solid var(--border);cursor:pointer;display:block;" onclick="window.open('${esc(d.buktiLink)}','_blank')" onerror="this.style.display='none'">` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function populateNicheSelect(all){
+  const rw = document.getElementById('rw-niche'), rwCur = rw.value;
+  const allNiches = [...new Set(all.map(d=>d.niche).filter(Boolean))].sort();
+  rw.innerHTML = '<option value="">Semua niche</option>' + allNiches.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if(allNiches.includes(rwCur)) rw.value = rwCur;
+  const sel = document.getElementById('niche-select');
+  const niches = allNiches;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">-- pilih niche --</option>' + niches.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if(niches.includes(current)) sel.value = current;
+}
+
+function renderNicheDetail(){
+  const niche = document.getElementById('niche-select').value;
+  const search = document.getElementById('niche-search').value.trim().toLowerCase();
+  const box = document.getElementById('niche-detail');
+  if(!niche){ box.innerHTML = '<div class="empty">Pilih niche dulu.</div>'; return; }
+
+  let entries = liveData.filter(d => d.niche === niche);
+  if(search){
+    entries = entries.filter(d =>
+      (d.stage||'').toLowerCase().includes(search) ||
+      (d.operators||[]).some(o=>o.toLowerCase().includes(search)) ||
+      (d.players||[]).some(p=>p.toLowerCase().includes(search))
+    );
+  }
+
+  const byStage = {}, opCount = {};
+  entries.forEach(d=>{
+    const s = d.stage || '(kosong)';
+    byStage[s] = (byStage[s]||0)+1;
+    (d.operators||[]).forEach(o=>{ opCount[o] = (opCount[o]||0)+1; });
+  });
+  const total = entries.length;
+
+  const stageHtml = Object.entries(byStage).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="stat-row"><span>${esc(k)}</span><b>${v}x</b></div>`).join('') || '<div class="hint">Tidak ada data cocok.</div>';
+  const opHtml = Object.entries(opCount).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>{
+      const pct = total ? Math.round(v/total*100) : 0;
+      return `<div class="stat-row"><span>${esc(k)}</span><b>${v}x (${pct}%)</b></div>`;
+    }).join('') || '<div class="hint">Tidak ada data cocok.</div>';
+
+  box.innerHTML = `
+    <div class="quad-grid">
+      <div class="stat-card"><div class="num">${total}</div><div class="lbl">Total Clear (${esc(niche)})</div></div>
+      <div class="stat-card"><div class="num">${Object.keys(byStage).length}</div><div class="lbl">Stage Unik Diselesaikan</div></div>
+      <div class="card"><h2>Stage Diselesaikan</h2><div>${stageHtml}</div></div>
+      <div class="card"><h2>Pick Rate Operator</h2><div>${opHtml}</div></div>
+    </div>`;
+}
+
+document.getElementById('rw-search').addEventListener('input', () => renderList(liveData));
+document.getElementById('rw-niche').addEventListener('change', () => renderList(liveData));
+document.getElementById('niche-select').addEventListener('change', renderNicheDetail);
+document.getElementById('niche-search').addEventListener('input', renderNicheDetail);
+
+function loadProfile(){
+  if(!profilesRef){ myProfile = null; renderProfileView(); return; }
+  profilesRef.doc(currentUser()).get().then(doc=>{
+    if(!doc.exists || !doc.data().username){ profilesRef.doc(currentUser()).set({ username: currentUser() }, { merge:true }).catch(()=>{}); }
+    myProfile = doc.exists ? doc.data() : {};
+    renderProfileView();
+    refreshMyNicheIfVisible();
+  }).catch(e=>{ console.error(e); myProfile = null; renderProfileView(); });
+}
+
+function populateProfileNicheSelect(){
+  const sel = document.getElementById('profile-niche-select');
+  const niches = [...new Set(liveData.map(d=>d.niche).filter(Boolean))].sort();
+  const keep = myProfile && myProfile.mainNiche;
+  sel.innerHTML = '<option value="">-- pilih niche --</option>' + niches.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if(keep && niches.includes(keep)) sel.value = keep;
+}
+
+function renderProfileView(){
+  const setup = document.getElementById('profile-setup');
+  const stats = document.getElementById('profile-stats');
+  if(!myProfile || !myProfile.mainNiche){
+    setup.classList.remove('hidden');
+    stats.classList.add('hidden');
+    populateProfileNicheSelect();
+    return;
+  }
+  setup.classList.add('hidden');
+  stats.classList.remove('hidden');
+  document.getElementById('profile-username').textContent = currentUser();
+  document.getElementById('profile-niche-label').textContent = myProfile.mainNiche;
+
+  const niche = myProfile.mainNiche, user = currentUser();
+  const entries = liveData.filter(d => d.niche === niche && d.admin === user);
+  const total = entries.length;
+  const byStage = {}, opCount = {};
+  entries.forEach(d=>{
+    const s = d.stage || '(kosong)';
+    byStage[s] = (byStage[s]||0)+1;
+    (d.operators||[]).forEach(o=>{ opCount[o] = (opCount[o]||0)+1; });
+  });
+  document.getElementById('profile-total').textContent = total;
+  document.getElementById('profile-stage-count').textContent = Object.keys(byStage).length;
+  document.getElementById('profile-stage-list').innerHTML = Object.entries(byStage).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<div class="stat-row"><span>${esc(k)}</span><b>${v}x</b></div>`).join('') || '<div class="hint">Belum ada data clear kamu di niche ini.</div>';
+  document.getElementById('profile-op-list').innerHTML = Object.entries(opCount).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>{
+      const pct = total ? Math.round(v/total*100) : 0;
+      return `<div class="stat-row"><span>${esc(k)}</span><b>${v}x (${pct}%)</b></div>`;
+    }).join('') || '<div class="hint">Belum ada data.</div>';
+}
+
+document.getElementById('btn-save-niche').addEventListener('click', async ()=>{
+  const val = document.getElementById('profile-niche-select').value;
+  if(!val){ alert('Niche utama wajib dipilih.'); return; }
+  if(!profilesRef){ alert('Firebase belum terhubung, tidak bisa menyimpan profil.'); return; }
+  try{
+    await profilesRef.doc(currentUser()).set({ mainNiche: val }, { merge:true });
+    myProfile = { ...(myProfile||{}), mainNiche: val };
+    renderProfileView();
+    refreshMyNicheIfVisible();
+  }catch(e){ console.error(e); alert('Gagal menyimpan profil.'); }
+});
+
+document.getElementById('btn-change-niche').addEventListener('click', ()=>{
+  document.getElementById('profile-setup').classList.remove('hidden');
+  document.getElementById('profile-stats').classList.add('hidden');
+  populateProfileNicheSelect();
+});
+
+function populateInputNicheSelect(all){
+  const sel = document.getElementById('f-niche');
+  const niches = [...new Set(all.map(d=>d.niche).filter(Boolean))].sort();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">-- pilih niche --</option>' +
+    niches.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('') +
+    '<option value="__new__">+ Niche Baru...</option>';
+  if(current && [...sel.options].some(o=>o.value===current)) sel.value = current;
+}
+
+document.getElementById('f-niche').addEventListener('change', ()=>{
+  const isNew = document.getElementById('f-niche').value === '__new__';
+  document.getElementById('f-niche-new').classList.toggle('hidden', !isNew);
+});
+
+window.removeEntry = async function(id){
+  if(!clearsRef){ alert('Firebase belum terhubung.'); return; }
+  const d = liveData.find(x => x.id === id);
+  if(!d || !canDelete(d)){ alert('Kamu tidak punya izin menghapus data ini.'); return; }
+  try{ await clearsRef.doc(id).delete(); }
+  catch(e){ console.error(e); alert(e.code === 'permission-denied' ? 'Kamu tidak punya izin menghapus data ini.' : 'Gagal menghapus data.'); }
+};
+
+document.getElementById('btn-submit').addEventListener('click', async ()=>{
+  const stage = document.getElementById('f-stage').value.trim();
+  const nicheSel = document.getElementById('f-niche').value;
+  const niche = nicheSel === '__new__' ? document.getElementById('f-niche-new').value.trim() : nicheSel;
+  const opcount = parseInt(document.getElementById('f-opcount').value,10) || 0;
+  const operators = selectedOps.slice();
+  const players = selectedPlayers.slice();
+  const buktiLink = document.getElementById('f-bukti').value.trim();
+  if(!stage || !niche){ alert('Stage dan Niche wajib diisi.'); return; }
+  if(!clearsRef){ alert('Firebase belum terhubung, data tidak bisa disimpan.'); return; }
+
+  try{
+    await clearsRef.add({
+      stage, niche, operatorCount: opcount, operators, players, buktiLink,
+      admin: currentUser(),
+      createdAt: Date.now()
+    });
+    document.getElementById('f-stage').value='';
+    document.getElementById('f-niche').value='';
+    document.getElementById('f-niche-new').value='';
+    document.getElementById('f-niche-new').classList.add('hidden');
+    document.getElementById('f-opcount').value='';
+    selectedOps = []; renderOpChips(); document.getElementById('f-ops-search').value='';
+    selectedPlayers = []; renderPlayerChips(); populatePlayerSelect();
+    document.getElementById('f-bukti').value='';
+  }catch(e){
+    console.error(e);
+    alert('Gagal menyimpan data. Cek koneksi & konfigurasi Firebase.');
+  }
+});
+
+/* ---------- PLAYER DROPDOWN, FOTO PROFIL ---------- */
+let selectedPlayers = [];
+let profilesMap = {};
+let unsubProfiles = null;
+
+function getRegisteredUsers(){
+  const set = new Set(Object.keys(profilesMap));
+  liveData.forEach(d=>{ if(d.admin) set.add(d.admin); });
+  const me = currentUser(); if(me) set.add(me);
+  if(me !== SUPER_ADMIN) set.delete(SUPER_ADMIN); // adminbadag disembunyikan dari member lain
+  return [...set].sort((a,b)=>a.localeCompare(b));
+}
+function populatePlayerSelect(){
+  const sel = document.getElementById('f-player-select');
+  const opts = getRegisteredUsers().filter(u=>!selectedPlayers.includes(u));
+  sel.innerHTML = '<option value="">-- tambah player --</option>' + opts.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
+}
+function renderPlayerChips(){
+  document.getElementById('f-player-chips').innerHTML = selectedPlayers
+    .map(u=>`<span class="chip">${esc(u)}<b class="chip-x" data-u="${esc(u)}">×</b></span>`).join('');
+}
+document.getElementById('f-player-select').addEventListener('change', e=>{
+  const v = e.target.value;
+  if(v && !selectedPlayers.includes(v)) selectedPlayers.push(v);
+  renderPlayerChips(); populatePlayerSelect();
+});
+document.getElementById('f-player-chips').addEventListener('click', e=>{
+  const u = e.target.dataset && e.target.dataset.u;
+  if(u){ selectedPlayers = selectedPlayers.filter(x=>x!==u); renderPlayerChips(); populatePlayerSelect(); }
+});
+
+function setAvatar(el, photo, name){
+  if(!el) return;
+  photo = safePhoto(photo);
+  if(photo){ el.style.backgroundImage = `url("${photo}")`; el.textContent = ''; }
+  else{ el.style.backgroundImage = ''; el.textContent = (name||'?').charAt(0).toUpperCase(); }
+}
+function applyAvatars(){
+  const me = currentUser(); if(!me) return;
+  const photo = profilesMap[me] && profilesMap[me].photo;
+  setAvatar(document.getElementById('sidebar-avatar'), photo, me);
+  setAvatar(document.getElementById('profile-avatar'), photo, me);
+}
+function startProfilesListener(){
+  if(!profilesRef || unsubProfiles) return;
+  unsubProfiles = profilesRef.onSnapshot(snap=>{
+    profilesMap = {};
+    snap.docs.forEach(d=>{ profilesMap[d.id] = d.data(); });
+    populatePlayerSelect(); applyAvatars(); applyProfileFields(); renderMembers();
+  }, err=>console.error('profiles error', err));
+}
+
+document.getElementById('btn-change-photo').addEventListener('click', ()=>document.getElementById('photo-input').click());
+document.getElementById('photo-input').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ alert('File harus berupa gambar.'); return; }
+  if(!profilesRef){ alert('Firebase belum terhubung.'); return; }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = async ()=>{
+    const size = 160, c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#161014'; ctx.fillRect(0,0,size,size);
+    const m = Math.min(img.width, img.height);
+    ctx.drawImage(img, (img.width-m)/2, (img.height-m)/2, m, m, 0, 0, size, size);
+    URL.revokeObjectURL(url);
+    try{
+      await profilesRef.doc(currentUser()).set({ photo: c.toDataURL('image/jpeg', 0.85), username: currentUser() }, { merge:true });
+    }catch(err){ console.error(err); alert('Gagal menyimpan foto profil.'); }
+  };
+  img.onerror = ()=>{ URL.revokeObjectURL(url); alert('Gambar tidak bisa dibaca.'); };
+  img.src = url;
+});
+
+/* ---------- MEMBER LIST & NICKNAME ---------- */
+function safePhoto(p){
+  return (typeof p === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(p)) ? p : '';
+}
+
+function applyProfileFields(){
+  const me = currentUser(); if(!me) return;
+  const inp = document.getElementById('profile-nick');
+  if(document.activeElement !== inp) inp.value = (profilesMap[me] && profilesMap[me].nickname) || '';
+}
+
+function renderMembers(){
+  const grid = document.getElementById('member-grid');
+  if(!grid) return;
+  const users = getRegisteredUsers();
+  document.getElementById('member-count').textContent = users.length + ' member';
+  if(!users.length){ grid.innerHTML = '<div class="empty">Belum ada member.</div>'; return; }
+  grid.innerHTML = users.map((u,i)=>{
+    const pr = profilesMap[u] || {};
+    return `<div class="member-card" data-user="${esc(u).replace(/"/g,'&quot;')}" tabindex="0" role="button" title="Lihat statistik ${esc(u).replace(/"/g,'&quot;')}">
+      <div class="avatar" data-i="${i}"></div>
+      <div class="member-name">${esc(u)}</div>
+      ${pr.role ? `<div class="member-role">⭐ ${esc(pr.role)}</div>` : ''}
+      ${pr.nickname ? `<div class="member-nick">🎮 ${esc(pr.nickname)}</div>` : `<div class="member-nick empty-v">Nickname belum diisi</div>`}
+      ${pr.mainNiche ? `<span class="member-niche">${esc(pr.mainNiche)}</span>` : `<span class="member-niche none">Niche belum dipilih</span>`}
+      <div class="member-more">Lihat statistik ›</div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.avatar[data-i]').forEach(el=>{
+    const u = users[+el.dataset.i];
+    setAvatar(el, profilesMap[u] && profilesMap[u].photo, u);
+  });
+  if(openMemberUser) renderMemberModal();
+}
+
+/* ---------- DETAIL STATISTIK MEMBER (popup) ---------- */
+let openMemberUser = null;
+let roleEditorEl = null;
+
+function isSuperAdmin(){ return currentUser() === SUPER_ADMIN; }
+
+/* Editor role: hanya dibuat untuk SUPER_ADMIN. Elemen disimpan supaya isian
+   tidak hilang waktu popup di-render ulang oleh update data. */
+function buildRoleEditor(u){
+  roleEditorEl = null;
+  if(!isSuperAdmin()) return;
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.style.marginBottom = '12px';
+  el.innerHTML = `
+    <h2>Atur Role</h2>
+    <input id="mm-role-input" list="role-suggestions" maxlength="20" placeholder="mis. Leader, Officer, Member">
+    <datalist id="role-suggestions"><option value="Leader"><option value="Co-Leader"><option value="Officer"><option value="Member"></datalist>
+    <div class="hint">Hanya ${esc(SUPER_ADMIN)} yang bisa mengubah role. Kosongkan lalu simpan untuk menghapus.</div>
+    <button id="mm-role-save">Simpan Role</button>`;
+  el.querySelector('#mm-role-input').value = (profilesMap[u] && profilesMap[u].role) || '';
+  el.querySelector('#mm-role-save').addEventListener('click', ()=>saveRole(u, el.querySelector('#mm-role-input').value, el.querySelector('#mm-role-save')));
+  roleEditorEl = el;
+}
+
+async function saveRole(u, value, btn){
+  if(!isSuperAdmin()){ alert('Hanya ' + SUPER_ADMIN + ' yang boleh mengatur role.'); return; }
+  if(!profilesRef){ alert('Firebase belum terhubung.'); return; }
+  const role = (value||'').trim().slice(0,20);
+  try{
+    await profilesRef.doc(u).set({ role, username: u }, { merge:true });
+    if(btn){ const t = btn.textContent; btn.textContent = 'Tersimpan ✓'; setTimeout(()=>{ btn.textContent = t; }, 1500); }
+  }catch(e){
+    console.error(e);
+    alert(e.code === 'permission-denied'
+      ? 'Ditolak oleh Firestore Rules. Rules koleksi profiles harus mengizinkan ' + SUPER_ADMIN + ' mengedit profil member lain.'
+      : 'Gagal menyimpan role.');
+  }
+}
+
+function statRows(obj, withPct, total){
+  const rows = Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+    const extra = withPct ? ` (${total ? Math.round(v/total*100) : 0}%)` : '';
+    return `<div class="stat-row"><span>${esc(k)}</span><b>${v}x${extra}</b></div>`;
+  });
+  return rows.join('');
+}
+
+function renderMemberModal(){
+  const u = openMemberUser;
+  const body = document.getElementById('member-modal-body');
+  if(!u || !body) return;
+  const pr = profilesMap[u] || {};
+  const mine = liveData.filter(d => d.admin === u);
+  const byNicheAll = {};
+  mine.forEach(d=>{ const n = d.niche || '(kosong)'; byNicheAll[n] = (byNicheAll[n]||0)+1; });
+
+  let nicheBlock = '';
+  if(pr.mainNiche){
+    const entries = mine.filter(d => d.niche === pr.mainNiche);
+    const byStage = {}, opCount = {};
+    entries.forEach(d=>{
+      const st = d.stage || '(kosong)';
+      byStage[st] = (byStage[st]||0)+1;
+      (d.operators||[]).forEach(o=>{ opCount[o] = (opCount[o]||0)+1; });
+    });
+    nicheBlock = `
+      <div class="mm-mini-grid">
+        <div class="stat-card"><div class="num">${mine.length}</div><div class="lbl">Total Clear (Semua Niche)</div></div>
+        <div class="stat-card"><div class="num">${entries.length}</div><div class="lbl">Clear di ${esc(pr.mainNiche)}</div></div>
+        <div class="stat-card"><div class="num">${Object.keys(byStage).length}</div><div class="lbl">Stage Diselesaikan</div></div>
+      </div>
+      <div class="card" style="margin-bottom:12px;"><h2>Stage yang Diselesaikan</h2>
+        <div class="mm-list">${statRows(byStage,false) || '<div class="hint">Belum ada clear di niche ini.</div>'}</div></div>
+      <div class="card" style="margin-bottom:12px;"><h2>Operator yang Dipakai</h2>
+        <div class="mm-list">${statRows(opCount,true,entries.length) || '<div class="hint">Belum ada data.</div>'}</div></div>`;
+  }else{
+    nicheBlock = `
+      <div class="mm-mini-grid">
+        <div class="stat-card"><div class="num">${mine.length}</div><div class="lbl">Total Clear (Semua Niche)</div></div>
+        <div class="stat-card"><div class="num">${Object.keys(byNicheAll).length}</div><div class="lbl">Niche Dimainkan</div></div>
+      </div>
+      <div class="hint" style="margin-bottom:12px;">Member ini belum memilih niche utama, jadi statistik stage &amp; operator belum ditampilkan.</div>`;
+  }
+
+  body.innerHTML = `
+    <div class="mm-head">
+      <div class="avatar" id="mm-avatar"></div>
+      <div class="info">
+        <div class="mm-name">${esc(u)}</div>
+        ${pr.role ? `<div class="member-role" style="margin:2px 0 4px;">⭐ ${esc(pr.role)}</div>` : ''}
+        ${pr.nickname ? `<div class="member-nick" style="margin-top:2px;">🎮 ${esc(pr.nickname)}</div>` : `<div class="member-nick empty-v">Nickname belum diisi</div>`}
+        ${pr.mainNiche ? `<span class="member-niche">${esc(pr.mainNiche)}</span>` : `<span class="member-niche none">Niche belum dipilih</span>`}
+      </div>
+    </div>
+    <div id="mm-role-slot"></div>
+    ${nicheBlock}
+    <div class="card"><h2>Clear per Niche</h2>
+      <div class="mm-list">${statRows(byNicheAll,false) || '<div class="hint">Belum ada data clear dari member ini.</div>'}</div></div>`;
+  setAvatar(document.getElementById('mm-avatar'), pr.photo, u);
+  const slot = document.getElementById('mm-role-slot');
+  if(slot && roleEditorEl) slot.appendChild(roleEditorEl);
+}
+
+function openMemberModal(u){
+  openMemberUser = u;
+  buildRoleEditor(u);
+  renderMemberModal();
+  document.getElementById('member-modal').classList.remove('hidden');
+}
+function closeMemberModal(){
+  openMemberUser = null;
+  document.getElementById('member-modal').classList.add('hidden');
+}
+
+document.addEventListener('click', e=>{
+  const card = e.target.closest && e.target.closest('.member-card');
+  if(card && card.dataset.user) openMemberModal(card.dataset.user);
+});
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest && e.target.closest('.member-card');
+  if(card && card.dataset.user){ e.preventDefault(); openMemberModal(card.dataset.user); }
+});
+document.getElementById('member-modal-close').addEventListener('click', closeMemberModal);
+document.getElementById('member-modal').addEventListener('click', e=>{ if(e.target.id === 'member-modal') closeMemberModal(); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && openMemberUser) closeMemberModal(); });
+
+document.getElementById('btn-save-nick').addEventListener('click', async ()=>{
+  const nick = document.getElementById('profile-nick').value.trim();
+  if(!profilesRef){ alert('Firebase belum terhubung.'); return; }
+  const btn = document.getElementById('btn-save-nick');
+  try{
+    await profilesRef.doc(currentUser()).set({ nickname: nick, username: currentUser() }, { merge:true });
+    btn.textContent = 'Tersimpan ✓';
+    setTimeout(()=>{ btn.textContent = 'Simpan Nickname'; }, 1500);
+  }catch(err){ console.error(err); alert('Gagal menyimpan nickname.'); }
+});
+
+/* ---------- STAGE INFO ---------- */
+const STAGE_API = 'https://awedtan.ca/api/stage';
+const STAGE_IMG = 'https://raw.githubusercontent.com/HellaOrg/HellaAssets/main/stages/';
+let stageList = [], stageState = 'idle', stageToken = 0;
+
+const GD_BASES = [
+  'https://raw.githubusercontent.com/HellaOrg/HellaAssets/main/gamedata/',
+  'https://cdn.jsdelivr.net/gh/HellaOrg/HellaAssets@main/gamedata/'
+];
+async function fetchJsonAny(urls){
+  let last;
+  for(const u of urls){
+    try{ const r = await fetch(u); if(!r.ok) throw new Error(u + ' -> HTTP ' + r.status); return await r.json(); }
+    catch(e){ console.warn('gagal:', e); last = e; }
+  }
+  throw last;
+}
+function addStage(e, fallbackId, seen){
+  const id = e.stageId || fallbackId;
+  if(!e.code || !e.name || !id || seen.has(id)) return;
+  seen.add(id);
+  stageList.push({ id, code: e.code, name: e.name, levelId: e.levelId || '' });
+}
+async function initStageView(){
+  if(stageState !== 'idle') return;
+  stageState = 'loading';
+  const status = document.getElementById('stage-status');
+  const seen = new Set();
+  try{
+    let ok = false;
+    // 1) API HellaAPI
+    try{
+      const q = ['excel.stageId','excel.code','excel.name','excel.levelId'].map(f=>'include='+f).join('&');
+      const docs = await (await fetch(STAGE_API + '?' + q)).json();
+      docs.forEach(d => [].concat(d.value || []).forEach(v => addStage(v.excel || {}, d.canon, seen)));
+      ok = stageList.length > 0;
+    }catch(e){ console.warn('API HellaAPI gagal, pakai data mentah:', e); }
+    // 2) fallback: stage_table.json dari repo data (raw GitHub / jsDelivr, CORS aman)
+    if(!ok){
+      status.textContent = 'API utama gagal, memuat dari data mentah...';
+      const t = await fetchJsonAny(GD_BASES.map(b => b + 'excel/stage_table.json'));
+      Object.entries(t.stages || t).forEach(([k, e]) => addStage(e, k, seen));
+    }
+    if(!stageList.length) throw new Error('daftar stage kosong');
+    stageState = 'ready';
+    renderStageList();
+  }catch(err){
+    console.error(err); stageState = 'idle';
+    status.textContent = 'Gagal memuat stage: ' + (err && err.message ? err.message : err) + ' (buka Console untuk detail). Tab ini akan mencoba lagi saat dibuka ulang.';
+  }
+}
+function stageMatches(){
+  const q = document.getElementById('stage-search').value.trim().toLowerCase();
+  return q ? stageList.filter(s => s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) : stageList;
+}
+function renderStageList(){
+  const q = document.getElementById('stage-search').value.trim(), list = stageMatches();
+  document.getElementById('stage-status').textContent = list.length + (q ? ' stage cocok' : ' stage tersedia');
+  document.getElementById('stage-list').innerHTML = list.slice(0, 60).map(s =>
+    `<div class="stage-row" data-id="${esc(s.id)}"><span>${esc(s.name)}</span><span class="code">${esc(s.code)}</span></div>`
+  ).join('') || '<div class="empty">Tidak ada hasil.</div>';
+}
+function imgOk(url){ return new Promise(r => { const i = new Image(); i.onload = () => r(true); i.onerror = () => r(false); i.src = url; }); }
+
+async function drawStageCanvas(s){
+  let md = null;
+  try{
+    const res = await (await fetch(`${STAGE_API}/${encodeURIComponent(s.id)}?include=levels.mapData`)).json();
+    const doc = Array.isArray(res) ? res[0] : res;
+    const v = [].concat(doc.value || [])[0] || {};
+    md = v.levels && v.levels.mapData;
+  }catch(e){ console.warn('level via API gagal:', e); }
+  if(!md && s.levelId){
+    const lj = await fetchJsonAny(GD_BASES.map(b => b + 'levels/' + s.levelId.toLowerCase() + '.json'));
+    md = lj.mapData;
+  }
+  if(!md) throw new Error('mapData tidak ada');
+  const cell = 40, map = md.map, tiles = md.tiles;
+  const c = document.createElement('canvas'); c.className = 'stage-img';
+  c.width = map[0].length * cell; c.height = map.length * cell;
+  const g = c.getContext('2d');
+  const color = t => {
+    if(t.tileKey === 'tile_start' || t.tileKey === 'tile_flystart') return '#e5233d';
+    if(t.tileKey === 'tile_end') return '#3b82f6';
+    return ({ MELEE:'#c9b79c', RANGED:'#8b95a5', ALL:'#a3b18a' })[t.buildableType] || '#1a1a1a';
+  };
+  map.forEach((row, y) => row.forEach((ti, x) => { g.fillStyle = color(tiles[ti] || {}); g.fillRect(x*cell, y*cell, cell-1, cell-1); }));
+  return c;
+}
+
+async function selectStage(id){
+  const s = stageList.find(x => x.id === id); if(!s) return;
+  const token = ++stageToken, box = document.getElementById('stage-detail');
+  box.innerHTML = `<h2>${esc(s.code)} — ${esc(s.name)}</h2><div id="stage-map" class="hint">Memuat gambar map...</div>`;
+  const holder = document.getElementById('stage-map');
+  const lvl = (s.levelId.split('/').pop() || '').toLowerCase();
+  for(const n of [s.id, lvl].filter(Boolean)){
+    const url = STAGE_IMG + n + '.png';
+    if(await imgOk(url)){ if(token === stageToken) holder.innerHTML = `<img class="stage-img" src="${url}" alt="${esc(s.name)}">`; return; }
+  }
+  try{
+    const c = await drawStageCanvas(s);
+    if(token === stageToken){ holder.innerHTML = ''; holder.appendChild(c); holder.insertAdjacentHTML('beforeend', '<div class="hint">Gambar resmi tidak ditemukan, ini preview grid dari data level.</div>'); }
+  }catch(e){ console.error(e); if(token === stageToken) holder.textContent = 'Gambar map tidak tersedia untuk stage ini.'; }
+}
+
+document.getElementById('stage-search').addEventListener('input', () => { if(stageState === 'ready') renderStageList(); });
+document.getElementById('stage-list').addEventListener('click', e => {
+  const row = e.target.closest('.stage-row'); if(row) selectStage(row.dataset.id);
+});
+document.getElementById('btn-stage-random').addEventListener('click', () => {
+  const pool = stageMatches(); if(!pool.length) return;
+  selectStage(pool[Math.floor(Math.random() * pool.length)].id);
+});
+
+
+/* ---------- OPERATORS ---------- */
+const HELLA = 'https://raw.githubusercontent.com/HellaOrg/HellaAssets/main/';
+const ACE = 'https://raw.githubusercontent.com/Aceship/Arknight-Images/main/';
+const ACE_CDN = 'https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/';
+const WIKI = 'https://arknights.wiki.gg/images/';
+const wikiName = n => encodeURIComponent(n.replace(/ /g, '_'));
+function avatarSrcs(id, name){ return [ACE + 'avatars/' + id + '.png', ACE_CDN + 'avatars/' + id + '.png', HELLA + 'operator/avatars/' + id + '.png', WIKI + wikiName(name + ' icon') + '.png']; }
+function artSrcs(id, name, n){ const out = []; for(let i = n; i >= 1; i--){ out.push(ACE + 'characters/' + id + '_' + i + '.png', ACE_CDN + 'characters/' + id + '_' + i + '.png'); }
+  out.push(HELLA + 'operator/portraits/' + id + '_' + n + '.png', WIKI + wikiName(name + ' Elite 2') + '.png', WIKI + wikiName(name) + '.png'); return out; }
+function skillSrcs(icon){ return [ACE + 'skills/skill_icon_' + icon + '.png', ACE_CDN + 'skills/skill_icon_' + icon + '.png', HELLA + 'operator/skills/skill_icon_' + icon + '.png']; }
+function opImgFail(el){ const l = JSON.parse(el.dataset.srcs || '[]'); const i = (+el.dataset.i || 0) + 1; if(i < l.length){ el.dataset.i = i; el.src = l[i]; } else el.style.visibility = 'hidden'; }
+let opList = [], opState = 'idle', opToken = 0;
+let opTables = {};   // cache tabel data mentah (character, skill, range, uniequip, ...)
+const PROF = { WARRIOR:'Guard', SNIPER:'Sniper', TANK:'Defender', MEDIC:'Medic', SUPPORT:'Supporter', CASTER:'Caster', SPECIAL:'Specialist', PIONEER:'Vanguard', TOKEN:'Token', TRAP:'Trap' };
+const ROOM = { CONTROL:'Control Center', POWER:'Power Plant', MANUFACTURE:'Factory', TRADING:'Trading Post', DORMITORY:'Dormitory', WORKSHOP:'Workshop', HIRE:'Reception Room', MEETING:'Reception Room', TRAINING:'Training Room', PROCESSING:'Processing Office' };
+
+async function opTable(name){
+  if(opTables[name]) return opTables[name];
+  return (opTables[name] = await fetchJsonAny(GD_BASES.map(b => b + 'excel/' + name + '.json')));
+}
+async function opTableSafe(name){ try{ return await opTable(name); }catch(e){ console.warn(name + ' gagal dimuat', e); return null; } }
+
+function rarityNum(r){ if(typeof r === 'number') return r + 1; const m = String(r).match(/(\d)/); return m ? +m[1] : 1; }
+function fmtVal(v, f){
+  if(f && f.indexOf('%') >= 0){ const d = (f.split('.')[1] || '').replace('%','').length; return +(v * 100).toFixed(d) + '%'; }
+  if(f && f.indexOf('.') >= 0){ return (+v).toFixed(f.split('.')[1].length); }
+  return +(+v).toFixed(2);
+}
+function fillDesc(txt, bb){
+  if(!txt) return '';
+  const m = {}; (bb || []).forEach(b => { m[b.key.toLowerCase()] = b.value; });
+  txt = txt.replace(/\{(-?)([^:}]+)(?::([^}]*))?\}/g, (all, neg, k, f) => {
+    const v = m[k.toLowerCase()]; if(v === undefined) return all;
+    return fmtVal(neg ? -v : v, f);
+  });
+  return esc(txt.replace(/<[^>]+>/g, '').replace(/\\n/g, ' ')).replace(/\n/g, '<br>');
+}
+function imgTag(srcs, cls){ srcs = [].concat(srcs); return `<img ${cls ? 'class="'+cls+'"' : ''} src="${esc(srcs[0])}" data-srcs='${JSON.stringify(srcs).replace(/'/g, '%27')}' data-i="0" loading="lazy" referrerpolicy="no-referrer" onerror="opImgFail(this)" alt="">`; }
+
+async function initOperatorView(){
+  if(opState !== 'idle') return;
+  opState = 'loading';
+  const status = document.getElementById('op-status');
+  try{
+    const t = await opTable('character_table');
+    opTables.character_table = t;
+    const un = await opTableSafe('uniequip_table');
+    opList = Object.entries(t).filter(([id, c]) => /^char_/.test(id) && c && c.name && c.phases && c.phases.length).map(([id, c]) => ({
+      id, name: c.name, rarity: rarityNum(c.rarity), prof: PROF[c.profession] || c.profession,
+      sub: (un && un.subProfDict && un.subProfDict[c.subProfessionId] && un.subProfDict[c.subProfessionId].subProfessionName) || c.subProfessionId || '',
+      c
+    })).sort((a, b) => b.rarity - a.rarity || a.name.localeCompare(b.name));
+    opState = 'ready';
+    renderOpList();
+  }catch(err){
+    console.error(err); opState = 'idle';
+    status.textContent = 'Gagal memuat operator: ' + (err && err.message ? err.message : err) + ' (tab ini akan mencoba lagi saat dibuka ulang).';
+  }
+}
+function opMatches(){
+  const q = document.getElementById('op-search').value.trim().toLowerCase();
+  if(!q) return opList;
+  return opList.filter(o => (o.name + ' ' + o.prof + ' ' + o.sub + ' ' + o.rarity + '*').toLowerCase().includes(q));
+}
+function renderOpList(){
+  const q = document.getElementById('op-search').value.trim(), list = opMatches();
+  document.getElementById('op-status').textContent = list.length + (q ? ' operator cocok' : ' operator tersedia') + (list.length > 80 ? ' (menampilkan 80 pertama)' : '');
+  document.getElementById('op-list').innerHTML = list.slice(0, 80).map(o =>
+    `<div class="op-row" data-id="${esc(o.id)}">${imgTag(avatarSrcs(o.id, o.name))}<div style="min-width:0;"><div class="n">${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)}</div></div></div>`
+  ).join('') || '<div class="empty">Tidak ada hasil.</div>';
+}
+document.getElementById('op-search').addEventListener('input', () => { if(opState === 'ready') renderOpList(); });
+document.getElementById('op-list').addEventListener('click', e => { const r = e.target.closest('.op-row'); if(r) selectOperator(r.dataset.id); });
+
+function attrAt(phase, lvl){
+  const kf = phase.attributesKeyFrames, first = kf[0], last = kf[kf.length - 1];
+  return { min: first.data, max: last.data, maxLevel: last.level };
+}
+function rangeHtml(rt, id){
+  const r = rt && rt[id]; if(!r || !r.grids) return '<span class="muted">-</span>';
+  const g = r.grids.concat([{row:0, col:0}]);
+  const rows = g.map(x => x.row), cols = g.map(x => x.col);
+  const r0 = Math.min(...rows), r1 = Math.max(...rows), c0 = Math.min(...cols), c1 = Math.max(...cols);
+  let h = `<div class="range" style="grid-template-columns:repeat(${c1 - c0 + 1},22px)">`;
+  for(let y = r0; y <= r1; y++) for(let x = c0; x <= c1; x++){
+    const on = g.some(k => k.row === y && k.col === x);
+    h += `<i class="${y === 0 && x === 0 ? 'me' : on ? 'on' : ''}"></i>`;
+  }
+  return h + '</div>';
+}
+function trustBonus(c){ const f = c.favorKeyFrames; return f && f.length ? f[f.length - 1].data : {}; }
+
+async function selectOperator(id){
+  const o = opList.find(x => x.id === id); if(!o) return;
+  const token = ++opToken, box = document.getElementById('op-detail'), c = o.c;
+  box.innerHTML = '<div class="card"><div class="empty">Memuat data ' + esc(o.name) + '...</div></div>';
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+  const [rt, sk, un, be, bd, team] = await Promise.all([
+    opTableSafe('range_table'), opTableSafe('skill_table'), opTableSafe('uniequip_table'),
+    opTableSafe('battle_equip_table'), opTableSafe('building_data'), opTableSafe('handbook_team_table')
+  ]);
+  if(token !== opToken) return;
+
+  const phases = c.phases, top = phases[phases.length - 1];
+  const A = phases.map(p => attrAt(p));
+  const topA = top.attributesKeyFrames[top.attributesKeyFrames.length - 1].data;
+  const trust = trustBonus(c);
+  const pw = c.mainPower || {}, powerId = pw.groupId || pw.teamId || pw.nationId || c.groupId || c.teamId || c.nationId;
+  const faction = (team && team[powerId] && team[powerId].powerName) || powerId || '-';
+  const posMap = { MELEE:'Melee', RANGED:'Ranged', ALL:'Melee/Ranged' };
+  const cost = phases.map(p => p.attributesKeyFrames[p.attributesKeyFrames.length - 1].data.cost);
+  const traitC = c.trait && c.trait.candidates && c.trait.candidates[c.trait.candidates.length - 1];
+  const traitTxt = traitC ? fillDesc(traitC.overrideDescripton || c.description, traitC.blackboard) : fillDesc(c.description, []);
+  const stars = '★'.repeat(o.rarity);
+
+  // ---- header / infobox ----
+  let h = `<div class="card"><div class="op-head">
+    <div>${imgTag(avatarSrcs(o.id, c.name), 'op-art')}</div>
+    <div class="op-info">
+      <h1 class="op-title">${esc(c.name)}</h1>
+      <div class="op-stars r${o.rarity}">${stars}</div>
+      <div class="hint">${esc(c.itemUsage || '')}</div>
+      <div class="kv">
+        <b>Class</b><span>${esc(o.prof)}</span>
+        <b>Branch</b><span>${esc(o.sub)}</span>
+        <b>Faction</b><span>${esc(faction)}</span>
+        <b>Position</b><span>${esc(posMap[c.position] || c.position || '-')}</span>
+        <b>Tags</b><span>${(c.tagList || []).map(t => `<span class="pill">${esc(t)}</span>`).join('') || '-'}</span>
+        <b>Trait</b><span>${traitTxt}</span>
+        <b>How to obtain</b><span>${esc(c.itemObtainApproach || '-')}</span>
+        <b>Internal name</b><span class="muted">${esc(o.id)}</span>
+      </div>
+    </div></div>`;
+  if(c.itemDesc) h += `<div class="hint" style="margin-top:12px; font-style:italic;">${esc(c.itemDesc)}</div>`;
+  h += '</div>';
+
+  // ---- stats ----
+  h += '<div class="card" style="margin-top:16px;"><h2>Stats</h2>';
+  h += '<div class="sub-h" style="margin-top:0;">Range</div>';
+  h += phases.map((p, i) => `<div style="display:inline-block; margin-right:16px; vertical-align:top;"><div class="hint">Elite ${i}</div>${rangeHtml(rt, p.rangeId)}</div>`).join('');
+  h += '<div class="sub-h">Attributes</div><div class="tbwrap"><table class="tb"><tr><th></th>' + phases.map((_, i) => `<th>Elite ${i} (Lv.1 – ${A[i].maxLevel})</th>`).join('') + '<th>Trust</th></tr>';
+  [['HP','maxHp'],['ATK','atk'],['DEF','def'],['RES','magicResistance']].forEach(([lbl, k]) => {
+    const tk = { maxHp:'maxHp', atk:'atk', def:'def', magicResistance:'magicResistance' }[k];
+    h += `<tr><th>${lbl}</th>` + A.map(a => `<td>${Math.round(a.min[k])} – ${Math.round(a.max[k])}</td>`).join('') + `<td>${trust[tk] ? '+' + trust[tk] : '–'}</td></tr>`;
+  });
+  h += '</table></div><div class="tbwrap"><table class="tb" style="margin-top:10px;">';
+  h += `<tr><th>Redeployment Time</th><td>${topA.respawnTime} seconds</td></tr>`;
+  h += `<tr><th>DP Cost</th><td>${[...new Set(cost)].join(' / ')}</td></tr>`;
+  h += `<tr><th>Block</th><td>${topA.blockCnt}</td></tr>`;
+  h += `<tr><th>Attack Interval</th><td>${topA.baseAttackTime} seconds</td></tr></table></div>`;
+
+  // potential
+  if(c.potentialRanks && c.potentialRanks.length){
+    h += '<div class="sub-h">Potential</div><div class="tbwrap"><table class="tb">' + c.potentialRanks.map((p, i) => `<tr><th style="width:90px;">Potential ${i + 2}</th><td>${esc(p.description || '')}</td></tr>`).join('') + '</table></div>';
+  }
+  // promotion
+  h += '<div class="sub-h">Promotion</div><div class="tbwrap"><table class="tb">' + phases.slice(1).map((p, i) => {
+    const items = (p.evolveCost || []).map(x => `${esc(x.id)} ×${x.count}`).join(', ');
+    return `<tr><th style="width:90px;">Elite ${i + 1}</th><td>Maksimum level Lv.${A[i + 1].maxLevel}. ${items ? '<span class="muted">Material: ' + items + '</span>' : ''}</td></tr>`;
+  }).join('') + '</table></div></div>';
+
+  // ---- talents ----
+  const tals = (c.talents || []).filter(t => t.candidates && t.candidates.some(x => x.name));
+  if(tals.length){
+    h += '<div class="card" style="margin-top:16px;"><h2>Talents</h2>';
+    tals.forEach(t => {
+      const cs = t.candidates.filter(x => x.name);
+      h += `<div class="sub-h">${esc(cs[cs.length - 1].name)}</div><div class="tbwrap"><table class="tb">` + cs.map(x => {
+        const u = x.unlockCondition || {}, ph = String(u.phase || 'PHASE_0').replace('PHASE_', '');
+        const req = 'Elite ' + ph + (u.level > 1 ? ' Lv.' + u.level : '') + (x.requiredPotentialRank ? ' · Pot ' + (x.requiredPotentialRank + 1) : '');
+        return `<tr><th style="width:140px;">${req}</th><td>${fillDesc(x.description, x.blackboard)}</td></tr>`;
+      }).join('') + '</table></div>';
+    });
+    h += '</div>';
+  }
+
+  // ---- skills ----
+  const skills = (c.skills || []).filter(s => s.skillId && sk && sk[s.skillId]);
+  if(skills.length){
+    h += '<div class="card" style="margin-top:16px;"><h2>Skills</h2>';
+    const spT = { 1:'Auto Recovery', 2:'Offensive Recovery', 4:'Defensive Recovery', 8:'Passive' };
+    const trT = { 0:'Passive', 1:'Manual', 2:'Auto' };
+    skills.forEach((s, si) => {
+      const d = sk[s.skillId], L = d.levels, l0 = L[0];
+      h += `<div class="skill-head">${imgTag(skillSrcs(d.iconId || s.skillId))}<div><div class="skill-name">${esc(l0.name)}</div><div class="hint">${esc(spT[l0.spData.spType] || '')} · ${esc(trT[l0.skillType] || '')}</div></div></div>`;
+      h += '<div class="tbwrap"><table class="tb"><tr><th>Lv.</th><th>Description</th><th>SP init</th><th>SP cost</th><th>Duration</th></tr>' + L.map((l, i) => {
+        const lab = i < 7 ? (i + 1) : 'M' + (i - 6);
+        return `<tr><td>${lab}</td><td>${fillDesc(l.description, l.blackboard)}</td><td>${l.spData.initSp}</td><td>${l.spData.spCost}</td><td>${l.duration > 0 ? l.duration : '–'}</td></tr>`;
+      }).join('') + '</table></div>';
+    });
+    h += '</div>';
+  }
+
+  // ---- modules ----
+  const eqIds = (un && un.charEquip && un.charEquip[o.id]) || [];
+  if(eqIds.length){
+    h += '<div class="card" style="margin-top:16px;"><h2>Operator Modules</h2>';
+    eqIds.forEach(eid => {
+      const e = un.equipDict[eid]; if(!e) return;
+      h += `<div class="sub-h">${esc(e.typeName1 || '')}${e.typeName2 ? '-' + esc(e.typeName2) : ''}: ${esc(e.uniEquipName)}</div><div class="hint">${esc((e.uniEquipDesc || '').replace(/\n/g, ' '))}</div>`;
+      const bp = be && be[eid] && be[eid].phases;
+      if(bp){
+        const nm = { max_hp:'HP', maxhp:'HP', atk:'ATK', def:'DEF', magic_resistance:'RES', attack_speed:'ASPD', cost:'DP Cost', respawn_time:'Redeploy' };
+        h += '<div class="tbwrap"><table class="tb">' + bp.map((p, i) => {
+          const attrs = (p.attributeBlackboard || []).map(a => `${nm[a.key.toLowerCase()] || a.key} ${a.value > 0 ? '+' : ''}${a.value}`).join(', ');
+          const extra = [];
+          (p.parts || []).forEach(pt => {
+            const tb = pt.addOrOverrideTalentDataBundle && pt.addOrOverrideTalentDataBundle.candidates;
+            if(tb) tb.forEach(x => { const t = x.upgradeDescription || x.description; if(t) extra.push(fillDesc(t, x.blackboard)); });
+            const tr = pt.overrideTraitDataBundle && pt.overrideTraitDataBundle.candidates;
+            if(tr) tr.forEach(x => { const t = x.additionalDescription || x.overrideDescripton; if(t) extra.push(fillDesc(t, x.blackboard)); });
+          });
+          return `<tr><th style="width:80px;">Stage ${i + 1}</th><td><b>Attributes:</b> ${esc(attrs) || '–'}${extra.length ? '<br>' + extra.join('<br>') : ''}</td></tr>`;
+        }).join('') + '</table></div>';
+      }
+    });
+    h += '</div>';
+  }
+
+  // ---- base skills ----
+  const bChar = bd && bd.chars && bd.chars[o.id];
+  if(bChar && bChar.buffChar && bChar.buffChar.length){
+    h += '<div class="card" style="margin-top:16px;"><h2>Base skills</h2><div class="tbwrap"><table class="tb"><tr><th>Skill</th><th>Unlock</th><th>Room</th><th>Effect</th></tr>';
+    bChar.buffChar.forEach(slot => (slot.buffData || []).forEach(b => {
+      const f = bd.buffs && bd.buffs[b.buffId]; if(!f) return;
+      const cd = b.cond || {}, ph = String(cd.phase || 'PHASE_0').replace('PHASE_', '');
+      h += `<tr><td><b>${esc(f.buffName)}</b></td><td>${ph === '0' ? 'Base' : 'Elite ' + ph}${cd.level > 1 ? ' Lv.' + cd.level : ''}</td><td>${esc(ROOM[f.roomType] || f.roomType || '')}</td><td>${fillDesc(f.description, [])}</td></tr>`;
+    }));
+    h += '</table></div></div>';
+  }
+  h += `<div class="hint" style="margin-top:12px;">Sumber data: HellaAssets (gamedata Arknights). Layout mengikuti Arknights Terra Wiki.</div>`;
+  box.innerHTML = h;
+}
+
+
+/* ---------- PICKER OPERATOR (Input Clear & My Niche) ---------- */
+let selectedOps = [];
+async function opReady(){
+  if(opState === 'idle') await initOperatorView();
+  while(opState === 'loading') await new Promise(r => setTimeout(r, 200));
+  return opState === 'ready';
+}
+function makeOpPicker(inputId, listId, onPick, allowCustom){
+  const inp = document.getElementById(inputId), box = document.getElementById(listId);
+  let tok = 0, current = [];
+  async function show(){
+    const my = ++tok, q = inp.value.trim().toLowerCase();
+    box.classList.remove('hidden');
+    if(opState !== 'ready') box.innerHTML = '<div class="hint" style="padding:8px 10px;">Memuat database operator...</div>';
+    const ok = await opReady(); if(my !== tok) return;
+    if(!ok){ box.innerHTML = '<div class="hint" style="padding:8px 10px;">Database operator gagal dimuat.</div>'; current = []; return; }
+    current = (q ? opList.filter(o => (o.name + ' ' + o.prof + ' ' + o.sub).toLowerCase().includes(q)) : opList).slice(0, 8);
+    box.innerHTML = current.map(o => `<div class="pick-row" data-name="${encodeURIComponent(o.name)}">${imgTag(avatarSrcs(o.id, o.name))}<div style="min-width:0;"><div>${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)} · ${esc(o.sub)}</div></div></div>`).join('')
+      || '<div class="hint" style="padding:8px 10px;">Tidak ada hasil' + (allowCustom && q ? ' — tekan Enter untuk memakai nama yang diketik.' : '.') + '</div>';
+  }
+  function pick(name){ if(name){ onPick(name); } inp.value = ''; show(); }
+  inp.addEventListener('focus', show);
+  inp.addEventListener('input', show);
+  inp.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){ box.classList.add('hidden'); return; }
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    if(current.length) pick(current[0].name);
+    else if(allowCustom && inp.value.trim()) pick(inp.value.trim());
+  });
+  box.addEventListener('mousedown', e => { const r = e.target.closest('.pick-row'); if(r){ e.preventDefault(); pick(decodeURIComponent(r.dataset.name)); } });
+  inp.addEventListener('blur', () => setTimeout(() => box.classList.add('hidden'), 150));
+}
+
+/* Input Clear */
+function renderOpChips(){
+  document.getElementById('f-ops-chips').innerHTML = selectedOps.map((n, i) =>
+    `<span class="chip">${esc(n)}<span class="chip-x" data-i="${i}">✕</span></span>`).join('');
+  document.getElementById('f-opcount').value = selectedOps.length || '';
+}
+document.getElementById('f-ops-chips').addEventListener('click', e => {
+  const x = e.target.closest('.chip-x'); if(!x) return;
+  selectedOps.splice(+x.dataset.i, 1); renderOpChips();
+});
+makeOpPicker('f-ops-search', 'f-ops-list', name => { if(!selectedOps.includes(name)){ selectedOps.push(name); renderOpChips(); } }, true);
+
+/* ---------- MY NICHE ---------- */
+let mnTok = 0;
+function refreshMyNicheIfVisible(){ const v = document.getElementById('view-myniche'); if(v && !v.classList.contains('hidden')) renderMyNiche(); }
+function myNicheOps(){ return (myProfile && myProfile.mainNiche && (myProfile.myNicheOps || {})[myProfile.mainNiche]) || []; }
+
+async function saveMyNicheOps(arr){
+  const niche = myProfile.mainNiche;
+  myProfile = { ...myProfile, myNicheOps: { ...(myProfile.myNicheOps || {}), [niche]: arr } };
+  renderMyNiche();
+  if(!profilesRef){ alert('Firebase belum terhubung, perubahan tidak tersimpan.'); return; }
+  try{ await profilesRef.doc(currentUser()).set({ myNicheOps: { [niche]: arr } }, { merge:true }); }
+  catch(e){ console.error(e); alert('Gagal menyimpan My Niche. Cek Firestore Rules untuk koleksi profiles.'); }
+}
+
+async function renderMyNiche(){
+  const empty = document.getElementById('mn-empty'), main = document.getElementById('mn-main');
+  if(!myProfile || !myProfile.mainNiche){ empty.classList.remove('hidden'); main.classList.add('hidden'); return; }
+  empty.classList.add('hidden'); main.classList.remove('hidden');
+  const niche = myProfile.mainNiche, my = ++mnTok;
+  document.getElementById('mn-niche').textContent = niche;
+  const names = myNicheOps(), me = currentUser();
+  const usage = {};
+  liveData.filter(d => d.niche === niche && d.admin === me).forEach(d => (d.operators || []).forEach(o => { usage[o] = (usage[o] || 0) + 1; }));
+  document.getElementById('mn-count').textContent = names.length + ' operator di My Niche';
+  function draw(){
+    const rows = names.map(n => ({ name: n, o: opList.find(x => x.name.toLowerCase() === n.toLowerCase()) }));
+    rows.sort((a, b) => ((b.o ? b.o.rarity : 0) - (a.o ? a.o.rarity : 0)) || a.name.localeCompare(b.name));
+    document.getElementById('mn-grid').innerHTML = rows.map(r => {
+      const o = r.o, img = o ? imgTag(avatarSrcs(o.id, o.name)) : '<div style="width:64px;height:64px;border-radius:10px;background:#000;flex-shrink:0;"></div>';
+      return `<div class="mn-card" data-name="${encodeURIComponent(r.name)}">${img}<div style="min-width:0;"><div class="n">${esc(r.name)}</div>
+        <div class="c ${o ? 'r' + o.rarity : ''}">${o ? '★'.repeat(o.rarity) + ' ' + esc(o.prof) + ' · ' + esc(o.sub) : 'tidak ada di database'}</div>
+        <div class="u">${usage[r.name] ? 'dipakai ' + usage[r.name] + 'x di clear kamu' : 'belum dipakai di clear'}</div></div>
+        <span class="mn-x" title="Hapus" data-name="${encodeURIComponent(r.name)}">✕</span></div>`;
+    }).join('') || '<div class="card"><div class="empty">Belum ada operator. Cari dan tambahkan lewat kolom di atas.</div></div>';
+  }
+  draw();
+  if(opState !== 'ready'){ if(await opReady() && my === mnTok) draw(); }
+}
+makeOpPicker('mn-search', 'mn-list', name => {
+  const cur = myNicheOps(); if(cur.some(x => x.toLowerCase() === name.toLowerCase())) return;
+  saveMyNicheOps(cur.concat(name));
+}, false);
+document.getElementById('mn-grid').addEventListener('click', async e => {
+  const x = e.target.closest('.mn-x');
+  if(x){ const n = decodeURIComponent(x.dataset.name); e.stopPropagation(); saveMyNicheOps(myNicheOps().filter(v => v !== n)); return; }
+  const c = e.target.closest('.mn-card'); if(!c) return;
+  const n = decodeURIComponent(c.dataset.name);
+  document.querySelector('.nav-item[data-view="operators"]').click();
+  if(await opReady()){ const o = opList.find(v => v.name.toLowerCase() === n.toLowerCase()); if(o) selectOperator(o.id); }
+});
+document.getElementById('mn-go-profile').addEventListener('click', () => document.querySelector('.nav-item[data-view="profile"]').click());
+
+
+/* ---------- CONTINGENCY CONTRACT ---------- */
+let ccStarted = false, ccCfg = null, ccContracts = [], ccClears = [], ccPick = new Set(), ccOps = [], ccPlayers = [], ccMuted = false;
+const ccAudio = new Audio('ncc1.mp3'); ccAudio.loop = true; ccAudio.volume = 0.5;
+const ccIsAdmin = () => currentUser() === SUPER_ADMIN;
+const ccDb = n => firebase.firestore().collection(n);
+const ccEl = id => document.getElementById(id);
+function ccEnter(){ startCC(); renderCC(); if(!ccMuted) ccAudio.play().catch(() => {}); }
+function ccLeave(){ ccAudio.pause(); }
+ccEl('cc-mute').addEventListener('click', () => {
+  ccMuted = !ccMuted; ccEl('cc-mute').textContent = ccMuted ? '🔇' : '🔊';
+  if(ccMuted) ccAudio.pause(); else ccAudio.play().catch(() => {});
+});
+function startCC(){
+  if(ccStarted || !clearsRef) return; ccStarted = true;
+  const err = e => { console.error('CC', e); ccEl('cc-note').textContent = 'Gagal memuat data Contingency Contract. Cek Firestore Rules untuk cc_config, cc_contracts, cc_clears.'; };
+  ccDb('cc_config').doc('current').onSnapshot(d => { ccCfg = d.exists ? d.data() : null; renderCC(); }, err);
+  ccDb('cc_contracts').orderBy('createdAt').onSnapshot(q => { ccContracts = q.docs.map(d => ({ id:d.id, ...d.data() })); renderCC(); }, err);
+  ccDb('cc_clears').orderBy('createdAt', 'desc').limit(500).onSnapshot(q => { ccClears = q.docs.map(d => ({ id:d.id, ...d.data() })); renderCC(); }, err);
+}
+ccEl('cc-tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#cc-tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.cc-sec').forEach(x => x.classList.toggle('hidden', x.dataset.sec !== b.dataset.sec));
+});
+const ccList = c => (c || []).map(x => `${esc(x.name)} (${x.risk})`).join(', ') || '-';
+const ccWho = d => esc((d.players && d.players.length ? d.players : [d.by]).join(', '));
+
+function renderCC(){
+  const admin = ccIsAdmin(), cfg = ccCfg;
+  ccEl('cc-tab-admin').classList.toggle('hidden', !admin);
+  // stage
+  const img = cfg && (cfg.imageData || cfg.imageUrl);
+  ccEl('cc-stage-view').innerHTML = cfg && cfg.stageName ? `<div class="nm">${esc(cfg.stageName)}</div>${img ? `<img src="${esc(img)}" alt="">` : ''}` : '<div class="empty">Stage belum diset oleh adminbadag.</div>';
+  if(admin && cfg){ [['cc-stage-name', cfg.stageName], ['cc-stage-url', cfg.imageUrl]].forEach(([id, v]) => { const e = ccEl(id); if(document.activeElement !== e && !e.value) e.value = v || ''; }); }
+  // pilih kontrak
+  const act = ccContracts.filter(c => c.active);
+  [...ccPick].forEach(id => { if(!act.some(c => c.id === id)) ccPick.delete(id); });
+  ccEl('cc-pick').innerHTML = act.map(c => `<div class="cc-con ${ccPick.has(c.id) ? 'on' : ''}" data-id="${c.id}"><b>${esc(c.name)}</b> <span class="pill">${c.risk}</span>${c.desc ? `<div class="d">${esc(c.desc)}</div>` : ''}</div>`).join('') || '<div class="hint">Belum ada kontrak yang tersedia.</div>';
+  ccEl('cc-total').textContent = 'Risk ' + act.filter(c => ccPick.has(c.id)).reduce((a, c) => a + c.risk, 0);
+  // leaderboard
+  const board = ccClears.filter(d => d.status === 'approved' && cfg && d.stageName === cfg.stageName).sort((a, b) => b.totalRisk - a.totalRisk || a.createdAt - b.createdAt);
+  ccEl('cc-board').innerHTML = board.map((d, i) => `<div class="cc-row"><div class="cc-rank"><span class="n">${['🥇', '🥈', '🥉'][i] || '#' + (i + 1)}</span></div>
+    <div class="g"><b>${ccWho(d)}</b> <span class="pill">Risk ${d.totalRisk}</span><div class="hint">Kontrak: ${ccList(d.contracts)}<br>Operator: ${esc((d.operators || []).join(', ')) || '-'}${d.buktiLink ? ` · <a href="${esc(d.buktiLink)}" target="_blank" rel="noopener noreferrer" style="color:var(--red);">Bukti ↗</a>` : ''}</div></div>
+    ${admin ? `<button class="ghost" onclick="ccDel('${d.id}')">Hapus</button>` : ''}</div>`).join('') || '<div class="empty">Belum ada clear yang disetujui.</div>';
+  if(!admin) return;
+  // admin: kontrak
+  ccEl('cc-con-list').innerHTML = ccContracts.map(c => `<div class="cc-row"><input type="checkbox" style="width:auto;" ${c.active ? 'checked' : ''} onchange="ccToggle('${c.id}',this.checked)"><div class="g"><b>${esc(c.name)}</b> <span class="pill">${c.risk}</span><div class="hint">${esc(c.desc || '')}</div></div><button class="ghost" onclick="ccDelCon('${c.id}')">Hapus</button></div>`).join('') || '<div class="hint">Belum ada kontrak.</div>';
+  // admin: pending
+  ccEl('cc-pending').innerHTML = ccClears.filter(d => d.status === 'pending').map(d => `<div class="entry"><div class="top"><span><b>${ccWho(d)}</b> · ${esc(d.stageName)} <span class="pill">Risk ${d.totalRisk}</span></span></div>
+    <div class="meta">Kontrak: ${ccList(d.contracts)}<br>Operator: ${esc((d.operators || []).join(', ')) || '-'}<br>Oleh: ${esc(d.by)}${d.buktiLink ? ` · <a href="${esc(d.buktiLink)}" target="_blank" rel="noopener noreferrer" style="color:var(--red);">Buka bukti ↗</a>` : ''}</div>
+    <div style="display:flex; gap:8px; margin-top:8px;"><button style="margin:0;" onclick="ccSet('${d.id}','approved')">Setujui</button><button class="ghost" onclick="ccSet('${d.id}','rejected')">Tolak</button></div></div>`).join('') || '<div class="hint">Tidak ada clear yang menunggu.</div>';
+}
+window.ccSet = (id, st) => ccDb('cc_clears').doc(id).update({ status: st, reviewedBy: currentUser() }).catch(e => { console.error(e); alert('Gagal memperbarui status.'); });
+window.ccDel = id => { if(confirm('Hapus clear ini dari leaderboard?')) ccDb('cc_clears').doc(id).delete().catch(e => alert('Gagal menghapus.')); };
+window.ccToggle = (id, v) => ccDb('cc_contracts').doc(id).update({ active: v }).catch(e => alert('Gagal memperbarui kontrak.'));
+window.ccDelCon = id => { if(confirm('Hapus kontrak ini?')) ccDb('cc_contracts').doc(id).delete().catch(e => alert('Gagal menghapus.')); };
+
+ccEl('cc-pick').addEventListener('click', e => { const c = e.target.closest('.cc-con'); if(!c) return; ccPick.has(c.dataset.id) ? ccPick.delete(c.dataset.id) : ccPick.add(c.dataset.id); renderCC(); });
+
+// operator & player
+function ccChips(){
+  ccEl('cc-ops-chips').innerHTML = ccOps.map((n, i) => `<span class="chip">${esc(n)}<span class="chip-x" data-i="${i}">✕</span></span>`).join('');
+  ccEl('cc-player-chips').innerHTML = ccPlayers.map(u => `<span class="chip">${esc(u)}<b class="chip-x" data-u="${esc(u)}">×</b></span>`).join('');
+  const sel = ccEl('cc-player-select');
+  sel.innerHTML = '<option value="">-- tambah player --</option>' + getRegisteredUsers().filter(u => !ccPlayers.includes(u)).map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+}
+makeOpPicker('cc-ops-search', 'cc-ops-list', n => { if(!ccOps.includes(n)){ ccOps.push(n); ccChips(); } }, true);
+ccEl('cc-ops-chips').addEventListener('click', e => { const x = e.target.closest('.chip-x'); if(x){ ccOps.splice(+x.dataset.i, 1); ccChips(); } });
+ccEl('cc-player-chips').addEventListener('click', e => { const x = e.target.closest('.chip-x'); if(x){ ccPlayers = ccPlayers.filter(u => u !== x.dataset.u); ccChips(); } });
+ccEl('cc-player-select').addEventListener('change', e => { if(e.target.value){ ccPlayers.push(e.target.value); ccChips(); } });
+ccEl('cc-player-select').addEventListener('focus', ccChips);
+ccChips();
+
+ccEl('cc-submit').addEventListener('click', async () => {
+  if(!ccCfg || !ccCfg.stageName){ alert('Stage belum diset oleh adminbadag.'); return; }
+  const cons = ccContracts.filter(c => c.active && ccPick.has(c.id)).map(c => ({ name:c.name, risk:c.risk }));
+  if(!cons.length){ alert('Pilih minimal satu kontrak.'); return; }
+  if(!ccOps.length){ alert('Pilih minimal satu operator.'); return; }
+  try{
+    await ccDb('cc_clears').add({ stageName: ccCfg.stageName, contracts: cons, totalRisk: cons.reduce((a, c) => a + c.risk, 0), operators: ccOps.slice(), operatorCount: ccOps.length,
+      players: ccPlayers.slice(), buktiLink: ccEl('cc-bukti').value.trim(), by: currentUser(), status: ccIsAdmin() ? 'approved' : 'pending', createdAt: Date.now() });
+    ccPick.clear(); ccOps = []; ccPlayers = []; ccEl('cc-bukti').value = ''; ccChips(); renderCC();
+    alert(ccIsAdmin() ? 'Clear tersimpan.' : 'Clear terkirim, menunggu persetujuan adminbadag.');
+  }catch(e){ console.error(e); alert('Gagal mengirim clear. Cek Firestore Rules.'); }
+});
+
+// admin: stage & kontrak
+function ccCompress(file){
+  return new Promise((res, rej) => {
+    const img = new Image(), u = URL.createObjectURL(file);
+    img.onload = () => {
+      let w = Math.min(1400, img.width), q = 0.85, out; const c = document.createElement('canvas');
+      do{ c.width = w; c.height = Math.round(img.height * w / img.width); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          out = c.toDataURL('image/jpeg', q); q -= 0.1; if(q < 0.4){ q = 0.6; w = Math.round(w * 0.8); } }while(out.length > 900000 && w > 300);
+      URL.revokeObjectURL(u); res(out);
+    };
+    img.onerror = () => rej(new Error('Gambar tidak bisa dibaca')); img.src = u;
+  });
+}
+ccEl('cc-stage-save').addEventListener('click', async () => {
+  const name = ccEl('cc-stage-name').value.trim(), url = ccEl('cc-stage-url').value.trim(), f = ccEl('cc-stage-file').files[0];
+  if(!name){ alert('Nama stage wajib diisi.'); return; }
+  let imageData = (ccCfg && ccCfg.imageData) || '', imageUrl = (ccCfg && ccCfg.imageUrl) || '';
+  try{
+    if(f){ imageData = await ccCompress(f); imageUrl = ''; } else if(url){ imageUrl = url; imageData = ''; }
+    await ccDb('cc_config').doc('current').set({ stageName: name, imageData, imageUrl, updatedAt: Date.now() });
+    ccEl('cc-stage-file').value = ''; alert('Stage tersimpan.');
+  }catch(e){ console.error(e); alert('Gagal menyimpan stage: ' + e.message); }
+});
+ccEl('cc-con-add').addEventListener('click', async () => {
+  const rows = ccEl('cc-con-bulk').value.split('\n').map(l => l.split('|').map(x => x.trim())).filter(r => r[0]);
+  if(!rows.length){ alert('Isi minimal satu baris: Nama | Risk | Deskripsi'); return; }
+  try{
+    let t = Date.now();
+    for(const r of rows) await ccDb('cc_contracts').add({ name: r[0], risk: parseInt(r[1], 10) || 0, desc: r.slice(2).join(' | '), active: true, createdAt: t++ });
+    ccEl('cc-con-bulk').value = '';
+  }catch(e){ console.error(e); alert('Gagal menambah kontrak.'); }
+});
+
+/* ---------- INIT ---------- */
+(function init(){
+  const u = currentUser();
+  if(u) showApp(u);
+})();
+</script>
+</body>
+</html>
