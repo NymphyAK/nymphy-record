@@ -248,6 +248,10 @@
   .ach-card{display:flex; gap:12px; padding:12px; border:1px solid var(--border); border-radius:12px; background:var(--panel2); margin-bottom:8px;}
   .ach-card.lock{opacity:.45;}
   .ach-ic{font-size:28px; width:44px; text-align:center; flex-shrink:0;}
+  .sidebar .logo-img, .sidebar .brand{cursor:pointer;}
+  .hm-row{display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .hm-row .d{color:var(--muted); font-size:12px; text-align:right; flex-shrink:0;}
+  .hm-warn{border-color:var(--red) !important;}
 </style>
 </head>
 <body>
@@ -271,6 +275,7 @@
     <aside class="sidebar">
       <img src="logo.png" alt="Nymphy" class="logo-img" style="width:64px; height:64px; margin-bottom:8px;">
       <div class="brand" style="text-align:center;">NYMPHY</div>
+      <div class="nav-item" data-view="home" title="Home"><span class="ni">🏠</span><span class="nl">Home</span></div>
       <div class="nav-item active" data-view="dashboard" title="Dashboard"><span class="ni">📊</span><span class="nl">Dashboard</span></div>
       <div class="nav-item" data-view="input" title="Input Clear"><span class="ni">➕</span><span class="nl">Input Clear</span></div>
       <div class="nav-item" data-view="riwayat" title="Riwayat Data"><span class="ni">📜</span><span class="nl">Riwayat Data</span></div>
@@ -336,7 +341,8 @@
           <label class="rf-chk" style="margin-bottom:8px;"><input type="checkbox" id="f-weekly" style="width:auto;"> 🏆 Clear untuk Weekly Challenge (stage terisi otomatis)</label>
           <div class="hint" id="f-weekly-hint"></div>
           <label>Stage</label>
-          <input id="f-stage" placeholder="mis. 1-7">
+          <div class="pick-wrap"><input id="f-stage" placeholder="cari stage dari database, mis. 1-7" autocomplete="off"><div id="f-stage-list" class="pick-list hidden"></div></div>
+          <div class="hint">Pilih dari daftar database stage (Enter = pilih hasil pertama). Nama yang diketik manual juga diterima.</div>
           <label>Niche</label>
           <select id="f-niche"><option value="">-- pilih niche --</option><option value="__new__">+ Niche Baru...</option></select>
           <input id="f-niche-new" type="text" placeholder="Nama niche baru" class="hidden" style="margin-top:8px;">
@@ -492,6 +498,11 @@
         <div id="ach-list"></div>
       </div>
 
+      <div id="view-home" class="view hidden">
+        <div class="card" id="home-weekly" style="margin-bottom:16px;"><div class="hint">Memuat weekly challenge...</div></div>
+        <div class="card"><h2>Event Live di Arknights Global</h2><div id="home-events"><div class="hint">Memuat daftar event...</div></div></div>
+      </div>
+
       <div id="view-profile" class="view hidden">
         <div class="op-tabs" id="pf-tabs"><button class="on" data-t="main">Profil</button><button data-t="ach">Achievement</button></div>
         <div id="profile-ach" class="hidden"></div>
@@ -594,7 +605,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','myniche','challenge','ach','profile'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','home','myniche','challenge','ach','profile'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -603,6 +614,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'operators') initOperatorView();
     if(item.dataset.view === 'myniche') renderMyNiche();
     if(item.dataset.view === 'challenge') renderChallenge();
+    if(item.dataset.view === 'home') renderHome();
     if(item.dataset.view === 'ach'){ achStart(); renderAch(); }
     if(item.dataset.view === 'profile') achStart();
   });
@@ -682,7 +694,7 @@ function startListening(){
       renderNicheDetail();
       if(myProfile && myProfile.mainNiche) renderProfileView();
       refreshMyNicheIfVisible();
-      chBoard(); achRefresh();
+      chBoard(); achRefresh(); homeRefresh();
     },
     (err)=>{ console.error('Firestore error', err); alert('Gagal memuat data dari Firebase. Cek konfigurasi & rules.'); }
   );
@@ -1775,7 +1787,8 @@ async function renderChallenge(){
   chEl('ch-week').textContent = 'Minggu mulai ' + wk + ' · stage diacak ulang tiap minggu';
   if(!await stageReady()){ chEl('ch-stage').innerHTML = '<div class="hint">Database stage gagal dimuat.</div>'; return; }
   await chReady(); chBoard();
-  chEl('ch-week').innerHTML = `<span class="pill">Week ${chWeekNum()}</span> Minggu mulai ${wk} · stage diacak ulang tiap minggu`;
+  { const st = chWeekDate(wk), en = chWeekDate(wk); en.setDate(en.getDate() + 6);
+    chEl('ch-week').innerHTML = `<span class="pill">Week ${chWeekNum()}</span> ${fmtDate(st)} – ${fmtDate(en)} · berakhir ${fmtDate(en, true)} pukul 23:59 · stage diacak ulang tiap Senin`; }
   const s = chEffective();
   if(!s){ chKey = ''; chEl('ch-stage').innerHTML = '<div class="empty">Tidak ada stage yang cocok dengan kriteria.</div>'; return; }
   if(admin){
@@ -1908,6 +1921,66 @@ ach$('ach-list').addEventListener('click', async e => {
   else if(gr){ const inp = document.querySelector(`.ach-grant[data-a="${gr.dataset.grant}"]`), u = inp.value.trim().toLowerCase(); if(u) col.doc(gr.dataset.grant).update({ holders: firebase.firestore.FieldValue.arrayUnion(u) }).catch(fail); }
   else if(rv){ col.doc(rv.dataset.a).update({ holders: firebase.firestore.FieldValue.arrayRemove(rv.dataset.u) }).catch(fail); }
 });
+
+
+/* ---------- INPUT CLEAR: DROPDOWN STAGE ---------- */
+(() => {
+  const inp = document.getElementById('f-stage'), box = document.getElementById('f-stage-list'); let tok = 0;
+  async function show(){
+    if(inp.readOnly){ box.classList.add('hidden'); return; }
+    const my = ++tok, q = inp.value.trim().toLowerCase(); box.classList.remove('hidden');
+    if(stageState !== 'ready') box.innerHTML = '<div class="hint" style="padding:8px 10px;">Memuat database stage...</div>';
+    if(!await stageReady()){ box.innerHTML = '<div class="hint" style="padding:8px 10px;">Database stage gagal dimuat, ketik manual saja.</div>'; return; }
+    if(my !== tok) return;
+    const list = (q ? stageList.filter(x => (x.code + ' ' + x.name).toLowerCase().includes(q)) : stageList).slice(0, 10);
+    box.innerHTML = list.map(x => `<div class="pick-row" data-i="${stageList.indexOf(x)}"><div><b>${esc(x.code)}</b> ${esc(x.name)}</div></div>`).join('') || '<div class="hint" style="padding:8px 10px;">Tidak ada di database, nama yang diketik dipakai apa adanya.</div>';
+  }
+  const pick = x => { inp.value = x.code + ' — ' + x.name; box.classList.add('hidden'); };
+  inp.addEventListener('focus', show); inp.addEventListener('input', show);
+  inp.addEventListener('blur', () => setTimeout(() => box.classList.add('hidden'), 150));
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ const r = box.querySelector('.pick-row'); if(r){ e.preventDefault(); pick(stageList[+r.dataset.i]); } } });
+  box.addEventListener('mousedown', e => { const r = e.target.closest('.pick-row'); if(r){ e.preventDefault(); pick(stageList[+r.dataset.i]); } });
+})();
+
+/* ---------- HOME ---------- */
+const fmtDate = (d, weekday) => d.toLocaleDateString('id-ID', { weekday: weekday ? 'long' : undefined, day: 'numeric', month: 'long', year: 'numeric' });
+const goTab = v => document.querySelector('.nav-item[data-view="' + v + '"]').click();
+document.querySelectorAll('.sidebar .logo-img, .sidebar .brand').forEach(el => el.addEventListener('click', () => goTab('home')));
+let homeEvents = null;
+function homeRefresh(){ if(!document.getElementById('view-home').classList.contains('hidden')) renderHome(); }
+const leftText = ms => { const h = Math.max(0, Math.floor(ms / 36e5)), d = Math.floor(h / 24); return d >= 1 ? d + ' hari ' + (h % 24) + ' jam' : h + ' jam'; };
+async function loadEvents(){
+  if(homeEvents) return homeEvents;
+  const t = await opTableSafe('activity_table'); if(!t) return null;
+  const info = t.basicInfo || t;
+  return (homeEvents = Object.values(info).filter(e => e && typeof e === 'object' && (e.displayName || e.name) && e.startTime && e.endTime)
+    .map(e => ({ name: e.displayName || e.name, start: e.startTime * 1000, end: e.endTime * 1000 })));
+}
+async function renderHome(){
+  const me = currentUser(), now = Date.now(), wk = chWeekKey(), box = document.getElementById('home-weekly');
+  // reminder weekly challenge
+  const endD = chWeekDate(wk); endD.setDate(endD.getDate() + 7);
+  const left = endD - now, done = liveData.some(d => d.weekly === wk && (d.admin === me || (d.players || []).includes(me)));
+  let stageLabel = '';
+  if(await stageReady()){ await chReady(); const s = chEffective(); if(s) stageLabel = s.code + ' — ' + s.name; }
+  const lastDay = new Date(endD - 1);
+  box.classList.toggle('hm-warn', !done && left < 2 * 864e5);
+  box.innerHTML = `<h2>🏆 Weekly Challenge · Week ${chWeekNum()}</h2>
+    <div class="hm-row"><span>Stage minggu ini</span><b>${esc(stageLabel || '-')}</b></div>
+    <div class="hm-row"><span>Berakhir</span><span class="d">${esc(fmtDate(lastDay, true))} 23:59 · sisa ${leftText(left)}</span></div>
+    <div class="hm-row"><span>Status kamu</span><b>${done ? '✅ Sudah submit minggu ini' : '⏰ Belum submit, jangan lupa!'}</b></div>
+    <button class="ghost" style="margin-top:10px;" onclick="goTab('challenge')">Ke Challenge</button>`;
+  // event live
+  const ev = document.getElementById('home-events');
+  let list; try{ list = await loadEvents(); }catch(e){ list = null; }
+  if(!list){ ev.innerHTML = '<div class="hint">Data event tidak dapat dimuat otomatis. Coba buka ulang tab ini.</div>'; return; }
+  const live = list.filter(e => e.start <= now && e.end > now && e.end < 1893456000000).sort((a, b) => a.end - b.end);
+  const soon = list.filter(e => e.start > now && e.start < now + 30 * 864e5).sort((a, b) => a.start - b.start);
+  const row = (e, txt) => `<div class="hm-row"><span>${esc(e.name)}</span><span class="d">${txt}</span></div>`;
+  ev.innerHTML = (live.map(e => row(e, 'berakhir ' + esc(fmtDate(new Date(e.end))) + ' · sisa ' + leftText(e.end - now))).join('') || '<div class="hint">Tidak ada event live di data game saat ini.</div>')
+    + (soon.length ? '<div class="sub-h">Segera hadir</div>' + soon.map(e => row(e, 'mulai ' + esc(fmtDate(new Date(e.start))))).join('') : '')
+    + '<div class="hint" style="margin-top:8px;">Data dari game data Arknights (versi Global). Jadwal terbaru bisa belum masuk kalau data belum diperbarui.</div>';
+}
 
 /* ---------- INIT ---------- */
 (function init(){
