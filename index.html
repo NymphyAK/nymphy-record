@@ -247,11 +247,14 @@
   .lb-g{flex:1; min-width:0;}
   .ach-card{display:flex; gap:12px; padding:12px; border:1px solid var(--border); border-radius:12px; background:var(--panel2); margin-bottom:8px;}
   .ach-card.lock{opacity:.45;}
-  .ach-ic{font-size:28px; width:44px; text-align:center; flex-shrink:0;}
+  .ach-ic{font-size:28px; width:56px; text-align:center; flex-shrink:0;}
+  .medal-img{width:56px; height:56px; object-fit:contain;}
   .sidebar .logo-img, .sidebar .brand{cursor:pointer;}
   .hm-row{display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px;}
   .hm-row .d{color:var(--muted); font-size:12px; text-align:right; flex-shrink:0;}
   .hm-warn{border-color:var(--red) !important;}
+  .hm-ev{display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); align-items:flex-start;}
+  .hm-img{width:160px; max-width:40%; aspect-ratio:2/1; object-fit:cover; border-radius:8px; border:1px solid var(--border); flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -285,7 +288,7 @@
       <div class="nav-item" data-view="operators" title="Operators"><span class="ni">🎖️</span><span class="nl">Operators</span></div>
       <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
-      <div class="nav-item" data-view="ach" title="Achievement"><span class="ni">🏅</span><span class="nl">Achievement</span></div>
+      <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
       <div class="nav-item profile-item" data-view="profile" title="Profil">
         <div class="avatar" id="sidebar-avatar"></div>
         <div class="pi-text"><div class="pi-name" id="sidebar-username"></div><div class="pi-sub">Lihat profil</div></div>
@@ -474,13 +477,13 @@
 
       <div id="view-ach" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
-          <h2>Achievement</h2>
-          <div class="hint" id="ach-note">Daftar achievement beserta ketentuannya.</div>
+          <h2>Medal</h2>
+          <div class="hint" id="ach-note">Daftar medal beserta ketentuannya.</div>
         </div>
         <div class="card hidden" id="ach-admin" style="margin-bottom:16px;">
-          <h2>Buat Achievement (adminbadag)</h2>
+          <h2>Buat Medal (adminbadag)</h2>
           <label>Nama</label><input id="ach-name" maxlength="60" placeholder="mis. Juara Weekly">
-          <label>Ikon (emoji)</label><input id="ach-icon" maxlength="4" placeholder="🏆" style="max-width:100px;">
+          <label>Gambar medal</label><input id="ach-img" type="file" accept="image/*"><input id="ach-img-url" type="url" placeholder="atau link gambar https://..." style="margin-top:6px;">
           <label>Deskripsi</label><input id="ach-desc" maxlength="140" placeholder="keterangan singkat">
           <label>Ketentuan</label>
           <select id="ach-type">
@@ -488,12 +491,14 @@
             <option value="weekly_count">Jumlah clear Weekly Challenge</option>
             <option value="clear_count">Total jumlah clear</option>
             <option value="niche_count">Jumlah clear di niche tertentu</option>
+            <option value="weekly_win">Juara 1 di Week tertentu (otomatis)</option>
             <option value="manual">Diberikan manual oleh admin</option>
           </select>
           <input id="ach-n" type="number" min="1" value="1" placeholder="jumlah (n)" style="margin-top:8px;">
           <input id="ach-niche" class="hidden" placeholder="nama niche" style="margin-top:8px;">
-          <div class="hint">Juara 1 dihitung setelah minggunya berakhir. "n" = berapa kali / berapa banyak yang dibutuhkan.</div>
-          <button id="ach-add">Buat Achievement</button>
+          <input id="ach-week" type="number" min="1" class="hidden" placeholder="Week ke- (mis. 1)" style="margin-top:8px;">
+          <div class="hint">Juara 1 (submit tercepat) dihitung otomatis setelah minggunya berakhir, tanpa perlu memberi medal manual. "n" = berapa kali / berapa banyak yang dibutuhkan.</div>
+          <button id="ach-add">Buat Medal</button>
         </div>
         <div id="ach-list"></div>
       </div>
@@ -504,7 +509,7 @@
       </div>
 
       <div id="view-profile" class="view hidden">
-        <div class="op-tabs" id="pf-tabs"><button class="on" data-t="main">Profil</button><button data-t="ach">Achievement</button></div>
+        <div class="op-tabs" id="pf-tabs"><button class="on" data-t="main">Profil</button><button data-t="ach">Medal</button></div>
         <div id="profile-ach" class="hidden"></div>
         <div class="card pf-main" style="max-width:420px; margin-bottom:16px; display:flex; align-items:center; gap:14px;">
           <div class="avatar avatar-lg" id="profile-avatar"></div>
@@ -1760,7 +1765,7 @@ async function stageReady(){ if(stageState === 'idle') await initStageView(); wh
 function chStart(){
   if(chStarted || !clearsRef) return; chStarted = true;
   firebase.firestore().collection('challenge').doc('current').onSnapshot(d => {
-    chDoc = d.exists ? d.data() : null; chLoaded = true;
+    chDoc = d.exists ? d.data() : null; chLoaded = true; achRefresh();
     if(!chEl('view-challenge').classList.contains('hidden')) renderChallenge();
   }, e => { console.error(e); chLoaded = true; chEl('ch-week').textContent = 'Gagal memuat challenge. Cek Firestore Rules untuk koleksi challenge.'; });
 }
@@ -1849,24 +1854,26 @@ let achList = [], achStarted = false;
 const ach$ = id => document.getElementById(id);
 const achAdmin = () => currentUser() === SUPER_ADMIN;
 function achStart(){
-  if(achStarted || !clearsRef) return; achStarted = true;
+  if(achStarted || !clearsRef) return; achStarted = true; chStart();
   firebase.firestore().collection('achievements').orderBy('createdAt').onSnapshot(q => { achList = q.docs.map(d => ({ id: d.id, ...d.data() })); achRefresh(); },
-    e => { console.error(e); ach$('ach-note').textContent = 'Gagal memuat achievement. Cek Firestore Rules untuk koleksi achievements.'; });
+    e => { console.error(e); ach$('ach-note').textContent = 'Gagal memuat medal. Cek Firestore Rules untuk koleksi achievements.'; });
 }
+const medalImg = a => a.image ? `<img class="medal-img" src="${esc(a.image)}" alt="" onerror="this.style.display='none'">` : esc(a.icon || '🏅');
 function achRefresh(){ if(!ach$('view-ach').classList.contains('hidden')) renderAch(); if(!ach$('profile-ach').classList.contains('hidden')) renderProfileAch(); }
 function achStats(){
   const cur = chWeekKey(), st = {}, top = {};
-  const U = u => st[u] || (st[u] = { clears: 0, weekly: 0, wins: 0, niche: {} });
+  const U = u => st[u] || (st[u] = { clears: 0, weekly: 0, wins: 0, won: [], niche: {} });
   liveData.forEach(d => {
     new Set([d.admin, ...(d.players || [])]).forEach(u => { if(!u) return; const x = U(u); x.clears++; if(d.weekly) x.weekly++; if(d.niche) x.niche[d.niche] = (x.niche[d.niche] || 0) + 1; });
     if(d.weekly && d.weekly < cur && (!top[d.weekly] || d.createdAt < top[d.weekly].createdAt)) top[d.weekly] = d;
   });
-  Object.values(top).forEach(d => (d.players && d.players.length ? d.players : [d.admin]).forEach(u => { if(u) U(u).wins++; }));
+  Object.entries(top).forEach(([wk, d]) => { const n = chWeekNum(wk); (d.players && d.players.length ? d.players : [d.admin]).forEach(u => { if(u){ const x = U(u); x.wins++; x.won.push(n); } }); });
   return st;
 }
 function achHas(a, u, st){
-  const x = st[u] || { clears: 0, weekly: 0, wins: 0, niche: {} }, r = a.rule || {}, n = r.n || 1;
+  const x = st[u] || { clears: 0, weekly: 0, wins: 0, won: [], niche: {} }, r = a.rule || {}, n = r.n || 1;
   if(r.type === 'weekly_top') return x.wins >= n;
+  if(r.type === 'weekly_win') return x.won.includes(r.week);
   if(r.type === 'weekly_count') return x.weekly >= n;
   if(r.type === 'clear_count') return x.clears >= n;
   if(r.type === 'niche_count') return (x.niche[r.niche] || 0) >= n;
@@ -1876,7 +1883,7 @@ function achHas(a, u, st){
 function achRuleText(r){
   r = r || {}; const n = r.n || 1;
   return ({ weekly_top: 'Juara 1 (submit tercepat) Weekly Challenge' + (n > 1 ? ' sebanyak ' + n + ' kali' : '') + ', dihitung setelah minggunya berakhir',
-    weekly_count: 'Submit ' + n + ' clear Weekly Challenge', clear_count: 'Total ' + n + ' clear',
+    weekly_win: 'Juara 1 (submit tercepat) Weekly Challenge Week ' + (r.week || '?') + ', otomatis setelah minggunya berakhir', weekly_count: 'Submit ' + n + ' clear Weekly Challenge', clear_count: 'Total ' + n + ' clear',
     niche_count: n + ' clear di niche "' + (r.niche || '?') + '"', manual: 'Diberikan manual oleh adminbadag' })[r.type] || '-';
 }
 const achHolders = (a, st) => [...new Set([...Object.keys(st), ...(a.holders || [])])].filter(u => achHas(a, u, st)).sort();
@@ -1885,16 +1892,16 @@ function renderAch(){
   const admin = achAdmin(), st = achStats(); ach$('ach-admin').classList.toggle('hidden', !admin);
   ach$('ach-list').innerHTML = achList.map(a => {
     const hold = achHolders(a, st), manual = a.rule && a.rule.type === 'manual';
-    return `<div class="ach-card"><div class="ach-ic">${esc(a.icon || '🏅')}</div><div style="flex:1; min-width:0;"><b>${esc(a.name)}</b>
+    return `<div class="ach-card"><div class="ach-ic">${medalImg(a)}</div><div style="flex:1; min-width:0;"><b>${esc(a.name)}</b>
       <div class="hint">${esc(a.desc || '')}</div><div class="hint"><b>Ketentuan:</b> ${esc(achRuleText(a.rule))}</div>
       <div class="hint"><b>Pemilik (${hold.length}):</b> ${hold.map(u => esc(u) + (admin && manual ? ` <span class="chip-x" data-a="${a.id}" data-u="${esc(u)}">✕</span>` : '')).join(', ') || '-'}</div>
       ${admin ? `<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">${manual ? `<input class="ach-grant" data-a="${a.id}" placeholder="username" style="max-width:160px;"><button class="ghost" data-grant="${a.id}">Beri</button>` : ''}<button class="ghost" data-del="${a.id}">Hapus</button></div>` : ''}</div></div>`;
-  }).join('') || '<div class="card"><div class="empty">Belum ada achievement.</div></div>';
+  }).join('') || '<div class="card"><div class="empty">Belum ada medal.</div></div>';
 }
 function renderProfileAch(){
   const st = achStats(), u = currentUser(), got = achList.filter(a => achHas(a, u, st));
-  ach$('profile-ach').innerHTML = `<div class="hint" style="margin-bottom:10px;">${got.length} dari ${achList.length} achievement terkumpul</div>` +
-    (achList.map(a => `<div class="ach-card ${achHas(a, u, st) ? '' : 'lock'}"><div class="ach-ic">${esc(a.icon || '🏅')}</div><div><b>${esc(a.name)}</b><div class="hint">${esc(a.desc || '')}</div><div class="hint">${esc(achRuleText(a.rule))}</div></div></div>`).join('') || '<div class="card"><div class="empty">Belum ada achievement.</div></div>');
+  ach$('profile-ach').innerHTML = `<div class="hint" style="margin-bottom:10px;">${got.length} dari ${achList.length} medal terkumpul</div>` +
+    (achList.map(a => `<div class="ach-card ${achHas(a, u, st) ? '' : 'lock'}"><div class="ach-ic">${medalImg(a)}</div><div><b>${esc(a.name)}</b><div class="hint">${esc(a.desc || '')}</div><div class="hint">${esc(achRuleText(a.rule))}</div></div></div>`).join('') || '<div class="card"><div class="empty">Belum ada medal.</div></div>');
 }
 ach$('pf-tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if(!b) return;
@@ -1904,20 +1911,42 @@ ach$('pf-tabs').addEventListener('click', e => {
   ach$('profile-ach').classList.toggle('hidden', !isAch);
   if(isAch){ achStart(); renderProfileAch(); }
 });
-ach$('ach-type').addEventListener('change', e => { ach$('ach-niche').classList.toggle('hidden', e.target.value !== 'niche_count'); ach$('ach-n').classList.toggle('hidden', e.target.value === 'manual'); });
+ach$('ach-type').addEventListener('change', e => {
+  const t = e.target.value;
+  ach$('ach-niche').classList.toggle('hidden', t !== 'niche_count');
+  ach$('ach-week').classList.toggle('hidden', t !== 'weekly_win');
+  ach$('ach-n').classList.toggle('hidden', t === 'manual' || t === 'weekly_win');
+});
+function medalCompress(file){
+  return new Promise((res, rej) => {
+    const img = new Image(), u = URL.createObjectURL(file);
+    img.onload = () => {
+      const r = Math.min(1, 256 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * r)); c.height = Math.max(1, Math.round(img.height * r));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+      let out = c.toDataURL('image/png'); if(out.length > 300000) out = c.toDataURL('image/webp', 0.8); res(out);
+    };
+    img.onerror = () => rej(new Error('Gambar tidak bisa dibaca')); img.src = u;
+  });
+}
 ach$('ach-add').addEventListener('click', async () => {
-  const name = ach$('ach-name').value.trim(), type = ach$('ach-type').value, n = parseInt(ach$('ach-n').value, 10) || 1, niche = ach$('ach-niche').value.trim();
-  if(!name){ alert('Nama achievement wajib diisi.'); return; }
+  const name = ach$('ach-name').value.trim(), type = ach$('ach-type').value, n = parseInt(ach$('ach-n').value, 10) || 1, niche = ach$('ach-niche').value.trim(), week = parseInt(ach$('ach-week').value, 10);
+  const f = ach$('ach-img').files[0], url = ach$('ach-img-url').value.trim();
+  if(!name){ alert('Nama medal wajib diisi.'); return; }
+  if(!f && !url){ alert('Pilih gambar medal (upload atau link).'); return; }
   if(type === 'niche_count' && !niche){ alert('Isi nama niche.'); return; }
-  const rule = { type }; if(type !== 'manual') rule.n = n; if(type === 'niche_count') rule.niche = niche;
-  try{ await firebase.firestore().collection('achievements').add({ name, icon: ach$('ach-icon').value.trim() || '🏅', desc: ach$('ach-desc').value.trim(), rule, holders: [], createdAt: Date.now() });
-    ['ach-name', 'ach-icon', 'ach-desc', 'ach-niche'].forEach(id => { ach$(id).value = ''; }); }
-  catch(e){ console.error(e); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi achievements.'); }
+  if(type === 'weekly_win' && !(week >= 1)){ alert('Isi nomor Week (minimal 1).'); return; }
+  const rule = { type }; if(type !== 'manual' && type !== 'weekly_win') rule.n = n; if(type === 'niche_count') rule.niche = niche; if(type === 'weekly_win') rule.week = week;
+  try{
+    const image = f ? await medalCompress(f) : url;
+    await firebase.firestore().collection('achievements').add({ name, image, desc: ach$('ach-desc').value.trim(), rule, holders: [], createdAt: Date.now() });
+    ['ach-name', 'ach-desc', 'ach-niche', 'ach-week', 'ach-img-url'].forEach(id => { ach$(id).value = ''; }); ach$('ach-img').value = '';
+  }catch(e){ console.error(e); alert('Gagal menyimpan medal: ' + e.message); }
 });
 ach$('ach-list').addEventListener('click', async e => {
-  const col = firebase.firestore().collection('achievements'), fail = err => { console.error(err); alert('Gagal memperbarui achievement.'); };
+  const col = firebase.firestore().collection('achievements'), fail = err => { console.error(err); alert('Gagal memperbarui medal.'); };
   const del = e.target.closest('[data-del]'), gr = e.target.closest('[data-grant]'), rv = e.target.closest('.chip-x[data-a]');
-  if(del){ if(confirm('Hapus achievement ini?')) col.doc(del.dataset.del).delete().catch(fail); }
+  if(del){ if(confirm('Hapus medal ini?')) col.doc(del.dataset.del).delete().catch(fail); }
   else if(gr){ const inp = document.querySelector(`.ach-grant[data-a="${gr.dataset.grant}"]`), u = inp.value.trim().toLowerCase(); if(u) col.doc(gr.dataset.grant).update({ holders: firebase.firestore.FieldValue.arrayUnion(u) }).catch(fail); }
   else if(rv){ col.doc(rv.dataset.a).update({ holders: firebase.firestore.FieldValue.arrayRemove(rv.dataset.u) }).catch(fail); }
 });
@@ -1946,7 +1975,20 @@ ach$('ach-list').addEventListener('click', async e => {
 const fmtDate = (d, weekday) => d.toLocaleDateString('id-ID', { weekday: weekday ? 'long' : undefined, day: 'numeric', month: 'long', year: 'numeric' });
 const goTab = v => document.querySelector('.nav-item[data-view="' + v + '"]').click();
 document.querySelectorAll('.sidebar .logo-img, .sidebar .brand').forEach(el => el.addEventListener('click', () => goTab('home')));
-let homeEvents = null;
+let homeEvents = null, homeImgs = {}, homeImgStarted = false;
+const evKey = e => String(e.id).replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 120);
+function homeImgStart(){
+  if(homeImgStarted || !clearsRef) return; homeImgStarted = true;
+  firebase.firestore().collection('event_images').onSnapshot(q => { homeImgs = {}; q.docs.forEach(d => { homeImgs[d.id] = d.data().url; }); homeRefresh(); }, e => console.warn('event_images', e));
+}
+document.getElementById('home-events').addEventListener('click', async e => {
+  const b = e.target.closest('[data-evimg]'); if(!b) return;
+  const k = b.dataset.evimg, url = prompt('Tempel link gambar event (https://...). Kosongkan untuk menghapus:', homeImgs[k] || '');
+  if(url === null) return;
+  const ref = firebase.firestore().collection('event_images').doc(k);
+  try{ if(url.trim()) await ref.set({ url: url.trim() }); else await ref.delete(); }
+  catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi event_images.'); }
+});
 function homeRefresh(){ if(!document.getElementById('view-home').classList.contains('hidden')) renderHome(); }
 const leftText = ms => { const h = Math.max(0, Math.floor(ms / 36e5)), d = Math.floor(h / 24); return d >= 1 ? d + ' hari ' + (h % 24) + ' jam' : h + ' jam'; };
 async function loadEvents(){
@@ -1954,7 +1996,7 @@ async function loadEvents(){
   const t = await opTableSafe('activity_table'); if(!t) return null;
   const info = t.basicInfo || t;
   return (homeEvents = Object.values(info).filter(e => e && typeof e === 'object' && (e.displayName || e.name) && e.startTime && e.endTime)
-    .map(e => ({ name: e.displayName || e.name, start: e.startTime * 1000, end: e.endTime * 1000 })));
+    .map(e => ({ id: String(e.id || e.displayName || e.name), name: e.displayName || e.name, start: e.startTime * 1000, end: e.endTime * 1000 })));
 }
 async function renderHome(){
   const me = currentUser(), now = Date.now(), wk = chWeekKey(), box = document.getElementById('home-weekly');
@@ -1976,10 +2018,14 @@ async function renderHome(){
   if(!list){ ev.innerHTML = '<div class="hint">Data event tidak dapat dimuat otomatis. Coba buka ulang tab ini.</div>'; return; }
   const live = list.filter(e => e.start <= now && e.end > now && e.end < 1893456000000).sort((a, b) => a.end - b.end);
   const soon = list.filter(e => e.start > now && e.start < now + 30 * 864e5).sort((a, b) => a.start - b.start);
-  const row = (e, txt) => `<div class="hm-row"><span>${esc(e.name)}</span><span class="d">${txt}</span></div>`;
+  homeImgStart();
+  const admin = currentUser() === SUPER_ADMIN;
+  const row = (e, txt) => { const k = evKey(e), img = homeImgs[k];
+    return `<div class="hm-ev">${img ? `<img class="hm-img" src="${esc(img)}" referrerpolicy="no-referrer" onerror="this.style.display='none'" alt="">` : ''}<div style="flex:1; min-width:0;"><b>${esc(e.name)}</b><div class="hint">${txt}</div>
+      ${admin ? `<div style="margin-top:4px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;"><button class="ghost" data-evimg="${k}">${img ? 'Ganti' : 'Atur'} gambar</button><a class="hint" target="_blank" rel="noopener noreferrer" href="https://arknights.wiki.gg/index.php?search=${encodeURIComponent(e.name)}" style="color:var(--red);">cari di wiki ↗</a></div>` : ''}</div></div>`; };
   ev.innerHTML = (live.map(e => row(e, 'berakhir ' + esc(fmtDate(new Date(e.end))) + ' · sisa ' + leftText(e.end - now))).join('') || '<div class="hint">Tidak ada event live di data game saat ini.</div>')
     + (soon.length ? '<div class="sub-h">Segera hadir</div>' + soon.map(e => row(e, 'mulai ' + esc(fmtDate(new Date(e.start))))).join('') : '')
-    + '<div class="hint" style="margin-top:8px;">Data dari game data Arknights (versi Global). Jadwal terbaru bisa belum masuk kalau data belum diperbarui.</div>';
+    + '<div class="hint" style="margin-top:8px;">Data dari game data Arknights (versi Global). Jadwal terbaru bisa belum masuk kalau data belum diperbarui.' + (admin ? ' Admin: tekan "Atur gambar" untuk menambahkan gambar event.' : '') + '</div>';
 }
 
 /* ---------- INIT ---------- */
