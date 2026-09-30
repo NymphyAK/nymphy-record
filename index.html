@@ -1253,9 +1253,9 @@ async function fetchJsonAny(urls){
 }
 function addStage(e, fallbackId, seen){
   const id = e.stageId || fallbackId;
-  if(!e.code || !e.name || !id || seen.has(id)) return;
+  if(!id || seen.has(id)) return;
   seen.add(id);
-  stageList.push({ id, code: e.code, name: e.name, levelId: e.levelId || '', type: e.stageType || '', boss: !!e.bossMark, diff: e.difficulty || '', story: !!e.isStoryOnly, ap: typeof e.apCost === 'number' ? e.apCost : NaN });
+  stageList.push({ id, code: e.code || id, name: e.name || e.code || id, levelId: e.levelId || '', type: e.stageType || '', boss: !!e.bossMark, diff: e.difficulty || '', story: !!e.isStoryOnly, ap: typeof e.apCost === 'number' ? e.apCost : NaN });
 }
 async function initStageView(){
   if(stageState !== 'idle') return;
@@ -1264,19 +1264,19 @@ async function initStageView(){
   const seen = new Set();
   try{
     let ok = false;
-    // 1) API HellaAPI
+    // 1) data mentah stage_table.json (lengkap)
     try{
-      const q = ['excel.stageId','excel.code','excel.name','excel.levelId','excel.stageType','excel.bossMark','excel.difficulty','excel.isStoryOnly','excel.apCost'].map(f=>'include='+f).join('&');
-      const docs = await (await fetch(STAGE_API + '?' + q)).json();
-      docs.forEach(d => [].concat(d.value || []).forEach(v => addStage(v.excel || {}, d.canon, seen)));
-      ok = stageList.length > 0;
-      if(ok && !stageList.some(x => x.type)){ ok = false; stageList.length = 0; seen.clear(); }   // API tidak membawa kolom kriteria -> pakai data mentah
-    }catch(e){ console.warn('API HellaAPI gagal, pakai data mentah:', e); }
-    // 2) fallback: stage_table.json dari repo data (raw GitHub / jsDelivr, CORS aman)
-    if(!ok){
-      status.textContent = 'API utama gagal, memuat dari data mentah...';
+      status.textContent = 'Memuat database stage lengkap...';
       const t = await fetchJsonAny(GD_BASES.map(b => b + 'excel/stage_table.json'));
       Object.entries(t.stages || t).forEach(([k, e]) => addStage(e, k, seen));
+      ok = stageList.length > 0;
+    }catch(e){ console.warn('Data mentah gagal, coba API:', e); stageList.length = 0; seen.clear(); }
+    // 2) cadangan: HellaAPI (bisa tidak lengkap)
+    if(!ok){
+      status.textContent = 'Data mentah gagal, memuat dari API (mungkin tidak lengkap)...';
+      const q = ['excel.stageId','excel.code','excel.name','excel.levelId','excel.stageType','excel.bossMark','excel.difficulty','excel.isStoryOnly','excel.apCost'].map(f => 'include=' + f).join('&');
+      const docs = await (await fetch(STAGE_API + '?' + q)).json();
+      docs.forEach(d => [].concat(d.value || []).forEach(v => addStage(v.excel || {}, d.canon, seen)));
     }
     if(!stageList.length) throw new Error('daftar stage kosong');
     stageState = 'ready';
@@ -1289,12 +1289,12 @@ async function initStageView(){
 }
 function stageMatches(){
   const q = document.getElementById('stage-search').value.trim().toLowerCase();
-  return q ? stageList.filter(s => s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) : stageList;
+  return q ? stageList.filter(s => s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q)) : stageList;
 }
 function renderStageList(){
   const q = document.getElementById('stage-search').value.trim(), list = stageMatches();
-  document.getElementById('stage-status').textContent = list.length + (q ? ' stage cocok' : ' stage tersedia');
-  document.getElementById('stage-list').innerHTML = list.slice(0, 60).map(s =>
+  document.getElementById('stage-status').textContent = list.length + (q ? ' stage cocok' : ' stage tersedia') + (list.length > 120 ? ' (menampilkan 120 pertama, persempit pencarian)' : '');
+  document.getElementById('stage-list').innerHTML = list.slice(0, 120).map(s =>
     `<div class="stage-row" data-id="${esc(s.id)}"><span>${esc(s.name)}</span><span class="code">${esc(s.code)}</span></div>`
   ).join('') || '<div class="empty">Tidak ada hasil.</div>';
 }
@@ -1359,7 +1359,7 @@ function fillCrit(p){
 }
 function critRead(p){ const ap = parseInt(rf(p + '-ap').value, 10); return { boss: rf(p + '-boss').checked, type: rf(p + '-type').value, mode: rf(p + '-mode').value, story: rf(p + '-story').checked, ap: isNaN(ap) ? null : ap }; }
 function critWrite(p, c){ rf(p + '-boss').checked = !!c.boss; rf(p + '-story').checked = !!c.story; rf(p + '-type').value = c.type || ''; rf(p + '-mode').value = c.mode || ''; rf(p + '-ap').value = c.ap == null ? '' : c.ap; }
-function critApply(list, c){ return list.filter(x => (!c.boss || x.boss) && (!c.type || x.type === c.type) && (!c.mode || x.diff === c.mode) && (!c.story || !x.story) && (c.ap == null || isNaN(x.ap) || x.ap <= c.ap)); }
+function critApply(list, c){ return list.filter(x => x.levelId && (!c.boss || x.boss) && (!c.type || x.type === c.type) && (!c.mode || x.diff === c.mode) && (!c.story || !x.story) && (c.ap == null || isNaN(x.ap) || x.ap <= c.ap)); }
 function buildRandFilters(){ fillCrit('rf'); fillCrit('ch'); updateRandCount(); }
 function randomPool(){ return critApply(stageMatches(), critRead('rf')); }
 function updateRandCount(){ rf('rf-count').textContent = stageState === 'ready' ? randomPool().length + ' stage cocok kriteria' : ''; }
@@ -1961,7 +1961,7 @@ ach$('ach-list').addEventListener('click', async e => {
     if(stageState !== 'ready') box.innerHTML = '<div class="hint" style="padding:8px 10px;">Memuat database stage...</div>';
     if(!await stageReady()){ box.innerHTML = '<div class="hint" style="padding:8px 10px;">Database stage gagal dimuat, ketik manual saja.</div>'; return; }
     if(my !== tok) return;
-    const list = (q ? stageList.filter(x => (x.code + ' ' + x.name).toLowerCase().includes(q)) : stageList).slice(0, 10);
+    const list = (q ? stageList.filter(x => (x.code + ' ' + x.name + ' ' + x.id).toLowerCase().includes(q)) : stageList).slice(0, 40);
     box.innerHTML = list.map(x => `<div class="pick-row" data-i="${stageList.indexOf(x)}"><div><b>${esc(x.code)}</b> ${esc(x.name)}</div></div>`).join('') || '<div class="hint" style="padding:8px 10px;">Tidak ada di database, nama yang diketik dipakai apa adanya.</div>';
   }
   const pick = x => { inp.value = x.code + ' — ' + x.name; box.classList.add('hidden'); };
