@@ -255,6 +255,50 @@
   .hm-warn{border-color:var(--red) !important;}
   .hm-ev{display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); align-items:flex-start;}
   .hm-img{width:160px; max-width:40%; aspect-ratio:2/1; object-fit:cover; border-radius:8px; border:1px solid var(--border); flex-shrink:0;}
+
+  /* ===== REDESIGN: dashboard modern (palet Nymphy) ===== */
+  :root{ --gold:#f5b82e; --panel:#181015; --panel2:#201519; --border:rgba(229,35,61,.22); }
+  body{background:radial-gradient(1200px 600px at 80% -10%, rgba(229,35,61,.10), transparent 60%), #0a0709;}
+  .card{background:linear-gradient(180deg,#1c1217,#150e12); border:1px solid var(--border); border-radius:16px; box-shadow:0 8px 28px rgba(0,0,0,.35);}
+  .card h2{font-size:15px; font-weight:800; letter-spacing:.2px;}
+  .topbar{position:sticky; top:0; z-index:20; background:rgba(10,7,9,.82); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); padding:14px 24px;}
+  .topbar h1{font-size:22px; font-weight:800;}
+  .topbar .who{background:var(--panel2); border:1px solid var(--border); padding:6px 12px; border-radius:999px; font-size:12px;}
+  .view{padding:22px 24px;}
+  .stat-card{position:relative; text-align:left; padding:18px 18px 16px; border-radius:16px; background:linear-gradient(180deg,#1e1418,#160f13); border:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,.3); transition:transform .15s, border-color .15s;}
+  .stat-card:hover{transform:translateY(-2px); border-color:var(--red);}
+  .stat-card .si{width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(229,35,61,.14); margin-bottom:12px;}
+  .hero{background:linear-gradient(135deg,#c4162f 0%,#7d0f20 55%,#3a0912 100%); border-radius:20px; padding:24px; margin-bottom:18px; box-shadow:0 14px 36px rgba(196,22,47,.28); position:relative; overflow:hidden;}
+  .hero::after{content:''; position:absolute; right:-60px; top:-80px; width:260px; height:260px; border-radius:50%; background:rgba(245,184,46,.12);}
+  .hero-top{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; position:relative; z-index:1;}
+  .hero h2{margin:0; font-size:26px; font-weight:800; color:#fff;}
+  .hero-sub{color:#ffd9de; font-size:13px; margin-top:4px;}
+  .hero-date{background:rgba(255,255,255,.16); padding:5px 12px; border-radius:999px; font-size:12px; color:#fff;}
+  .hero-tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:18px; position:relative; z-index:1;}
+  .hero-tile{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); border-radius:14px; padding:14px;}
+  .hero-tile .hl{font-size:12px; color:#ffe4e8;}
+  .hero-tile .hv{font-size:28px; font-weight:800; color:#fff; margin-top:6px;}
+  .hero-tile .hs{font-size:11px; color:var(--gold); margin-top:2px;}
+  .qa-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:6px;}
+  button.qa{margin:0; width:100%; text-align:left; border:none; border-radius:14px; padding:16px; color:#fff; display:flex; flex-direction:column; gap:4px; min-height:92px; box-shadow:0 8px 20px rgba(0,0,0,.3); transition:transform .15s;}
+  button.qa:hover{transform:translateY(-2px);}
+  button.qa span{font-size:22px;} button.qa small{font-size:11px; opacity:.85; font-weight:400;}
+  .qa1{background:linear-gradient(135deg,#e5233d,#a3101f);} .qa2{background:linear-gradient(135deg,#8f1526,#3d0a12);}
+  .qa3{background:linear-gradient(135deg,#f5b82e,#c27a0a); color:#2a1600 !important;} .qa4{background:linear-gradient(135deg,#d12a6b,#7a1240);}
+  @media(min-width:721px){
+    .sidebar{width:232px; background:linear-gradient(180deg,#8a1224 0%,#3d0a12 42%,#12060a 100%); border-right:none; padding:18px 14px;}
+    .sidebar .brand{color:#fff; text-shadow:0 0 14px rgba(245,184,46,.35);}
+    .nav-item{padding:11px 14px; border-radius:12px; font-size:14px; color:rgba(255,255,255,.78); transition:background .15s;}
+    .nav-item:hover{background:rgba(255,255,255,.09); color:#fff;}
+    .nav-item.active{background:linear-gradient(135deg,#ff3b57,#c4162f); color:#fff; box-shadow:0 6px 16px rgba(229,35,61,.45);}
+    .profile-item{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);}
+  }
+  @media(max-width:720px){
+    .hero{padding:18px;} .hero h2{font-size:21px;}
+    .hero-tiles, .qa-grid{grid-template-columns:repeat(2,1fr);}
+    .hero-tile .hv{font-size:22px;}
+    .topbar{padding:10px 14px;} .view{padding:12px 10px;}
+  }
 </style>
 </head>
 <body>
@@ -308,11 +352,28 @@
       </div>
 
       <div id="view-dashboard" class="view">
+        <div class="hero">
+          <div class="hero-top"><div><h2 id="hero-title">Welcome back</h2><div class="hero-sub">Ringkasan aktivitas Nicheknights</div></div><span class="hero-date" id="hero-date"></span></div>
+          <div class="hero-tiles">
+            <div class="hero-tile"><div class="hl">Clear Hari Ini</div><div class="hv" id="hv-today">0</div><div class="hs" id="hs-today"></div></div>
+            <div class="hero-tile"><div class="hl">Clear Minggu Ini</div><div class="hv" id="hv-week">0</div><div class="hs">sejak Senin</div></div>
+            <div class="hero-tile"><div class="hl">Player Aktif</div><div class="hv" id="hv-players">0</div><div class="hs">pernah submit clear</div></div>
+            <div class="hero-tile"><div class="hl">Weekly Challenge</div><div class="hv" id="hv-weekly">0</div><div class="hs" id="hs-weekly"></div></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:18px;"><h2>Quick Actions</h2>
+          <div class="qa-grid">
+            <button class="qa qa1" onclick="goTab('input')"><span>➕</span><b>Input Clear</b><small>Catat clear baru</small></button>
+            <button class="qa qa2" onclick="goTab('challenge')"><span>🏆</span><b>Challenge</b><small>Stage mingguan</small></button>
+            <button class="qa qa3" onclick="goTab('stage')"><span>🗺️</span><b>Stage Info</b><small>Cari map &amp; musuh</small></button>
+            <button class="qa qa4" onclick="goTab('operators')"><span>🪖</span><b>Operators</b><small>Database operator</small></button>
+          </div>
+        </div>
         <div class="stat-cards">
-          <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Total Clear</div></div>
-          <div class="stat-card"><div class="num" id="stat-niche-count">0</div><div class="lbl">Niche Aktif</div></div>
-          <div class="stat-card"><div class="num" id="stat-stage-count">0</div><div class="lbl">Stage Clear</div></div>
-          <div class="stat-card"><div class="num" id="stat-op-top" style="font-size:16px; line-height:1.3; word-break:break-word;">-</div><div class="lbl">Most Used Operator</div></div>
+          <div class="stat-card"><div class="si">📈</div><div class="num" id="stat-total">0</div><div class="lbl">Total Clear</div></div>
+          <div class="stat-card"><div class="si">🎯</div><div class="num" id="stat-niche-count">0</div><div class="lbl">Niche Aktif</div></div>
+          <div class="stat-card"><div class="si">🗺️</div><div class="num" id="stat-stage-count">0</div><div class="lbl">Stage Clear</div></div>
+          <div class="stat-card"><div class="si">🪖</div><div class="num" id="stat-op-top" style="font-size:16px; line-height:1.3; word-break:break-word;">-</div><div class="lbl">Most Used Operator</div></div>
         </div>
         <div class="grid">
           <div class="card">
@@ -598,7 +659,7 @@ function showApp(user){
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('who').textContent = 'Login sebagai: ' + user;
-    document.getElementById('welcome-title').textContent = 'Welcome back, ' + user;
+    setPageTitle('dashboard');
   document.getElementById('sidebar-username').textContent = user;
   startListening();
   startProfilesListener();
@@ -620,6 +681,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'myniche') renderMyNiche();
     if(item.dataset.view === 'challenge') renderChallenge();
     if(item.dataset.view === 'home') renderHome();
+    setPageTitle(item.dataset.view);
     if(item.dataset.view === 'ach'){ achStart(); renderAch(); }
     if(item.dataset.view === 'profile') achStart();
   });
@@ -699,7 +761,7 @@ function startListening(){
       renderNicheDetail();
       if(myProfile && myProfile.mainNiche) renderProfileView();
       refreshMyNicheIfVisible();
-      chBoard(); achRefresh(); homeRefresh();
+      chBoard(); achRefresh(); homeRefresh(); heroRefresh();
     },
     (err)=>{ console.error('Firestore error', err); alert('Gagal memuat data dari Firebase. Cek konfigurasi & rules.'); }
   );
@@ -2026,6 +2088,30 @@ async function renderHome(){
   ev.innerHTML = (live.map(e => row(e, 'berakhir ' + esc(fmtDate(new Date(e.end))) + ' · sisa ' + leftText(e.end - now))).join('') || '<div class="hint">Tidak ada event live di data game saat ini.</div>')
     + (soon.length ? '<div class="sub-h">Segera hadir</div>' + soon.map(e => row(e, 'mulai ' + esc(fmtDate(new Date(e.start))))).join('') : '')
     + '<div class="hint" style="margin-top:8px;">Data dari game data Arknights (versi Global). Jadwal terbaru bisa belum masuk kalau data belum diperbarui.' + (admin ? ' Admin: tekan "Atur gambar" untuk menambahkan gambar event.' : '') + '</div>';
+}
+
+
+/* ---------- JUDUL HALAMAN & HERO ---------- */
+const PAGE_TITLES = { dashboard:['Dashboard','Ringkasan aktivitas Nicheknights'], input:['Input Clear','Catat clear baru'], riwayat:['Riwayat Data','Semua clear yang tercatat'], niche:['Niche Stat','Statistik per niche'],
+  members:['Member List','Daftar anggota'], stage:['Stage Info','Cari stage, map, dan musuh'], operators:['Operators','Database operator Arknights'], myniche:['My Niche','Operator niche utamamu'],
+  challenge:['Weekly Challenge','Stage mingguan Nymphy'], ach:['Medal','Koleksi medal'], home:['Home','Event live & reminder'], profile:['Profil','Pengaturan dan statistikmu'] };
+function setPageTitle(v){
+  const t = PAGE_TITLES[v]; if(!t) return;
+  document.getElementById('welcome-title').textContent = t[0];
+  const sub = document.querySelector('.topbar .sub'); if(sub) sub.textContent = t[1];
+  if(v === 'dashboard') heroRefresh();
+}
+function heroRefresh(){
+  const t = document.getElementById('hero-title'); if(!t) return;
+  const now = new Date(), d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(), w0 = chWeekDate(chWeekKey()).getTime(), wk = chWeekKey();
+  const today = liveData.filter(d => d.createdAt >= d0).length, yest = liveData.filter(d => d.createdAt >= d0 - 864e5 && d.createdAt < d0).length;
+  const set = (id, v) => { document.getElementById(id).textContent = v; };
+  t.textContent = 'Welcome back, ' + currentUser();
+  set('hero-date', fmtDate(now, true));
+  set('hv-today', today); set('hs-today', (today - yest >= 0 ? '+' : '') + (today - yest) + ' dari kemarin');
+  set('hv-week', liveData.filter(d => d.createdAt >= w0).length);
+  set('hv-players', new Set(liveData.map(d => d.admin).filter(Boolean)).size);
+  set('hv-weekly', liveData.filter(d => d.weekly === wk).length); set('hs-weekly', 'Week ' + chWeekNum() + ' · submit minggu ini');
 }
 
 /* ---------- INIT ---------- */
