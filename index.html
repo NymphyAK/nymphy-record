@@ -365,7 +365,6 @@
   #nr-info{font-size:12.5px; margin-top:8px;} #nr-info .bad{color:#ff8fb0;} #nr-edit{margin-top:10px; font-size:13px;} #nr-edit summary{cursor:pointer; color:var(--muted);}
 
   .mat.big img{width:64px; height:64px;}
-  .cc-art{position:relative; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2a0d16,#0d0d0d 70%);} .cc-art::before{content:attr(data-n); font-weight:800; font-size:26px; letter-spacing:2px; color:rgba(254,47,103,.85); text-shadow:0 0 16px rgba(254,47,103,.5);} .cc-art img{position:absolute; inset:0;}
   .mat img{background:rgba(255,255,255,.05); border-radius:8px;}
   .mini-card,.op-row{position:relative;}
   .bm{position:absolute; top:8px; right:8px; z-index:2; width:30px; height:30px; padding:0; margin:0; border-radius:50%; font-size:16px; line-height:1; background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.18); color:#bbb; cursor:pointer;} .bm.on{color:#ffc83d; border-color:#ffc83d;}
@@ -411,7 +410,6 @@
       <div class="nav-item" data-view="calc"><span class="nl">Kalkulator</span></div>
       <div class="nav-item" data-view="squad"><span class="nl">Squad Acak</span></div>
       <div class="nav-item" data-view="is"><span class="nl">IS</span></div>
-      <div class="nav-item" data-view="cc"><span class="nl">CC</span></div>
       <div class="nav-item" data-view="streak"><span class="nl">Streak</span></div>
       <div class="nav-item" data-view="unused"><span class="nl">Belum Dipakai</span></div>
       <div class="nav-item" data-view="pity"><span class="nl">Pity</span></div>
@@ -596,8 +594,6 @@
   <input id="sqb-link" readonly placeholder="link squad muncul di sini" style="margin-top:8px;"></div></div>
       <div id="view-is" class="view hidden"><div class="card"><h2>Integrated Strategies — Relic</h2>
   <input id="is-search" placeholder="cari relic..."><div class="rf-grid"><select id="is-topic"><option value="">Semua tema</option></select></div><div class="hint" id="is-status">Memuat data...</div><div id="is-grid" class="mini-grid"></div></div></div>
-      <div id="view-cc" class="view hidden"><div class="card"><h2>Contingency Contract</h2>
-  <div class="hint" id="cc-status">Memuat data...</div><div id="cc-grid" class="mini-grid"></div></div></div>
       <div id="view-streak" class="view hidden"><div class="card"><h2>Streak Member</h2><div class="hint" style="margin-bottom:10px;">Hari berturut-turut yang ada clear. Streak aktif dihitung sampai hari ini atau kemarin.</div><div id="st-out"></div></div></div>
       <div id="view-unused" class="view hidden"><div class="card"><h2>Operator Belum Pernah Dipakai</h2>
   <input id="un-search" placeholder="cari operator..."><div class="rf-grid"><select id="un-r"><option value="0">Semua rarity</option></select></div><div class="hint" id="un-status">Memuat operator...</div><div id="un-grid" class="mini-grid"></div></div></div>
@@ -803,7 +799,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','gacha','medalgame','lore','calc','squad','is','cc','streak','unused','pity','enemy','home','myniche','challenge','ach','profile','bookmark'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','gacha','medalgame','lore','calc','squad','is','streak','unused','pity','enemy','home','myniche','challenge','ach','profile','bookmark'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -819,7 +815,6 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'squad') initSquad();
     if(item.dataset.view === 'bookmark') renderBookmarks();
     if(item.dataset.view === 'is') initIS();
-    if(item.dataset.view === 'cc') initCC();
     if(item.dataset.view === 'streak') renderStreak();
     if(item.dataset.view === 'unused') initUnused();
     if(item.dataset.view === 'pity') pityCalc();
@@ -1080,9 +1075,10 @@ function loadProfile(){
   profilesRef.doc(currentUser()).get().then(doc=>{
     if(!doc.exists || !doc.data().username){ profilesRef.doc(currentUser()).set({ username: currentUser() }, { merge:true }).catch(()=>{}); }
     myProfile = doc.exists ? doc.data() : {};
+    bmInit();
     renderProfileView();
     refreshMyNicheIfVisible();
-  }).catch(e=>{ console.error(e); myProfile = null; renderProfileView(); });
+  }).catch(e=>{ console.error(e); myProfile = null; bmInit(); renderProfileView(); });
 }
 
 function populateProfileNicheSelect(){
@@ -2412,20 +2408,33 @@ const medalSrcs = x => { const n = wikiName(x.name), ks = [...new Set([x.pic, x.
 const fmtD = t => t > 1e9 ? new Date(t * 1000).toLocaleDateString('id-ID', { year:'numeric', month:'short', day:'numeric' }) : '-';
 const bannerSrcs = id => id ? [FEX, FEX_CDN].flatMap(b => [b + 'gacha/' + encodeURIComponent(id) + '_full.png', b + 'gacha/' + encodeURIComponent(id) + '.png']) : [];
 let gcS = 'idle', gcL = [];
+// ambil operator rate-up dari beberapa kemungkinan lokasi (banner limited & standar punya struktur berbeda)
+function gcUpIds(g){
+  const d = (g.gachaPoolDetail || {}).detailInfo || {}, dm = g.dynMeta || {};
+  const grab = (obj, re, skip) => { const out = [], walk = (v, n) => { if(v == null || n > 6) return; if(typeof v === 'string'){ if(/^char_/.test(v) && !out.includes(v)) out.push(v); } else if(Array.isArray(v)) v.forEach(x => walk(x, n + 1)); else if(typeof v === 'object') Object.keys(v).forEach(k => walk(v[k], n + 1)); };
+    Object.keys(obj || {}).forEach(k => { if(re.test(k) && !(skip && skip.test(k))) walk(obj[k], 0); }); return out; };
+  const top = Object.fromEntries(Object.entries(g).filter(([k]) => k !== 'gachaPoolDetail' && k !== 'dynMeta'));
+  let ids = grab(d, /up/i, /avail/i);
+  if(!ids.length) ids = grab(top, /up|choose|focus|select/i);
+  if(!ids.length) ids = grab(dm, /up|choose|focus|select|main/i);
+  if(!ids.length) ids = grab(dm, /./).slice(0, 6);
+  return ids.slice(0, 8);
+}
 async function loadGachaList(){
   if(gcL.length) return gcL;
   const t = await opTable('gacha_table'), ch = (await opTableSafe('character_table')) || {};
-  gcL = (t.gachaPoolClient || []).map(g => {
-    const ui = (((g.gachaPoolDetail || {}).detailInfo || {}).upCharInfo || {}).perCharList || [];
-    const ups = [].concat(...ui.map(x => x.charIdList || []));
-    return { pid:g.gachaPoolId || '', name:g.gachaPoolName || g.gachaPoolId, open:g.openTime, end:g.endTime, ups:ups.map(id => ({ id, n:ch[id] ? ch[id].name : id })) };
+  window.gcRaw = t.gachaPoolClient || [];   // untuk debug di Console: gcRaw.find(g => g.gachaPoolId === '...')
+  gcL = gcRaw.map(g => {
+    const ups = gcUpIds(g).map(id => ({ id, n:ch[id] ? ch[id].name : id, r:ch[id] ? rarityNum(ch[id].rarity) : 0 })).sort((a, b) => b.r - a.r);
+    return { pid:g.gachaPoolId || '', name:g.gachaPoolName || g.gachaPoolId, open:g.openTime, end:g.endTime, ups };
   }).sort((a, b) => b.open - a.open);
   if(!gcL.length) throw new Error('daftar banner kosong');
   return gcL;
 }
+const gcTitle = x => x.ups.length ? x.ups.map(u => u.n).join(' · ') : x.name;
 function gcLiveHtml(){
   const now = Date.now(), act = gcL.filter(x => x.open * 1e3 <= now && x.end * 1e3 > now && x.end < 1.9e9).sort((a, b) => a.end - b.end), up = gcL.filter(x => x.open * 1e3 > now && x.open * 1e3 < now + 60 * 864e5).sort((a, b) => a.open - b.open);
-  const row = (x, txt, t) => `<div class="hm-ev"><div class="gc-ups" style="margin:0;">${x.ups.slice(0, 3).map(u => `<span title="${esc(u.n)}">${imgTag(avatarSrcs(u.id, u.n))}</span>`).join('')}</div><div style="flex:1; min-width:0;"><b>${esc(x.name)}</b><div class="hint">${txt} <b data-cd="${t}"></b></div></div></div>`;
+  const row = (x, txt, t) => `<div class="hm-ev"><div class="gc-ups" style="margin:0;">${x.ups.slice(0, 3).map(u => `<span title="${esc(u.n)}">${imgTag(avatarSrcs(u.id, u.n))}</span>`).join('')}</div><div style="flex:1; min-width:0;"><b>${esc(gcTitle(x))}</b><div class="hint">${txt} <b data-cd="${t}"></b></div></div></div>`;
   return (act.map(x => row(x, 'sisa', x.end * 1e3)).join('') || '<div class="hint">Tidak ada banner aktif di data.</div>') + (up.length ? '<div class="sub-h">Segera hadir</div>' + up.map(x => row(x, 'mulai dalam', x.open * 1e3)).join('') : '');
 }
 async function homeBanners(){ const el = document.getElementById('home-banners'); if(!el) return; try{ await loadGachaList(); el.innerHTML = gcLiveHtml(); cdTick(); }catch(e){ el.innerHTML = '<div class="hint">Banner tidak dapat dimuat.</div>'; } }
@@ -2444,7 +2453,7 @@ function renderGacha(){
   cdTick();
   document.getElementById('gacha-grid').innerHTML = l.slice(0, 60).map(x => {
     const gs = [...bannerSrcs(x.pid), ...(x.ups.length ? artSrcs(x.ups[0].id, x.ups[0].n, 2) : [])], on = x.open * 1e3 <= now && x.end * 1e3 > now && x.end < 1.9e9;
-    return `<div class="mini-card">${bmBtn('banner', x.pid || x.name, x.name, fmtD(x.open) + ' – ' + fmtD(x.end), gs)}${on ? `<span class="cd-badge">sisa <span data-cd="${x.end * 1e3}"></span></span>` : ''}<div class="gc-art">${imgTag(gs)}</div><div class="n">${esc(x.name)}</div><div class="c">${fmtD(x.open)} – ${fmtD(x.end)}</div>${x.ups.length ? `<div class="gc-ups">${x.ups.map(u => `<span title="${esc(u.n)}">${imgTag(avatarSrcs(u.id, u.n))}</span>`).join('')}</div>` : ''}</div>`;
+    return `<div class="mini-card">${bmBtn('banner', x.pid || x.name, gcTitle(x), fmtD(x.open) + ' – ' + fmtD(x.end), gs)}${on ? `<span class="cd-badge">sisa <span data-cd="${x.end * 1e3}"></span></span>` : ''}<div class="gc-art">${imgTag(gs)}</div><div class="n">${esc(gcTitle(x))}</div><div class="c">${fmtD(x.open)} – ${fmtD(x.end)}</div>${x.ups.length ? `<div class="gc-ups">${x.ups.map(u => `<span title="${esc(u.n)}">${imgTag(avatarSrcs(u.id, u.n))}</span>`).join('')}</div>` : ''}</div>`;
   }).join('') || '<div class="empty">Tidak ada hasil.</div>';
 }
 document.getElementById('gacha-search').addEventListener('input', () => { if(gcS === 'ready') renderGacha(); });
@@ -2602,23 +2611,6 @@ function renderIS(){
 kg('is-search').addEventListener('input', () => { if(isS === 'ready') renderIS(); });
 kg('is-topic').addEventListener('change', () => { if(isS === 'ready') renderIS(); });
 
-const ccTag = (x, n) => { const m = String(x.seasonId || x.name || '').match(/(\d+)\s*$/); return 'CC ' + (m ? m[1] : n); };
-const ccSrcs = x => { const ks = [...new Set([x.bannerImg, x.bgImg, x.seasonImg, x.imageId, x.picId, x.seasonId].filter(v => typeof v === 'string' && v).map(encodeURIComponent))];
-  return ks.flatMap(k => [FEX, FEX_CDN].flatMap(b => [b + 'kvimg/' + k + '.png', b + 'gacha/' + k + '.png'])); };
-let ccS = 'idle';
-async function initCC(){
-  if(ccS !== 'idle') return; ccS = 'loading';
-  try{
-    const t = (await opTableSafe('crisis_v2_table')) || (await opTable('crisis_table'));
-    const m = t.seasonInfoDataMap || t.seasonInfo || t.seasons || {};
-    const l = Object.values(m).filter(x => x && (x.name || x.seasonName || x.seasonId)).sort((a, b) => (b.startTs || 0) - (a.startTs || 0));
-    if(!l.length) throw new Error('data season tidak ditemukan');
-    kg('cc-status').textContent = l.length + ' season';
-    kg('cc-grid').innerHTML = l.map((x, i) => `<div class="mini-card">${bmBtn('cc', x.seasonId || x.name || ccTag(x, l.length - i), x.name || x.seasonName || ccTag(x, l.length - i), fmtD(x.startTs) + ' – ' + fmtD(x.endTs), ccSrcs(x))}<div class="gc-art cc-art" data-n="${esc(ccTag(x, l.length - i))}">${ccSrcs(x).length ? imgTag(ccSrcs(x)) : ''}</div><div class="n">${esc(x.name || x.seasonName || x.seasonId)}</div><div class="c">${fmtD(x.startTs)} – ${fmtD(x.endTs)}</div><div class="c">${esc(x.seasonId || '')}</div></div>`).join('');
-    ccS = 'ready';
-  }catch(e){ console.error(e); ccS = 'idle'; kg('cc-status').textContent = 'Gagal memuat CC: ' + (e.message || e); }
-}
-
 /* ---------- EXPORT / STREAK / BELUM DIPAKAI / PITY / MUSUH ---------- */
 function dl(name, text, type){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
 const stamp = () => new Date().toISOString().slice(0, 10);
@@ -2708,9 +2700,24 @@ const cdText = ms => { if(ms <= 0) return 'selesai'; const s = Math.floor(ms / 1
 function cdTick(){ const n = Date.now(); document.querySelectorAll('[data-cd]').forEach(el => { el.textContent = cdText(+el.dataset.cd - n); }); }
 setInterval(cdTick, 1000);
 
-const BM_LAB = { operator:'Operator', musuh:'Musuh', relic:'Relic IS', medal:'Medal', banner:'Banner', cc:'CC' };
-let bmList = []; try{ bmList = JSON.parse(localStorage.getItem('bm_v1')) || []; }catch(e){}
-const bmSave = () => { try{ localStorage.setItem('bm_v1', JSON.stringify(bmList)); }catch(e){} };
+const BM_LAB = { operator:'Operator', musuh:'Musuh', relic:'Relic IS', medal:'Medal', banner:'Banner' };
+let bmList = [];
+const bmKey = () => 'bm_v2:' + (currentUser() || 'anon');
+const bmRead = k => { try{ const v = JSON.parse(localStorage.getItem(k)); return Array.isArray(v) ? v : null; }catch(e){ return null; } };
+function bmInit(){   // bookmark per akun: Firestore profiles/{user}.bookmarks, cadangan lokal per user
+  const u = currentUser(), srv = myProfile && Array.isArray(myProfile.bookmarks) ? myProfile.bookmarks : null;
+  let loc = bmRead(bmKey()); if(!loc && u){ loc = bmRead('bm_v1'); if(loc) try{ localStorage.removeItem('bm_v1'); }catch(e){} }
+  bmList = (srv || loc || []).filter(b => BM_LAB[b.t]);
+  if(u && !srv && bmList.length) bmSave();
+  document.querySelectorAll('.bm').forEach(b => { try{ const d = JSON.parse(b.dataset.bm), on = bmHas(d.t, d.id); b.classList.toggle('on', on); b.textContent = on ? '★' : '☆'; }catch(e){} });
+  if(!kg('view-bookmark').classList.contains('hidden')) renderBookmarks();
+}
+function bmSave(){
+  try{ localStorage.setItem(bmKey(), JSON.stringify(bmList)); }catch(e){}
+  const u = currentUser(); if(!u || !profilesRef) return;
+  myProfile = { ...(myProfile || {}), bookmarks: bmList };
+  profilesRef.doc(u).set({ bookmarks: bmList, username: u }, { merge:true }).catch(e => console.warn('bookmark gagal disimpan ke akun', e));
+}
 const bmHas = (t, id) => bmList.some(b => b.t === t && b.id === id);
 const bmBtn = (t, id, n, sub, srcs) => `<button class="bm${bmHas(t, id) ? ' on' : ''}" title="Bookmark" data-bm="${esc(JSON.stringify({ t, id:String(id), n, sub:sub || '', s:(srcs || []).slice(0, 6) })).replace(/"/g, '&quot;')}">${bmHas(t, id) ? '★' : '☆'}</button>`;
 document.addEventListener('click', e => {
@@ -2797,7 +2804,7 @@ window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800)
     { label:'Clear Log', icon:'clog',  views:[['input','Input Clear','plus'], ['riwayat','Riwayat','hist']] },
     { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target'], ['streak','Streak','flame']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
-    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['gacha','Banner','star'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['cc','CC','target'], ['enemy','Musuh','target']] },
+    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['gacha','Banner','star'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['enemy','Musuh','target']] },
     { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['pity','Pity','star'], ['bookmark','Bookmark','star']] }
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
