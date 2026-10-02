@@ -315,6 +315,7 @@
       <div class="nav-item" data-view="members" title="Member List"><span class="ni">👥</span><span class="nl">Member List</span></div>
       <div class="nav-item" data-view="stage" title="Stage Info"><span class="ni">🗺️</span><span class="nl">Stage Info</span></div>
       <div class="nav-item" data-view="operators" title="Operators"><span class="ni">🎖️</span><span class="nl">Operators</span></div>
+      <div class="nav-item" data-view="items" title="Item"><span class="ni">📦</span><span class="nl">Item</span></div>
       <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
       <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
@@ -455,6 +456,20 @@
           <div id="op-list" class="op-list"></div>
         </div>
         <div id="op-detail"><div class="card"><div class="empty">Klik operator untuk melihat detailnya.</div></div></div>
+      </div>
+
+      <div id="view-items" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Item Info</h2>
+          <input id="item-search" placeholder="cari nama item, mis. Orirock atau LMD">
+          <div class="rf-grid">
+            <select id="item-type"><option value="">Semua tipe</option><option value="MATERIAL">Material</option><option value="CONSUME">Consumable</option><option value="NORMAL">Umum</option></select>
+            <select id="item-rar"><option value="">Semua rarity</option><option value="5">5★</option><option value="4">4★</option><option value="3">3★</option><option value="2">2★</option><option value="1">1★</option></select>
+          </div>
+          <div class="hint" id="item-status">Memuat daftar item...</div>
+          <div id="item-grid" class="op-list"></div>
+        </div>
+        <div id="item-detail"><div class="card"><div class="empty">Klik item untuk melihat infonya.</div></div></div>
       </div>
 
       <div id="view-myniche" class="view hidden">
@@ -639,13 +654,14 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','home','myniche','challenge','ach','profile'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','home','myniche','challenge','ach','profile'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
     if(item.dataset.view === 'members') renderMembers();
     if(item.dataset.view === 'stage') initStageView();
     if(item.dataset.view === 'operators') initOperatorView();
+    if(item.dataset.view === 'items') initItemView();
     if(item.dataset.view === 'myniche') renderMyNiche();
     if(item.dataset.view === 'challenge') renderChallenge();
     if(item.dataset.view === 'home') renderHome();
@@ -2062,6 +2078,68 @@ async function renderHome(){
   const u = currentUser();
   if(u) showApp(u);
 })();
-</script>
-</body>
-</html>
+
+/* ---------- ITEM INFO ---------- */
+let itemList = [], itemState = 'idle', itemToken = 0;
+const ITEM_CLS = { MATERIAL:'Material', CONSUME:'Consumable', NORMAL:'Umum' };
+const OCC = { ALWAYS:'Selalu', ALMOST:'Hampir selalu', USUAL:'Sering', OFTEN:'Cukup sering', SOMETIMES:'Kadang' };
+const OCC_ORDER = ['ALWAYS','ALMOST','USUAL','OFTEN','SOMETIMES'];
+function itemSrcs(ic){ return [ACE + 'items/' + ic + '.png', ACE_CDN + 'items/' + ic + '.png', HELLA + 'items/' + ic + '.png']; }
+
+async function initItemView(){
+  if(itemState !== 'idle') return;
+  itemState = 'loading';
+  const st = document.getElementById('item-status');
+  try{
+    const t = await opTable('item_table');
+    Object.values(t.items || t).forEach(it => { if(it && it.itemId && it.name && it.classifyType !== 'NONE') itemList.push(it); });
+    if(!itemList.length) throw new Error('daftar item kosong');
+    itemList.sort((a, b) => (a.sortId || 0) - (b.sortId || 0));
+    itemState = 'ready';
+    renderItemList();
+  }catch(e){
+    console.error(e); itemState = 'idle';
+    st.textContent = 'Gagal memuat item: ' + (e.message || e) + ' (cek Console). Dicoba lagi saat tab dibuka ulang.';
+  }
+}
+function itemMatches(){
+  const q = document.getElementById('item-search').value.trim().toLowerCase();
+  const c = document.getElementById('item-type').value, r = document.getElementById('item-rar').value;
+  return itemList.filter(i => (!q || i.name.toLowerCase().includes(q)) && (!c || i.classifyType === c) && (!r || rarityNum(i.rarity) === +r));
+}
+function renderItemList(){
+  const l = itemMatches();
+  document.getElementById('item-status').textContent = l.length + ' item' + (l.length > 60 ? ' (60 pertama ditampilkan, persempit pencarian)' : '');
+  document.getElementById('item-grid').innerHTML = l.slice(0, 60).map(i =>
+    `<div class="op-row" data-id="${esc(i.itemId)}">${imgTag(itemSrcs(i.iconId || i.itemId))}<div style="min-width:0;"><div class="n">${esc(i.name)}</div><div class="c">${'★'.repeat(rarityNum(i.rarity))} · ${esc(ITEM_CLS[i.classifyType] || '')}</div></div></div>`
+  ).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
+}
+const PENGUIN = 'https://penguin-stats.io/PenguinStats/api/v2/result/matrix?server=US&itemFilter=';
+const pgCache = {};
+async function pgMatrix(itemId){
+  if(pgCache[itemId]) return pgCache[itemId];
+  const r = await fetch(PENGUIN + encodeURIComponent(itemId));
+  if(!r.ok) throw new Error('Penguin HTTP ' + r.status);
+  const j = await r.json();
+  return (pgCache[itemId] = j.matrix || []);
+}
+async function openItem(id){
+  const it = itemList.find(x => x.itemId === id); if(!it) return;
+  const tk = ++itemToken, box = document.getElementById('item-detail');
+  box.innerHTML = '<div class="card"><div class="hint">Memuat ' + esc(it.name) + ' dan drop rate...</div></div>';
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+  const drops = (it.stageDropList || []).slice().sort((a, b) => OCC_ORDER.indexOf(a.occPer) - OCC_ORDER.indexOf(b.occPer));
+  let pg = null;
+  try{ pg = await pgMatrix(it.itemId); }catch(e){ console.warn('Penguin gagal, pakai label bawaan game:', e); }
+  if(tk !== itemToken) return;
+  const hasPg = !!(pg && pg.length);
+  const sm = {};
+  if(hasPg || drops.length){ try{ if(await stageReady()) stageList.forEach(s => sm[s.id] = s); }catch(e){ console.warn(e); } }
+  if(tk !== itemToken) return;
+  const stName = id => { const s = sm[id]; return esc(s ? s.code + ' — ' + s.name : id); };
+  const pgAll = hasPg ? pg.filter(m => m.times > 0).map(m => ({ id: m.stageId, rate: m.quantity / m.times * 100, times: m.times })).sort((a, b) => b.rate - a.rate) : [];
+  const pgRows = pgAll.slice(0, 40).map(m => `<tr><td>${stName(m.id)}</td><td><b>${m.rate.toFixed(2)}%</b></td><td>${m.times.toLocaleString('id-ID')}</td></tr>`).join('');
+  const dropHtml = pgRows
+    ? `<h3 class="sub-h">Drop rate per stage</h3><div class="tbwrap"><table class="tb"><tr><th>Stage</th><th>Drop rate</th><th>Sampel (run)</th></tr>${pgRows}</table></div><div class="hint">Diurutkan dari drop rate tertinggi${pgAll.length > 40 ? ' (40 teratas dari ' + pgAll.length + ')' : ''}. Stage dengan sampel sedikit kurang akurat. Di atas 100% berarti rata-rata lebih dari 1 item per run. Data server Global dari <a href="https://penguin-stats.io" target="_blank" rel="noopener">Penguin Statistics</a> (CC BY-NC 4.0).</div>`
+    : (drops.length ? `<h3 class="sub-h">Drop dari stage</h3><div class="hint">Data persen dari Penguin Statistics tidak bisa dimuat, jadi hanya label peluang dari game yang ditampilkan.</div>` : '');
+  const rooms = [...new Set((it.buildingProductList || []).map(b => ROOM[b.roomType] || b.roomType))];
