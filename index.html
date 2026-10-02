@@ -284,6 +284,16 @@
     .sidebar:hover .nav-item .nl,.sidebar:hover .profile-item .pi-text,.sidebar:focus-within .nav-item .nl,.sidebar:focus-within .profile-item .pi-text{opacity:1;}
     .profile-item{padding:8px 10px;}
   }
+  .skin-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:12px; max-height:560px; overflow-y:auto;}
+  .skin-card{background:var(--panel2); border:1px solid var(--border); border-radius:18px; overflow:hidden; cursor:pointer; min-width:0; transition:border-color .12s,transform .12s;}
+  .skin-card:hover{border-color:rgba(254,47,103,.55); transform:translateY(-2px);}
+  .skin-card img{display:block; width:100%; aspect-ratio:1/1.15; object-fit:cover; object-position:top; background:#000;}
+  .skin-card .t{padding:8px 10px;} .skin-card .n{font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;} .skin-card .c{font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .nav-sub{display:none !important;}
+  .subtabs{display:flex; gap:4px; flex-wrap:wrap; margin:0 0 18px; padding:5px; width:fit-content; max-width:100%; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:999px;}
+  .subtab{padding:7px 16px; border-radius:999px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; user-select:none; white-space:nowrap; transition:background .12s,color .12s;}
+  .subtab:hover{color:var(--text);} .subtab.on{background:var(--main); color:#fff; box-shadow:inset 0 0 0 1px rgba(254,47,103,.5);}
+  @media(max-width:720px){ .subtabs{border-radius:18px; width:100%;} .subtab{padding:7px 12px; font-size:12.5px;} }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -316,6 +326,7 @@
       <div class="nav-item" data-view="stage" title="Stage Info"><span class="ni">🗺️</span><span class="nl">Stage Info</span></div>
       <div class="nav-item" data-view="operators" title="Operators"><span class="ni">🎖️</span><span class="nl">Operators</span></div>
       <div class="nav-item" data-view="items" title="Item"><span class="ni">📦</span><span class="nl">Item</span></div>
+      <div class="nav-item" data-view="skins" title="Skin"><span class="ni">👗</span><span class="nl">Skin</span></div>
       <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
       <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
@@ -460,16 +471,26 @@
 
       <div id="view-items" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
-          <h2>Item Info</h2>
+          <h2>Item Info — Material</h2>
           <input id="item-search" placeholder="cari nama item, mis. Orirock atau LMD">
           <div class="rf-grid">
-            <select id="item-type"><option value="">Semua tipe</option><option value="MATERIAL">Material</option><option value="CONSUME">Consumable</option><option value="NORMAL">Umum</option></select>
             <select id="item-rar"><option value="">Semua rarity</option><option value="5">5★</option><option value="4">4★</option><option value="3">3★</option><option value="2">2★</option><option value="1">1★</option></select>
           </div>
           <div class="hint" id="item-status">Memuat daftar item...</div>
           <div id="item-grid" class="op-list"></div>
         </div>
         <div id="item-detail"><div class="card"><div class="empty">Klik item untuk melihat infonya.</div></div></div>
+      </div>
+
+      <div id="view-skins" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Koleksi Skin</h2>
+          <input id="skin-search" placeholder="cari skin / operator / seri, mis. Amiya atau Epoque">
+          <div class="rf-grid"><select id="skin-group"><option value="">Semua seri</option></select></div>
+          <div class="hint" id="skin-status">Memuat daftar skin...</div>
+          <div id="skin-grid" class="skin-grid"></div>
+        </div>
+        <div id="skin-detail"><div class="card"><div class="empty">Klik skin untuk melihat detailnya.</div></div></div>
       </div>
 
       <div id="view-myniche" class="view hidden">
@@ -654,7 +675,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','home','myniche','challenge','ach','profile'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','home','myniche','challenge','ach','profile'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -662,6 +683,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'stage') initStageView();
     if(item.dataset.view === 'operators') initOperatorView();
     if(item.dataset.view === 'items') initItemView();
+    if(item.dataset.view === 'skins') initSkinView();
     if(item.dataset.view === 'myniche') renderMyNiche();
     if(item.dataset.view === 'challenge') renderChallenge();
     if(item.dataset.view === 'home') renderHome();
@@ -687,12 +709,22 @@ function tryLogin(){
   authRef.signInWithEmailAndPassword(u + EMAIL_DOMAIN, p)
     .catch((e)=>{
       console.error(e);
-      err.textContent = 'Username atau password salah.';
+      const c = (e && e.code) || '';
+      if(!c || /invalid-credential|wrong-password|user-not-found|invalid-login|invalid-email/.test(c)) err.textContent = 'Username atau password salah.';
+      else if(c.includes('unauthorized-domain')) err.textContent = 'Domain ini belum diizinkan di Firebase (Authentication > Settings > Authorized domains).';
+      else if(c.includes('operation-not-supported')) err.textContent = 'Buka lewat http(s) atau localhost, bukan file://.';
+      else if(c.includes('network')) err.textContent = 'Koneksi ke Firebase gagal, cek internet.';
+      else err.textContent = 'Gagal login (' + c + ').';
     });
+  setTimeout(()=>{
+    const ls = document.getElementById('login-screen');
+    if(ls && !ls.classList.contains('hidden') && !err.textContent) err.textContent = 'Belum ada respons dari Firebase. Cek internet atau domain yang diizinkan.';
+  }, 10000);
   // Kalau berhasil, onAuthStateChanged di bawah yang akan memindahkan ke homescreen.
 }
 
 document.getElementById('btn-login').addEventListener('click', tryLogin);
+if(location.protocol === 'file:') document.getElementById('login-error').textContent = 'Dibuka dari file://. Login Firebase tidak jalan di mode ini, buka lewat localhost atau hosting.';
 document.getElementById('li-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
 document.getElementById('li-user').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
 
@@ -2086,7 +2118,7 @@ async function initItemView(){
   const st = document.getElementById('item-status');
   try{
     const t = await opTable('item_table');
-    Object.values(t.items || t).forEach(it => { if(it && it.itemId && it.name && it.classifyType !== 'NONE') itemList.push(it); });
+    Object.values(t.items || t).forEach(it => { if(it && it.itemId && it.name && it.classifyType === 'MATERIAL') itemList.push(it); });
     if(!itemList.length) throw new Error('daftar item kosong');
     itemList.sort((a, b) => (a.sortId || 0) - (b.sortId || 0));
     itemState = 'ready';
@@ -2098,8 +2130,8 @@ async function initItemView(){
 }
 function itemMatches(){
   const q = document.getElementById('item-search').value.trim().toLowerCase();
-  const c = document.getElementById('item-type').value, r = document.getElementById('item-rar').value;
-  return itemList.filter(i => (!q || i.name.toLowerCase().includes(q)) && (!c || i.classifyType === c) && (!r || rarityNum(i.rarity) === +r));
+  const r = document.getElementById('item-rar').value;
+  return itemList.filter(i => (!q || i.name.toLowerCase().includes(q)) && (!r || rarityNum(i.rarity) === +r));
 }
 function renderItemList(){
   const l = itemMatches();
@@ -2154,9 +2186,115 @@ async function openItem(id){
   </div>`;
 }
 document.getElementById('item-search').addEventListener('input', () => { if(itemState === 'ready') renderItemList(); });
-document.getElementById('item-type').addEventListener('change', () => { if(itemState === 'ready') renderItemList(); });
 document.getElementById('item-rar').addEventListener('change', () => { if(itemState === 'ready') renderItemList(); });
 document.getElementById('item-grid').addEventListener('click', e => { const c = e.target.closest('.op-row'); if(c) openItem(c.dataset.id); });
+
+/* ---------- SKIN COLLECTION ---------- */
+let skinList = [], skinState = 'idle', skinToken = 0;
+function skinSrcs(pid){ const e = encodeURIComponent(pid); return [ACE + 'characters/' + e + '.png', ACE_CDN + 'characters/' + e + '.png', HELLA + 'operator/portraits/' + e + '.png']; }
+
+async function initSkinView(){
+  if(skinState !== 'idle') return;
+  skinState = 'loading';
+  const st = document.getElementById('skin-status');
+  try{
+    const t = await opTable('skin_table');
+    const chars = (await opTableSafe('character_table')) || {};
+    Object.values(t.charSkins || t).forEach(sk => {
+      const d = sk && sk.displaySkin || {};
+      if(!sk || !sk.skinId || sk.skinId.indexOf('@') < 0 || !d.skinName) return;
+      const ch = chars[sk.charId];
+      skinList.push({ id: sk.skinId, op: ch ? ch.name : sk.charId, name: d.skinName, group: d.skinGroupName || 'Lainnya', pid: sk.portraitId || sk.skinId.replace('@', '_'), d, time: d.getTime || 0, sort: d.sortId || 0 });
+    });
+    if(!skinList.length) throw new Error('daftar skin kosong');
+    skinList.sort((a, b) => b.time - a.time || b.sort - a.sort);
+    const cnt = {}; skinList.forEach(x => cnt[x.group] = (cnt[x.group] || 0) + 1);
+    const sel = document.getElementById('skin-group');
+    Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a] || a.localeCompare(b)).forEach(g => sel.insertAdjacentHTML('beforeend', `<option value="${esc(g)}">${esc(g)} (${cnt[g]})</option>`));
+    skinState = 'ready';
+    renderSkinList();
+  }catch(e){
+    console.error(e); skinState = 'idle';
+    st.textContent = 'Gagal memuat skin: ' + (e.message || e) + ' (cek Console). Dicoba lagi saat tab dibuka ulang.';
+  }
+}
+function skinMatches(){
+  const q = document.getElementById('skin-search').value.trim().toLowerCase(), g = document.getElementById('skin-group').value;
+  return skinList.filter(x => (!g || x.group === g) && (!q || x.name.toLowerCase().includes(q) || x.op.toLowerCase().includes(q) || x.group.toLowerCase().includes(q)));
+}
+function renderSkinList(){
+  const l = skinMatches();
+  document.getElementById('skin-status').textContent = l.length + ' skin' + (l.length > 60 ? ' (60 pertama ditampilkan, persempit pencarian)' : '');
+  document.getElementById('skin-grid').innerHTML = l.slice(0, 60).map(x =>
+    `<div class="skin-card" data-id="${esc(x.id)}">${imgTag(skinSrcs(x.pid))}<div class="t"><div class="n">${esc(x.name)}</div><div class="c">${esc(x.op)} · ${esc(x.group)}</div></div></div>`
+  ).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
+}
+function openSkin(id){
+  const x = skinList.find(y => y.id === id); if(!x) return;
+  const d = x.d, box = document.getElementById('skin-detail');
+  const list = a => (a || []).filter(Boolean).join(', ');
+  const date = d.getTime > 1e9 ? new Date(d.getTime * 1000).toLocaleDateString('id-ID', { year:'numeric', month:'long', day:'numeric' }) : '';
+  const sec = (t, v) => v ? `<h3 class="sub-h">${t}</h3><div>${fillDesc(v, [])}</div>` : '';
+  box.innerHTML = `<div class="card"><div class="op-head">
+    <div style="width:300px; max-width:100%;">${imgTag(skinSrcs(x.pid), 'stage-img')}</div>
+    <div class="op-info"><div class="op-title">${esc(x.name)}</div>
+      <div class="kv"><b>Operator</b><span>${esc(x.op)}</span><b>Seri</b><span>${esc(x.group)}</span>
+        ${list(d.drawerList) ? `<b>Ilustrator</b><span>${esc(list(d.drawerList))}</span>` : ''}
+        ${list(d.designerList) ? `<b>Desainer</b><span>${esc(list(d.designerList))}</span>` : ''}
+        ${date ? `<b>Rilis</b><span>${esc(date)}</span>` : ''}
+        ${d.obtainApproach ? `<b>Didapat</b><span>${esc(d.obtainApproach)}</span>` : ''}</div></div></div>
+    ${sec('Deskripsi', d.content)}${sec('Kutipan', d.dialog)}${sec('Keterangan', d.description)}${sec('Kegunaan', d.usage)}</div>`;
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+document.getElementById('skin-search').addEventListener('input', () => { if(skinState === 'ready') renderSkinList(); });
+document.getElementById('skin-group').addEventListener('change', () => { if(skinState === 'ready') renderSkinList(); });
+document.getElementById('skin-grid').addEventListener('click', e => { const c = e.target.closest('.skin-card'); if(c) openSkin(c.dataset.id); });
+
+/* ---------- NAV GROUPS (sidebar diringkas, fungsi tab asli tetap dipakai) ---------- */
+(function(){
+  const GROUPS = [
+    { label:'Beranda',   icon:'🏠', views:[['home','Home'], ['dashboard','Dashboard']] },
+    { label:'Clear Log', icon:'📝', views:[['input','Input Clear'], ['riwayat','Riwayat']] },
+    { label:'Komunitas', icon:'👥', views:[['members','Member'], ['niche','Niche Stat'], ['myniche','My Niche']] },
+    { label:'Challenge', icon:'🏆', views:[['challenge','Challenge'], ['ach','Medal']] },
+    { label:'Database',  icon:'📚', views:[['stage','Stage'], ['operators','Operator'], ['items','Item'], ['skins','Skin']] }
+  ];
+  const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
+  const profile = document.querySelector('.sidebar .profile-item');
+  GROUPS.forEach(g => {
+    g.last = g.views[0][0];
+    g.views.forEach(([v, label]) => {
+      const o = orig(v); if(o) o.classList.add('nav-sub');
+      const view = document.getElementById('view-' + v);
+      if(view){
+        const bar = document.createElement('div'); bar.className = 'subtabs';
+        bar.innerHTML = g.views.map(([k, l]) => `<div class="subtab" role="tab" tabindex="0" data-view="${k}">${l}</div>`).join('');
+        view.insertBefore(bar, view.firstChild);
+      }
+    });
+    const el = document.createElement('div');
+    el.className = 'nav-item nav-group'; el.title = g.label; el.setAttribute('role', 'button'); el.tabIndex = 0;
+    el.innerHTML = `<span class="ni">${g.icon}</span><span class="nl">${g.label}</span>`;
+    const go = () => { const o = orig(g.last); if(o) o.click(); };
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
+    profile.parentNode.insertBefore(el, profile);
+    g.el = el;
+  });
+  const go = v => { const o = orig(v); if(o) o.click(); };
+  document.querySelectorAll('.subtab').forEach(t => {
+    t.addEventListener('click', () => go(t.dataset.view));
+    t.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(t.dataset.view); } });
+  });
+  function sync(){
+    const a = document.querySelector('.nav-item[data-view].active'), v = a && a.dataset.view;
+    GROUPS.forEach(g => { const on = g.views.some(x => x[0] === v); if(on) g.last = v; g.el.classList.toggle('active', on); });
+    document.querySelectorAll('.subtab').forEach(t => t.classList.toggle('on', t.dataset.view === v));
+  }
+  const mo = new MutationObserver(sync);
+  document.querySelectorAll('.nav-item[data-view]').forEach(n => mo.observe(n, { attributes:true, attributeFilter:['class'] }));
+  sync();
+})();
 
 /* ---------- INIT ---------- */
 (function init(){
