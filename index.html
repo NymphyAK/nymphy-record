@@ -363,6 +363,11 @@
   .mat{display:flex; align-items:center; gap:10px;} .mat img{width:44px; height:44px; object-fit:contain; flex-shrink:0;}
   .sq-chk{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:6px;} .sq-chk label{display:flex; align-items:center; gap:6px; margin:0; font-weight:500; cursor:pointer;} .sq-chk input{width:auto;}
   #nr-info{font-size:12.5px; margin-top:8px;} #nr-info .bad{color:#ff8fb0;} #nr-edit{margin-top:10px; font-size:13px;} #nr-edit summary{cursor:pointer; color:var(--muted);}
+
+  .mat.big img{width:64px; height:64px;}
+  .cc-art{position:relative; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2a0d16,#0d0d0d 70%);} .cc-art::before{content:attr(data-n); font-weight:800; font-size:26px; letter-spacing:2px; color:rgba(254,47,103,.85); text-shadow:0 0 16px rgba(254,47,103,.5);} .cc-art img{position:absolute; inset:0;}
+  .mat img{background:rgba(255,255,255,.05); border-radius:8px;}
+  .gc-art{margin:-14px -14px 12px; height:130px; overflow:hidden; border-radius:18px 18px 0 0; background:#0d0d0d;} .gc-art img{width:100%; height:100%; object-fit:cover; object-position:top; display:block;}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -403,6 +408,10 @@
       <div class="nav-item" data-view="squad"><span class="nl">Squad Acak</span></div>
       <div class="nav-item" data-view="is"><span class="nl">IS</span></div>
       <div class="nav-item" data-view="cc"><span class="nl">CC</span></div>
+      <div class="nav-item" data-view="streak"><span class="nl">Streak</span></div>
+      <div class="nav-item" data-view="unused"><span class="nl">Belum Dipakai</span></div>
+      <div class="nav-item" data-view="pity"><span class="nl">Pity</span></div>
+      <div class="nav-item" data-view="enemy"><span class="nl">Musuh</span></div>
       <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
       <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
@@ -466,12 +475,6 @@
           <label>Niche</label>
           <select id="f-niche"><option value="">-- pilih niche --</option><option value="__new__">+ Niche Baru...</option></select>
           <input id="f-niche-new" type="text" placeholder="Nama niche baru" class="hidden" style="margin-top:8px;">
-          <div id="nr-info"></div>
-          <details id="nr-edit" class="hidden"><summary>⚙ Atur aturan niche (admin)</summary>
-            <label>Rarity maksimal</label><select id="nr-max"></select>
-            <label>Maks. jumlah operator (0 = bebas)</label><input id="nr-ops" type="number" min="0" value="0">
-            <label>Kelas yang dilarang</label><div id="nr-prof" class="sq-chk"></div>
-            <button id="nr-save" style="margin-top:12px;">Simpan Aturan</button></details>
           <label>Jumlah Operator</label>
           <input id="f-opcount" type="number" min="0" placeholder="mis. 4">
           <label>Nama Operator</label>
@@ -492,6 +495,7 @@
       <div id="view-riwayat" class="view hidden">
         <div class="card">
           <h2>Riwayat Data</h2>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;"><button class="ghost" id="rw-csv">⬇ Export CSV</button><button class="ghost" id="rw-json">⬇ Backup JSON</button></div>
           <div class="rw-filter">
             <input id="rw-search" type="search" placeholder="cari stage, niche, operator, player, admin..." autocomplete="off">
             <select id="rw-niche"><option value="">Semua niche</option></select>
@@ -584,6 +588,16 @@
   <input id="is-search" placeholder="cari relic..."><div class="rf-grid"><select id="is-topic"><option value="">Semua tema</option></select></div><div class="hint" id="is-status">Memuat data...</div><div id="is-grid" class="mini-grid"></div></div></div>
       <div id="view-cc" class="view hidden"><div class="card"><h2>Contingency Contract</h2>
   <div class="hint" id="cc-status">Memuat data...</div><div id="cc-grid" class="mini-grid"></div></div></div>
+      <div id="view-streak" class="view hidden"><div class="card"><h2>Streak Member</h2><div class="hint" style="margin-bottom:10px;">Hari berturut-turut yang ada clear. Streak aktif dihitung sampai hari ini atau kemarin.</div><div id="st-out"></div></div></div>
+      <div id="view-unused" class="view hidden"><div class="card"><h2>Operator Belum Pernah Dipakai</h2>
+  <input id="un-search" placeholder="cari operator..."><div class="rf-grid"><select id="un-r"><option value="0">Semua rarity</option></select></div><div class="hint" id="un-status">Memuat operator...</div><div id="un-grid" class="mini-grid"></div></div></div>
+      <div id="view-pity" class="view hidden"><div class="card" style="max-width:520px;"><h2>Kalkulator Pull</h2>
+  <label>Pull sejak 6★ terakhir (0–98)</label><input id="py-k" type="number" min="0" max="98" value="0">
+  <label>Jumlah pull yang dimiliki</label><input id="py-n" type="number" min="0" value="60">
+  <label>Peluang operator fokus saat dapat 6★</label><select id="py-f"><option value="0.5">50% (banner standar)</option><option value="0.7">70% (limited)</option></select>
+  <div id="py-out" style="margin-top:14px;"></div><div class="hint">Asumsi: rate 6★ 2%, naik +2% per pull setelah pull ke-50 tanpa 6★ (pity). Perkiraan, bukan jaminan.</div></div></div>
+      <div id="view-enemy" class="view hidden"><div class="card"><h2>Database Musuh</h2>
+  <input id="en-search" placeholder="cari musuh..."><div class="rf-grid"><select id="en-lv"><option value="">Semua tingkat</option><option value="NORMAL">Normal</option><option value="ELITE">Elite</option><option value="BOSS">Boss</option></select></div><div class="hint" id="en-status">Memuat musuh...</div><div id="en-grid" class="mini-grid"></div></div></div>
       <div id="view-skins" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
           <h2>Koleksi Skin</h2>
@@ -777,7 +791,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','gacha','medalgame','lore','calc','squad','is','cc','home','myniche','challenge','ach','profile'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','gacha','medalgame','lore','calc','squad','is','cc','streak','unused','pity','enemy','home','myniche','challenge','ach','profile'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -793,7 +807,10 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'squad') initSquad();
     if(item.dataset.view === 'is') initIS();
     if(item.dataset.view === 'cc') initCC();
-    if(item.dataset.view === 'input') nrStart();
+    if(item.dataset.view === 'streak') renderStreak();
+    if(item.dataset.view === 'unused') initUnused();
+    if(item.dataset.view === 'pity') pityCalc();
+    if(item.dataset.view === 'enemy') initEnemy();
     if(item.dataset.view === 'myniche') renderMyNiche();
     if(item.dataset.view === 'challenge') renderChallenge();
     if(item.dataset.view === 'home') renderHome();
@@ -2372,7 +2389,15 @@ document.getElementById('skin-group').addEventListener('change', () => { if(skin
 document.getElementById('skin-grid').addEventListener('click', e => { const c = e.target.closest('.skin-card'); if(c) openSkin(c.dataset.id); });
 
 /* ---------- BANNER / MEDAL GAME / LORE ---------- */
+const HELLA_CDN = 'https://cdn.jsdelivr.net/gh/HellaOrg/HellaAssets@main/';
+const FEX = 'https://raw.githubusercontent.com/fexli/ArknightsResource/main/', FEX_CDN = 'https://cdn.jsdelivr.net/gh/fexli/ArknightsResource@main/';
+const relicSrcs = x => { const ks = [...new Set([x.ico, x.id].filter(Boolean).map(encodeURIComponent))];
+  return [...new Set([...ks.flatMap(k => [HELLA, HELLA_CDN].map(b => b + 'rogue/items/' + k + '.png')), ...ks.flatMap(k => [FEX, FEX_CDN].map(b => b + 'rogueitem/' + k + '.png'))])]; };
+const medalSrcs = x => { const n = wikiName(x.name), ks = [...new Set([x.pic, x.id].filter(Boolean).map(encodeURIComponent))], out = [];
+  ks.forEach(k => [FEX, FEX_CDN].forEach(b => out.push(b + 'medal/raw/' + k + '.png', b + 'medal/group/' + k + '.png', b + 'medal/' + k + '.png')));
+  out.push(WIKI + n + '.png', WIKI + n + '_Trimmed.png'); ks.forEach(k => out.push(ACE + 'medal/' + k + '.png', ACE_CDN + 'medal/' + k + '.png')); return out; };
 const fmtD = t => t > 1e9 ? new Date(t * 1000).toLocaleDateString('id-ID', { year:'numeric', month:'short', day:'numeric' }) : '-';
+const bannerSrcs = id => id ? [FEX, FEX_CDN].flatMap(b => [b + 'gacha/' + encodeURIComponent(id) + '_full.png', b + 'gacha/' + encodeURIComponent(id) + '.png']) : [];
 let gcS = 'idle', gcL = [];
 async function initGacha(){
   if(gcS !== 'idle') return; gcS = 'loading';
@@ -2382,7 +2407,7 @@ async function initGacha(){
     gcL = (t.gachaPoolClient || []).map(g => {
       const ui = (((g.gachaPoolDetail || {}).detailInfo || {}).upCharInfo || {}).perCharList || [];
       const ups = [].concat(...ui.map(x => x.charIdList || []));
-      return { name:g.gachaPoolName || g.gachaPoolId, open:g.openTime, end:g.endTime, ups:ups.map(id => ({ id, n:ch[id] ? ch[id].name : id })) };
+      return { pid:g.gachaPoolId || '', name:g.gachaPoolName || g.gachaPoolId, open:g.openTime, end:g.endTime, ups:ups.map(id => ({ id, n:ch[id] ? ch[id].name : id })) };
     }).sort((a, b) => b.open - a.open);
     if(!gcL.length) throw new Error('daftar banner kosong');
     gcS = 'ready'; renderGacha();
@@ -2393,7 +2418,7 @@ function renderGacha(){
   const l = gcL.filter(x => !q || x.name.toLowerCase().includes(q) || x.ups.some(u => u.n.toLowerCase().includes(q)));
   document.getElementById('gacha-status').textContent = l.length + ' banner';
   document.getElementById('gacha-grid').innerHTML = l.slice(0, 60).map(x =>
-    `<div class="mini-card"><div class="n">${esc(x.name)}</div><div class="c">${fmtD(x.open)} – ${fmtD(x.end)}</div>${x.ups.length ? `<div class="gc-ups">${x.ups.map(u => `<span title="${esc(u.n)}">${imgTag(avatarSrcs(u.id, u.n))}</span>`).join('')}</div>` : ''}</div>`
+    `<div class="mini-card"><div class="gc-art">${imgTag([...bannerSrcs(x.pid), ...(x.ups.length ? artSrcs(x.ups[0].id, x.ups[0].n, 2) : [])])}</div><div class="n">${esc(x.name)}</div><div class="c">${fmtD(x.open)} – ${fmtD(x.end)}</div>${x.ups.length ? `<div class="gc-ups">${x.ups.map(u => `<span title="${esc(u.n)}">${imgTag(avatarSrcs(u.id, u.n))}</span>`).join('')}</div>` : ''}</div>`
   ).join('') || '<div class="empty">Tidak ada hasil.</div>';
 }
 document.getElementById('gacha-search').addEventListener('input', () => { if(gcS === 'ready') renderGacha(); });
@@ -2404,7 +2429,7 @@ async function initMedalGame(){
   const st = document.getElementById('mg-status');
   try{
     const t = await opTable('medal_table');
-    mgL = (t.medalList || []).map(m => ({ name:m.medalName || m.medalId, type:String(m.medalType || 'Lainnya'), rar:m.rarity, desc:m.description || '', how:m.getMethod || '' }));
+    mgL = (t.medalList || []).map(m => ({ id:m.medalId, pic:m.picId || m.medalPicId || '', name:m.medalName || m.medalId, type:String(m.medalType || 'Lainnya'), rar:m.rarity, desc:m.description || '', how:m.getMethod || '' }));
     if(!mgL.length) throw new Error('daftar medal kosong');
     const cnt = {}; mgL.forEach(x => cnt[x.type] = (cnt[x.type] || 0) + 1);
     const sel = document.getElementById('mg-type');
@@ -2417,7 +2442,7 @@ function renderMedalGame(){
   const l = mgL.filter(x => (!g || x.type === g) && (!q || x.name.toLowerCase().includes(q) || x.desc.toLowerCase().includes(q)));
   document.getElementById('mg-status').textContent = l.length + ' medal' + (l.length > 80 ? ' (80 pertama ditampilkan)' : '');
   document.getElementById('mg-grid').innerHTML = l.slice(0, 80).map(x =>
-    `<div class="mini-card"><div class="n">${esc(x.name)}</div><div class="c">${esc(x.type)}</div><div style="font-size:12.5px; margin-top:8px;">${fillDesc(x.desc, [])}</div>${x.how ? `<div class="c" style="margin-top:6px;">${fillDesc(x.how, [])}</div>` : ''}</div>`
+    `<div class="mini-card"><div class="mat big" style="margin-bottom:8px;">${imgTag(medalSrcs(x))}<div><div class="n">${esc(x.name)}</div><div class="c">${esc(x.type)}</div></div></div><div style="font-size:12.5px;">${fillDesc(x.desc, [])}</div>${x.how ? `<div class="c" style="margin-top:6px;">${fillDesc(x.how, [])}</div>` : ''}</div>`
   ).join('') || '<div class="empty">Tidak ada hasil.</div>';
 }
 document.getElementById('mg-search').addEventListener('input', () => { if(mgS === 'ready') renderMedalGame(); });
@@ -2536,7 +2561,7 @@ async function initIS(){
   try{
     const t = await opTable('roguelike_topic_table'), tp = t.topics || {}, det = t.details || {}, names = {};
     Object.keys(det).forEach(tid => { const tn = (tp[tid] && tp[tid].name) || tid; names[tn] = 1;
-      Object.values(det[tid].items || {}).forEach(r => { if(r && r.name) isL.push({ topic:tn, n:r.name, type:String(r.type || ''), rar:r.rarity || '', d:r.description || r.usage || '', how:r.obtainApproach || '' }); }); });
+      Object.values(det[tid].items || {}).forEach(r => { if(r && r.name) isL.push({ id:r.id || r.itemId, ico:r.iconId, topic:tn, n:r.name, type:String(r.type || ''), rar:r.rarity || '', d:r.description || r.usage || '', how:r.obtainApproach || '' }); }); });
     if(!isL.length) throw new Error('relic tidak ditemukan di data');
     Object.keys(names).forEach(n => kg('is-topic').insertAdjacentHTML('beforeend', `<option value="${esc(n)}">${esc(n)}</option>`));
     isS = 'ready'; renderIS();
@@ -2546,11 +2571,14 @@ function renderIS(){
   const q = kg('is-search').value.trim().toLowerCase(), g = kg('is-topic').value;
   const l = isL.filter(x => (!g || x.topic === g) && (!q || x.n.toLowerCase().includes(q) || x.d.toLowerCase().includes(q)));
   kg('is-status').textContent = l.length + ' item' + (l.length > 80 ? ' (80 pertama ditampilkan)' : '');
-  kg('is-grid').innerHTML = l.slice(0, 80).map(x => `<div class="mini-card"><div class="n">${esc(x.n)}</div><div class="c">${esc(x.topic)}${x.type ? ' · ' + esc(x.type) : ''}</div><div style="font-size:12.5px; margin-top:8px;">${fillDesc(x.d, [])}</div>${x.how ? `<div class="c" style="margin-top:6px;">${fillDesc(x.how, [])}</div>` : ''}</div>`).join('') || '<div class="empty">Tidak ada hasil.</div>';
+  kg('is-grid').innerHTML = l.slice(0, 80).map(x => `<div class="mini-card"><div class="mat" style="margin-bottom:8px;">${imgTag(relicSrcs(x))}<div><div class="n">${esc(x.n)}</div><div class="c">${esc(x.topic)}${x.type ? ' · ' + esc(x.type) : ''}</div></div></div><div style="font-size:12.5px;">${fillDesc(x.d, [])}</div>${x.how ? `<div class="c" style="margin-top:6px;">${fillDesc(x.how, [])}</div>` : ''}</div>`).join('') || '<div class="empty">Tidak ada hasil.</div>';
 }
 kg('is-search').addEventListener('input', () => { if(isS === 'ready') renderIS(); });
 kg('is-topic').addEventListener('change', () => { if(isS === 'ready') renderIS(); });
 
+const ccTag = (x, n) => { const m = String(x.seasonId || x.name || '').match(/(\d+)\s*$/); return 'CC ' + (m ? m[1] : n); };
+const ccSrcs = x => { const ks = [...new Set([x.bannerImg, x.bgImg, x.seasonImg, x.imageId, x.picId, x.seasonId].filter(v => typeof v === 'string' && v).map(encodeURIComponent))];
+  return ks.flatMap(k => [FEX, FEX_CDN].flatMap(b => [b + 'kvimg/' + k + '.png', b + 'gacha/' + k + '.png'])); };
 let ccS = 'idle';
 async function initCC(){
   if(ccS !== 'idle') return; ccS = 'loading';
@@ -2560,53 +2588,93 @@ async function initCC(){
     const l = Object.values(m).filter(x => x && (x.name || x.seasonName || x.seasonId)).sort((a, b) => (b.startTs || 0) - (a.startTs || 0));
     if(!l.length) throw new Error('data season tidak ditemukan');
     kg('cc-status').textContent = l.length + ' season';
-    kg('cc-grid').innerHTML = l.map(x => `<div class="mini-card"><div class="n">${esc(x.name || x.seasonName || x.seasonId)}</div><div class="c">${fmtD(x.startTs)} – ${fmtD(x.endTs)}</div><div class="c">${esc(x.seasonId || '')}</div></div>`).join('');
+    kg('cc-grid').innerHTML = l.map((x, i) => `<div class="mini-card"><div class="gc-art cc-art" data-n="${esc(ccTag(x, l.length - i))}">${ccSrcs(x).length ? imgTag(ccSrcs(x)) : ''}</div><div class="n">${esc(x.name || x.seasonName || x.seasonId)}</div><div class="c">${fmtD(x.startTs)} – ${fmtD(x.endTs)}</div><div class="c">${esc(x.seasonId || '')}</div></div>`).join('');
     ccS = 'ready';
   }catch(e){ console.error(e); ccS = 'idle'; kg('cc-status').textContent = 'Gagal memuat CC: ' + (e.message || e); }
 }
 
-/* aturan niche: disimpan di Firestore koleksi niche_rules, dibuat admin; dicek saat input */
-let nrMap = {}, nrOn = false, nrNames = null;
-const nrId = n => encodeURIComponent(n).replace(/\./g, '%2E');
-const curNiche = () => { const v = kg('f-niche').value; return v === '__new__' ? kg('f-niche-new').value.trim() : v; };
-async function nrStart(){
-  if(!nrNames){ try{ await loadChars(); nrNames = {}; kcOps.forEach(x => { nrNames[x.n.toLowerCase()] = x; }); }catch(e){ console.warn(e); } }
-  kg('nr-max').innerHTML = '<option value="0">Tanpa batas</option>' + rng(1, 6).replace(/(\d)<\/option>/g, '$1★</option>');
-  if(!kg('nr-prof').children.length) kg('nr-prof').innerHTML = profBoxes('nr-prof', 'nrp');
-  kg('nr-edit').classList.toggle('hidden', currentUser() !== SUPER_ADMIN);
-  if(nrOn) return; nrOn = true;
-  try{ firebase.firestore().collection('niche_rules').onSnapshot(q => { nrMap = {}; q.docs.forEach(d => { const x = d.data(); if(x.niche) nrMap[x.niche] = x; }); nrShow(); }, e => { nrOn = false; console.warn('niche_rules', e); }); }catch(e){ nrOn = false; }
-}
-function nrCheck(niche, ops){
-  const r = nrMap[niche], out = []; if(!r || !nrNames) return out;
-  ops.forEach(n => { const o = nrNames[String(n).toLowerCase()]; if(!o) return;
-    if(r.maxRarity && o.r > r.maxRarity) out.push(`${n} (${o.r}★) melebihi batas ${r.maxRarity}★`);
-    if((r.bannedProf || []).includes(o.c.profession)) out.push(`${n}: kelas ${PROF[o.c.profession] || o.c.profession} dilarang`);
-  });
-  if(r.maxOps && ops.length > r.maxOps) out.push(`Jumlah operator ${ops.length} melebihi batas ${r.maxOps}`);
-  return out;
-}
-function nrShow(){
-  const n = curNiche(), r = nrMap[n], box = kg('nr-info');
-  if(r){ const bits = []; if(r.maxRarity) bits.push('maks ' + r.maxRarity + '★'); if(r.maxOps) bits.push('maks ' + r.maxOps + ' operator'); if((r.bannedProf || []).length) bits.push('tanpa ' + r.bannedProf.map(k => PROF[k] || k).join(', '));
-    const bad = nrCheck(n, selectedOps.slice());
-    box.innerHTML = '<span class="muted">Aturan: ' + (bits.join(' · ') || 'tidak ada batasan') + '</span>' + bad.map(b => `<div class="bad">⚠ ${esc(b)}</div>`).join('');
-    kg('nr-max').value = r.maxRarity || 0; kg('nr-ops').value = r.maxOps || 0;
-    kg('nr-prof').querySelectorAll('input').forEach(x => { x.checked = (r.bannedProf || []).includes(x.value); });
-  } else box.innerHTML = '';
-}
-kg('f-niche').addEventListener('change', nrShow);
-kg('f-niche-new').addEventListener('input', nrShow);
-new MutationObserver(nrShow).observe(kg('f-ops-chips'), { childList:true });
-kg('nr-save').addEventListener('click', async () => {
-  const n = curNiche(); if(!n){ alert('Pilih atau isi niche dulu.'); return; }
-  try{ await firebase.firestore().collection('niche_rules').doc(nrId(n)).set({ niche:n, maxRarity:+kg('nr-max').value || 0, maxOps:+kg('nr-ops').value || 0, bannedProf:[...kg('nr-prof').querySelectorAll('input:checked')].map(x => x.value), updatedBy:currentUser(), updatedAt:Date.now() }); }
-  catch(e){ console.error(e); alert('Gagal menyimpan aturan. Cek aturan Firestore untuk koleksi niche_rules.'); }
+/* ---------- EXPORT / STREAK / BELUM DIPAKAI / PITY / MUSUH ---------- */
+function dl(name, text, type){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+const stamp = () => new Date().toISOString().slice(0, 10);
+kg('rw-csv').addEventListener('click', () => {
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const rows = [['tanggal', 'stage', 'niche', 'jumlah_operator', 'operator', 'player', 'link', 'admin', 'weekly']].concat((liveData || []).map(d => [new Date(d.createdAt || 0).toISOString(), d.stage, d.niche, d.operatorCount, (d.operators || []).join(' | '), (d.players || []).join(' | '), d.buktiLink, d.admin, d.weekly]));
+  dl('clear-log-' + stamp() + '.csv', '\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
 });
-kg('btn-submit').addEventListener('click', e => {
-  const n = curNiche(), bad = nrCheck(n, selectedOps.slice());
-  if(bad.length && !confirm('Squad ini melanggar aturan niche "' + n + '":\n\n- ' + bad.join('\n- ') + '\n\nTetap simpan?')) e.stopImmediatePropagation();
-}, true);
+kg('rw-json').addEventListener('click', () => dl('clear-log-backup-' + stamp() + '.json', JSON.stringify(liveData || [], null, 2), 'application/json'));
+
+const dayNo = t => { const d = new Date(t); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5); };
+function renderStreak(){
+  const per = {};
+  (liveData || []).forEach(d => (d.players || []).forEach(p => { (per[p] = per[p] || { days:new Set(), n:0 }); per[p].days.add(dayNo(d.createdAt || 0)); per[p].n++; }));
+  const today = dayNo(Date.now());
+  const rows = Object.keys(per).map(p => {
+    const ds = [...per[p].days].sort((a, b) => a - b); let best = 0, run = 0, prev = null;
+    ds.forEach(x => { run = prev !== null && x === prev + 1 ? run + 1 : 1; best = Math.max(best, run); prev = x; });
+    let cur = 0, x = per[p].days.has(today) ? today : today - 1; while(per[p].days.has(x)){ cur++; x--; }
+    return { p, cur, best, n:per[p].n };
+  }).sort((a, b) => b.cur - a.cur || b.best - a.best || b.n - a.n);
+  kg('st-out').innerHTML = rows.length ? '<table class="tb"><tr><th>Member</th><th>Streak aktif</th><th>Terpanjang</th><th>Total clear</th></tr>' + rows.map(r => `<tr><td>${esc(r.p)}</td><td>${r.cur ? '🔥 ' + r.cur + ' hari' : '-'}</td><td>${r.best} hari</td><td>${r.n}</td></tr>`).join('') + '</table>' : '<div class="empty">Belum ada data player.</div>';
+}
+
+let unS = 'idle';
+async function initUnused(){
+  if(unS === 'idle'){ unS = 'loading';
+    try{ await loadChars(); kg('un-r').insertAdjacentHTML('beforeend', [1, 2, 3, 4, 5, 6].map(i => `<option value="${i}">${i}★</option>`).join('')); unS = 'ready'; }
+    catch(e){ console.error(e); unS = 'idle'; kg('un-status').textContent = 'Gagal memuat: ' + (e.message || e); return; } }
+  if(unS === 'ready') renderUnused();
+}
+function renderUnused(){
+  const used = new Set(); (liveData || []).forEach(d => (d.operators || []).forEach(n => used.add(String(n).toLowerCase())));
+  const q = kg('un-search').value.trim().toLowerCase(), r = +kg('un-r').value;
+  const all = kcOps.filter(x => x.c.profession !== 'TOKEN' && x.c.profession !== 'TRAP'), un = all.filter(x => !used.has(x.n.toLowerCase()));
+  const l = un.filter(x => (!r || x.r === r) && (!q || x.n.toLowerCase().includes(q)));
+  kg('un-status').textContent = un.length + ' dari ' + all.length + ' operator belum pernah dipakai' + (l.length > 80 ? ' (80 pertama ditampilkan)' : '');
+  kg('un-grid').innerHTML = l.slice(0, 80).map(x => `<div class="mini-card lore-it">${imgTag(avatarSrcs(x.id, x.n))}<div><div class="n">${esc(x.n)}</div><div class="c">${x.r}★ · ${esc(PROF[x.c.profession] || x.c.profession)}</div></div></div>`).join('') || '<div class="empty">Tidak ada.</div>';
+}
+kg('un-search').addEventListener('input', () => { if(unS === 'ready') renderUnused(); });
+kg('un-r').addEventListener('change', () => { if(unS === 'ready') renderUnused(); });
+
+const pyRate = j => j <= 50 ? .02 : Math.min(1, .02 + .02 * (j - 50));
+function pityCalc(){
+  const k = Math.max(0, Math.min(98, +kg('py-k').value || 0)), n = Math.max(0, +kg('py-n').value || 0), f = +kg('py-f').value;
+  let noSix = 1; for(let i = 1; i <= n; i++) noSix *= 1 - pyRate(k + i > 99 ? 99 : k + i);
+  let dist = new Array(99).fill(0); dist[k] = 1; let got = 0, cum = [], expF = 0, expS = 0, ns = 1, p6 = k;
+  for(let t = 1; t <= 1500; t++){
+    expF += dist.reduce((a, b) => a + b, 0);
+    const nd = new Array(99).fill(0);
+    dist.forEach((m, p) => { if(!m) return; const r = pyRate(p + 1); got += m * r * f; nd[0] += m * r * (1 - f); if(p + 1 < 99) nd[p + 1] += m * (1 - r); });
+    dist = nd; cum.push(got);
+    if(t <= 200){ expS += ns; ns *= 1 - pyRate(p6 + t > 99 ? 99 : p6 + t); }
+  }
+  const at = x => { const i = cum.findIndex(v => v >= x); return i < 0 ? '-' : (i + 1) + ' pull'; };
+  const pc = v => (v * 100).toFixed(1) + '%';
+  kg('py-out').innerHTML = `<div class="stat-row"><span>Peluang ≥1 6★ dalam ${n} pull</span><b>${pc(1 - noSix)}</b></div>
+    <div class="stat-row"><span>Peluang ≥1 operator fokus dalam ${n} pull</span><b>${pc(n ? cum[Math.min(n, 1500) - 1] : 0)}</b></div>
+    <div class="stat-row"><span>Rata-rata pull sampai 6★ berikutnya</span><b>${expS.toFixed(1)}</b></div>
+    <div class="stat-row"><span>Rata-rata pull sampai operator fokus</span><b>${expF.toFixed(1)}</b></div>
+    <div class="stat-row"><span>Pull untuk peluang 50% / 90% dapat fokus</span><b>${at(.5)} / ${at(.9)}</b></div>`;
+}
+['py-k', 'py-n', 'py-f'].forEach(i => kg(i).addEventListener('input', pityCalc));
+
+let enS = 'idle', enL = [];
+async function initEnemy(){
+  if(enS !== 'idle') return; enS = 'loading';
+  try{
+    const t = await opTable('enemy_handbook_table'), d = t.enemyData || t;
+    enL = Object.values(d).filter(e => e && e.name && e.enemyId && !e.hideInHandbook).map(e => ({ id:e.enemyId, n:e.name, lv:String(e.enemyLevel || ''), d:e.description || '', ab:(e.abilityList || []).map(a => a.text || '').filter(Boolean).join('\n'), sort:e.sortId || 0 })).sort((a, b) => a.sort - b.sort);
+    if(!enL.length) throw new Error('data musuh kosong');
+    enS = 'ready'; renderEnemy();
+  }catch(e){ console.error(e); enS = 'idle'; kg('en-status').textContent = 'Gagal memuat musuh: ' + (e.message || e); }
+}
+function renderEnemy(){
+  const q = kg('en-search').value.trim().toLowerCase(), g = kg('en-lv').value;
+  const l = enL.filter(x => (!g || x.lv === g) && (!q || x.n.toLowerCase().includes(q)));
+  kg('en-status').textContent = l.length + ' musuh' + (l.length > 60 ? ' (60 pertama ditampilkan)' : '');
+  kg('en-grid').innerHTML = l.slice(0, 60).map(x => `<div class="mini-card"><div class="mat" style="margin-bottom:8px;">${imgTag(enemySrcs(x.id))}<div><div class="n">${esc(x.n)}</div><div class="c">${esc(x.lv)}</div></div></div><div style="font-size:12.5px;">${fillDesc(x.d, [])}</div>${x.ab ? `<div class="c" style="margin-top:8px;">${fillDesc(x.ab, [])}</div>` : ''}</div>`).join('') || '<div class="empty">Tidak ada hasil.</div>';
+}
+kg('en-search').addEventListener('input', () => { if(enS === 'ready') renderEnemy(); });
+kg('en-lv').addEventListener('change', () => { if(enS === 'ready') renderEnemy(); });
 
 /* ---------- NAV GROUPS (sidebar diringkas, fungsi tab asli tetap dipakai) ---------- */
 (function(){
@@ -2629,16 +2697,17 @@ kg('btn-submit').addEventListener('click', e => {
     book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/>',
     calc:'<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/>',
     dice:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/>',
+    flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.4 1 2 1.8 2.3C11 8.5 11 5.5 12 3z"/>',
     db:'<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/>'
   };
   const svg = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
   const GROUPS = [
     { label:'Beranda',   icon:'home',  views:[['home','Home','home'], ['dashboard','Dashboard','dash']] },
     { label:'Clear Log', icon:'clog',  views:[['input','Input Clear','plus'], ['riwayat','Riwayat','hist']] },
-    { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target']] },
+    { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target'], ['streak','Streak','flame']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
-    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['gacha','Banner','star'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['cc','CC','target']] },
-    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice']] }
+    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['gacha','Banner','star'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['cc','CC','target'], ['enemy','Musuh','target']] },
+    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['pity','Pity','star']] }
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
   const profile = document.querySelector('.sidebar .profile-item');
