@@ -272,9 +272,16 @@
   #login-screen{background:radial-gradient(720px 420px at 50% -5%,rgba(94,9,29,.75),transparent 70%),#121212;}
   #login-box{padding:34px 26px;}
   @media(min-width:721px){
-    .sidebar{gap:4px;}
-    .nav-item{padding:12px 14px; white-space:nowrap;}
+    .content{margin-left:84px;}
+    .sidebar{position:fixed; left:0; top:0; bottom:0; width:84px; height:auto; z-index:45; overflow:hidden; background:rgba(16,16,16,.92); border-right:1px solid rgba(255,255,255,.06); transition:width .22s ease, box-shadow .22s; padding:18px 12px;}
+    .sidebar:hover,.sidebar:focus-within{width:228px; box-shadow:20px 0 50px -20px rgba(0,0,0,.8);}
+    .sidebar .logo-img{width:44px !important; height:44px !important; margin-bottom:6px !important;}
+    .sidebar .brand{font-size:11px; letter-spacing:.08em; margin-bottom:18px; transition:font-size .22s;}
+    .sidebar:hover .brand,.sidebar:focus-within .brand{font-size:23px; letter-spacing:.14em;}
+    .nav-item{padding:11px 0 11px 17px; white-space:nowrap;}
     .nav-item.active::before{display:none;}
+    .nav-item .nl,.profile-item .pi-text{opacity:0; transition:opacity .15s;}
+    .sidebar:hover .nav-item .nl,.sidebar:hover .profile-item .pi-text,.sidebar:focus-within .nav-item .nl,.sidebar:focus-within .profile-item .pi-text{opacity:1;}
     .profile-item{padding:8px 10px;}
   }
   .skin-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:12px; max-height:560px; overflow-y:auto;}
@@ -287,6 +294,65 @@
   .subtab{padding:7px 16px; border-radius:999px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; user-select:none; white-space:nowrap; transition:background .12s,color .12s;}
   .subtab:hover{color:var(--text);} .subtab.on{background:var(--main); color:#fff; box-shadow:inset 0 0 0 1px rgba(254,47,103,.5);}
   @media(max-width:720px){ .subtabs{border-radius:18px; width:100%;} .subtab{padding:7px 12px; font-size:12.5px;} }
+
+  /* ===== SIDEBAR & MENU v2 ===== */
+  .ni svg,.subtab svg{width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; display:block;}
+  .nav-item{border-radius:12px; border:1px solid transparent; color:#8d8d8d;}
+  .nav-item .ni{display:flex; align-items:center; justify-content:center; width:44px; height:42px; flex-shrink:0; filter:none; opacity:1; color:inherit; transition:color .15s;}
+  .nav-item:hover{background:rgba(255,255,255,.05); color:#fff;}
+  .nav-item.active{background:rgba(254,47,103,.12); border-color:rgba(254,47,103,.26); box-shadow:none; color:#fff;}
+  .nav-item.active .ni{color:var(--red); filter:none;}
+  .nav-item .nl{font-size:13.5px; font-weight:600; letter-spacing:.01em;}
+  .profile-item{border-radius:14px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.07);}
+  .profile-item:hover{background:rgba(255,255,255,.06);}
+  .sidebar .brand{margin-bottom:14px;}
+  .sidebar::after{content:none;}
+
+  @media(min-width:721px){
+    .content{margin-left:76px;}
+    .sidebar{width:76px; height:100vh; height:100dvh; top:0; bottom:auto; padding:18px 16px 16px; gap:4px; background:#0f0f10; border-right:1px solid rgba(255,255,255,.06);}
+    .sidebar:hover,.sidebar:focus-within{width:236px;}
+    .sidebar .logo-img{width:42px !important; height:42px !important; margin:0 0 6px 1px !important; align-self:flex-start; box-shadow:0 0 0 2px rgba(254,47,103,.35);}
+    .sidebar .brand{font-size:19px; letter-spacing:.18em; text-align:left !important; padding-left:2px; max-height:0; opacity:0; margin:0; overflow:hidden; white-space:nowrap; transition:max-height .22s ease, opacity .18s ease, margin .22s ease;}
+    .sidebar:hover .brand,.sidebar:focus-within .brand{max-height:30px; opacity:1; margin-bottom:12px; font-size:19px; letter-spacing:.18em;}
+    .sidebar .nav-group:first-of-type{margin-top:6px;}
+    .nav-item{padding:0; height:44px; white-space:nowrap; overflow:hidden;}
+    .nav-item.active::before{display:none;}
+    .nav-item .nl{opacity:0; transition:opacity .15s;}
+    .sidebar:hover .nav-item .nl,.sidebar:focus-within .nav-item .nl{opacity:1;}
+    .profile-item{padding:0 3px; height:52px; margin-top:auto; gap:8px;}
+    .profile-item .avatar{width:36px; height:36px; margin:0 3px;}
+    .profile-item .pi-text{opacity:0; transition:opacity .15s; min-width:0;}
+    .sidebar:hover .profile-item .pi-text,.sidebar:focus-within .profile-item .pi-text{opacity:1;}
+  }
+  @media(max-width:720px){
+    .nav-item{border-radius:12px; min-width:64px; padding:6px 6px 5px; gap:3px;}
+    .nav-item .ni{width:auto; height:auto;}
+    .nav-item .ni svg{width:22px; height:22px;}
+    .nav-item .nl{font-size:10.5px; font-weight:600;}
+    .nav-item.active::before{display:none;}
+    .nav-item.active{background:rgba(254,47,103,.14);}
+  }
+
+  /* sub-menu (Input Clear, Riwayat, dst) -> tab bar bergaris, bukan pil bulat */
+  .subtabs{display:flex; flex-wrap:nowrap; gap:2px; width:100%; max-width:100%; margin:0 0 22px; padding:0; background:none; border:none; border-bottom:1px solid var(--border); border-radius:0; overflow-x:auto; scrollbar-width:none;}
+  .subtabs::-webkit-scrollbar{display:none;}
+  .subtab{position:relative; display:inline-flex; align-items:center; gap:9px; padding:12px 18px 13px; border-radius:12px 12px 0 0; font-size:13.5px; font-weight:600; color:#8d8d8d; background:none; box-shadow:none; transition:color .15s, background .15s;}
+  .subtab svg{width:18px; height:18px; opacity:.85;}
+  .subtab:hover{color:#fff; background:rgba(255,255,255,.04);}
+  .subtab.on{color:#fff; background:linear-gradient(180deg,rgba(254,47,103,0) 0%,rgba(254,47,103,.11) 100%); box-shadow:none;}
+  .subtab.on svg{color:var(--red); opacity:1;}
+  .subtab.on::after{content:""; position:absolute; left:10px; right:10px; bottom:-1px; height:2px; background:var(--red); border-radius:2px 2px 0 0; box-shadow:0 0 12px rgba(254,47,103,.75);}
+  .subtab:focus-visible{outline:2px solid var(--red); outline-offset:-2px;}
+  @media(max-width:720px){ .subtabs{border-radius:0; width:100%;} .subtab{padding:11px 10px 12px; gap:6px; font-size:12.5px;} .subtab svg{width:16px; height:16px;} }
+
+  /* kartu skin: placeholder kalau gambar gagal dimuat */
+  .skin-card .skin-art{position:relative; aspect-ratio:1/1.15; background:#0d0d0d; overflow:hidden;}
+  .skin-card .skin-art::before{content:"Gambar belum\Atersedia"; white-space:pre; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; font-size:11px; color:#5d5d5d; line-height:1.4;}
+  .skin-card .skin-art img{position:absolute; inset:0; width:100%; height:100%; aspect-ratio:auto;}
+  .skin-detail-art{position:relative; width:300px; max-width:100%; min-height:200px; background:#0d0d0d; border-radius:18px; overflow:hidden;}
+  .skin-detail-art::before{content:"Gambar skin belum tersedia"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; color:#5d5d5d;}
+  .skin-detail-art img{position:relative; margin:0; border:none; max-height:none;}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -2184,7 +2250,18 @@ document.getElementById('item-grid').addEventListener('click', e => { const c = 
 
 /* ---------- SKIN COLLECTION ---------- */
 let skinList = [], skinState = 'idle', skinToken = 0;
-function skinSrcs(pid){ const e = encodeURIComponent(pid); return [ACE + 'characters/' + e + '.png', ACE_CDN + 'characters/' + e + '.png', HELLA + 'operator/portraits/' + e + '.png']; }
+function skinSrcs(pid){
+  const e = encodeURIComponent(pid), u = encodeURIComponent(pid.replace(/#/g, '_')), a = encodeURIComponent(pid.replace(/#.*$/, ''));
+  const out = [];
+  [ACE, ACE_CDN].forEach(b => { out.push(b + 'characters/' + e + '.png'); });
+  [ACE, ACE_CDN].forEach(b => { out.push(b + 'characters/' + u + '.png'); });
+  [ACE, ACE_CDN].forEach(b => { out.push(b + 'portraits/' + e + '.png', b + 'portraits/' + u + '.png'); });
+  out.push(HELLA + 'operator/portraits/' + e + '.png', HELLA + 'operator/portraits/' + u + '.png');
+  out.push(HELLA + 'operator/skins/' + e + '.png', HELLA + 'operator/skins/' + u + '.png');
+  [ACE, ACE_CDN].forEach(b => { out.push(b + 'avatars/' + e + '.png', b + 'avatars/' + u + '.png'); });
+  out.push(HELLA + 'operator/avatars/' + e + '.png', HELLA + 'operator/avatars/' + u + '.png');
+  return [...new Set(out)];
+}
 
 async function initSkinView(){
   if(skinState !== 'idle') return;
@@ -2219,7 +2296,7 @@ function renderSkinList(){
   const l = skinMatches();
   document.getElementById('skin-status').textContent = l.length + ' skin' + (l.length > 60 ? ' (60 pertama ditampilkan, persempit pencarian)' : '');
   document.getElementById('skin-grid').innerHTML = l.slice(0, 60).map(x =>
-    `<div class="skin-card" data-id="${esc(x.id)}">${imgTag(skinSrcs(x.pid))}<div class="t"><div class="n">${esc(x.name)}</div><div class="c">${esc(x.op)} · ${esc(x.group)}</div></div></div>`
+    `<div class="skin-card" data-id="${esc(x.id)}"><div class="skin-art">${imgTag(skinSrcs(x.pid))}</div><div class="t"><div class="n">${esc(x.name)}</div><div class="c">${esc(x.op)} · ${esc(x.group)}</div></div></div>`
   ).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
 }
 function openSkin(id){
@@ -2229,7 +2306,7 @@ function openSkin(id){
   const date = d.getTime > 1e9 ? new Date(d.getTime * 1000).toLocaleDateString('id-ID', { year:'numeric', month:'long', day:'numeric' }) : '';
   const sec = (t, v) => v ? `<h3 class="sub-h">${t}</h3><div>${fillDesc(v, [])}</div>` : '';
   box.innerHTML = `<div class="card"><div class="op-head">
-    <div style="width:300px; max-width:100%;">${imgTag(skinSrcs(x.pid), 'stage-img')}</div>
+    <div class="skin-detail-art">${imgTag(skinSrcs(x.pid), 'stage-img')}</div>
     <div class="op-info"><div class="op-title">${esc(x.name)}</div>
       <div class="kv"><b>Operator</b><span>${esc(x.op)}</span><b>Seri</b><span>${esc(x.group)}</span>
         ${list(d.drawerList) ? `<b>Ilustrator</b><span>${esc(list(d.drawerList))}</span>` : ''}
@@ -2245,12 +2322,30 @@ document.getElementById('skin-grid').addEventListener('click', e => { const c = 
 
 /* ---------- NAV GROUPS (sidebar diringkas, fungsi tab asli tetap dipakai) ---------- */
 (function(){
+  const IC = {
+    home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
+    dash:'<rect x="3" y="3" width="7.5" height="9" rx="1.8"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.8"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="1.8"/><rect x="3" y="15" width="7.5" height="6" rx="1.8"/>',
+    plus:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+    hist:'<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4.5v4.2h4.2"/><path d="M12 7.5V12l3 2"/>',
+    clog:'<path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 5.5H6.5A1.5 1.5 0 0 0 5 7v12.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V7a1.5 1.5 0 0 0-1.5-1.5H16"/><path d="m9 14 2 2 4-4.5"/>',
+    users:'<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c.4-3.6 3-5.5 6.5-5.5s6.1 1.9 6.5 5.5"/><path d="M16 5.2a3.4 3.4 0 0 1 0 6.6"/><path d="M18 14.8c2 .6 3.3 2.3 3.5 5.2"/>',
+    pie:'<path d="M12 3v9h9"/><path d="M20.5 15.5A9 9 0 1 1 8.5 3.5"/>',
+    target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+    trophy:'<path d="M8 4h8v6a4 4 0 0 1-8 0V4z"/><path d="M8 6H4.5v1.5A3.5 3.5 0 0 0 8 11"/><path d="M16 6h3.5v1.5A3.5 3.5 0 0 1 16 11"/><path d="M12 14v4M8.5 20.5h7"/>',
+    medal:'<circle cx="12" cy="15" r="5.5"/><path d="m8.7 10.6-2.2-7h4.6l1.3 4.2M15.3 10.6l2.2-7h-4.6"/><path d="m12 12.4.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z"/>',
+    map:'<path d="M3.5 6.5 9 4l6 2.5L20.5 4v13.5L15 20l-6-2.5L3.5 20V6.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
+    shield:'<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8 7.5 9.5 4.4-1.5 7.5-4.9 7.5-9.5V6L12 3z"/><path d="m9 12 2.2 2.2L15.2 10"/>',
+    box:'<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9z"/><path d="m3.5 7.5 8.5 4.5 8.5-4.5M12 12v9"/>',
+    shirt:'<path d="M8.5 3.5 3 6.5l2 4 2.5-1V20.5h9V9.5l2.5 1 2-4-5.5-3c-.5 1.7-1.9 2.7-3.5 2.7S9 5.2 8.5 3.5z"/>',
+    db:'<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/>'
+  };
+  const svg = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
   const GROUPS = [
-    { label:'Beranda',   icon:'🏠', views:[['home','Home'], ['dashboard','Dashboard']] },
-    { label:'Clear Log', icon:'📝', views:[['input','Input Clear'], ['riwayat','Riwayat']] },
-    { label:'Komunitas', icon:'👥', views:[['members','Member'], ['niche','Niche Stat'], ['myniche','My Niche']] },
-    { label:'Challenge', icon:'🏆', views:[['challenge','Challenge'], ['ach','Medal']] },
-    { label:'Database',  icon:'📚', views:[['stage','Stage'], ['operators','Operator'], ['items','Item'], ['skins','Skin']] }
+    { label:'Beranda',   icon:'home',  views:[['home','Home','home'], ['dashboard','Dashboard','dash']] },
+    { label:'Clear Log', icon:'clog',  views:[['input','Input Clear','plus'], ['riwayat','Riwayat','hist']] },
+    { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target']] },
+    { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
+    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt']] }
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
   const profile = document.querySelector('.sidebar .profile-item');
@@ -2261,13 +2356,13 @@ document.getElementById('skin-grid').addEventListener('click', e => { const c = 
       const view = document.getElementById('view-' + v);
       if(view){
         const bar = document.createElement('div'); bar.className = 'subtabs';
-        bar.innerHTML = g.views.map(([k, l]) => `<div class="subtab" role="tab" tabindex="0" data-view="${k}">${l}</div>`).join('');
+        bar.innerHTML = g.views.map(([k, l, ic]) => `<div class="subtab" role="tab" tabindex="0" data-view="${k}">${svg(ic)}<span>${l}</span></div>`).join('');
         view.insertBefore(bar, view.firstChild);
       }
     });
     const el = document.createElement('div');
     el.className = 'nav-item nav-group'; el.title = g.label; el.setAttribute('role', 'button'); el.tabIndex = 0;
-    el.innerHTML = `<span class="ni">${g.icon}</span><span class="nl">${g.label}</span>`;
+    el.innerHTML = `<span class="ni">${svg(g.icon)}</span><span class="nl">${g.label}</span>`;
     const go = () => { const o = orig(g.last); if(o) o.click(); };
     el.addEventListener('click', go);
     el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
