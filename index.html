@@ -2073,12 +2073,6 @@ async function renderHome(){
     + '<div class="hint" style="margin-top:8px;">Data dari game data Arknights (versi Global). Jadwal terbaru bisa belum masuk kalau data belum diperbarui.' + (admin ? ' Admin: tekan "Atur gambar" untuk menambahkan gambar event.' : '') + '</div>';
 }
 
-/* ---------- INIT ---------- */
-(function init(){
-  const u = currentUser();
-  if(u) showApp(u);
-})();
-
 /* ---------- ITEM INFO ---------- */
 let itemList = [], itemState = 'idle', itemToken = 0;
 const ITEM_CLS = { MATERIAL:'Material', CONSUME:'Consumable', NORMAL:'Umum' };
@@ -2143,3 +2137,33 @@ async function openItem(id){
     ? `<h3 class="sub-h">Drop rate per stage</h3><div class="tbwrap"><table class="tb"><tr><th>Stage</th><th>Drop rate</th><th>Sampel (run)</th></tr>${pgRows}</table></div><div class="hint">Diurutkan dari drop rate tertinggi${pgAll.length > 40 ? ' (40 teratas dari ' + pgAll.length + ')' : ''}. Stage dengan sampel sedikit kurang akurat. Di atas 100% berarti rata-rata lebih dari 1 item per run. Data server Global dari <a href="https://penguin-stats.io" target="_blank" rel="noopener">Penguin Statistics</a> (CC BY-NC 4.0).</div>`
     : (drops.length ? `<h3 class="sub-h">Drop dari stage</h3><div class="hint">Data persen dari Penguin Statistics tidak bisa dimuat, jadi hanya label peluang dari game yang ditampilkan.</div>` : '');
   const rooms = [...new Set((it.buildingProductList || []).map(b => ROOM[b.roomType] || b.roomType))];
+  const rows = drops.slice(0, 40).map(d => {
+    const s = sm[d.stageId];
+    return `<tr><td>${esc(s ? s.code + ' — ' + s.name : d.stageId)}</td><td>${esc(OCC[d.occPer] || d.occPer || '-')}</td></tr>`;
+  }).join('');
+  box.innerHTML = `<div class="card">
+    <div class="op-head">${imgTag(itemSrcs(it.iconId || it.itemId), 'op-art')}
+      <div class="op-info"><div class="op-title">${esc(it.name)}</div><div class="op-stars">${'★'.repeat(rarityNum(it.rarity))}</div>
+        <div class="kv"><b>Tipe</b><span>${esc(ITEM_CLS[it.classifyType] || it.classifyType || '-')}</span><b>ID</b><span>${esc(it.itemId)}</span></div></div></div>
+    ${it.description ? `<h3 class="sub-h">Deskripsi</h3><div>${fillDesc(it.description, [])}</div>` : ''}
+    ${it.usage ? `<h3 class="sub-h">Kegunaan</h3><div>${fillDesc(it.usage, [])}</div>` : ''}
+    ${it.obtainApproach ? `<h3 class="sub-h">Cara dapat</h3><div>${fillDesc(it.obtainApproach, [])}</div>` : ''}
+    ${rooms.length ? `<h3 class="sub-h">Bisa dibuat di</h3><div>${rooms.map(r => `<span class="pill">${esc(r)}</span>`).join('')}</div>` : ''}
+    ${dropHtml}
+    ${!pgRows && rows ? `<div class="tbwrap"><table class="tb"><tr><th>Stage</th><th>Peluang</th></tr>${rows}</table></div>` : ''}
+  </div>`;
+}
+document.getElementById('item-search').addEventListener('input', () => { if(itemState === 'ready') renderItemList(); });
+document.getElementById('item-type').addEventListener('change', () => { if(itemState === 'ready') renderItemList(); });
+document.getElementById('item-rar').addEventListener('change', () => { if(itemState === 'ready') renderItemList(); });
+document.getElementById('item-grid').addEventListener('click', e => { const c = e.target.closest('.op-row'); if(c) openItem(c.dataset.id); });
+
+/* ---------- INIT ---------- */
+(function init(){
+  const u = currentUser();
+  if(u) showApp(u);
+})();
+
+</script>
+</body>
+</html>
