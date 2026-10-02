@@ -272,16 +272,9 @@
   #login-screen{background:radial-gradient(720px 420px at 50% -5%,rgba(94,9,29,.75),transparent 70%),#121212;}
   #login-box{padding:34px 26px;}
   @media(min-width:721px){
-    .content{margin-left:84px;}
-    .sidebar{position:fixed; left:0; top:0; bottom:0; width:84px; height:auto; z-index:45; overflow:hidden; background:rgba(16,16,16,.92); border-right:1px solid rgba(255,255,255,.06); transition:width .22s ease, box-shadow .22s; padding:18px 12px;}
-    .sidebar:hover,.sidebar:focus-within{width:228px; box-shadow:20px 0 50px -20px rgba(0,0,0,.8);}
-    .sidebar .logo-img{width:44px !important; height:44px !important; margin-bottom:6px !important;}
-    .sidebar .brand{font-size:11px; letter-spacing:.08em; margin-bottom:18px; transition:font-size .22s;}
-    .sidebar:hover .brand,.sidebar:focus-within .brand{font-size:23px; letter-spacing:.14em;}
-    .nav-item{padding:11px 0 11px 17px; white-space:nowrap;}
+    .sidebar{gap:4px;}
+    .nav-item{padding:12px 14px; white-space:nowrap;}
     .nav-item.active::before{display:none;}
-    .nav-item .nl,.profile-item .pi-text{opacity:0; transition:opacity .15s;}
-    .sidebar:hover .nav-item .nl,.sidebar:hover .profile-item .pi-text,.sidebar:focus-within .nav-item .nl,.sidebar:focus-within .profile-item .pi-text{opacity:1;}
     .profile-item{padding:8px 10px;}
   }
   .skin-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:12px; max-height:560px; overflow-y:auto;}
