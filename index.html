@@ -307,23 +307,19 @@
   .profile-item:hover{background:rgba(255,255,255,.06);}
   .sidebar .brand{margin-bottom:14px;}
   .sidebar::after{content:none;}
+  .sidebar .brand{text-shadow:none !important; background:none !important; filter:none !important;}
 
   @media(min-width:721px){
-    .content{margin-left:76px;}
-    .sidebar{width:76px; height:100vh; height:100dvh; top:0; bottom:auto; padding:18px 16px 16px; gap:4px; background:#0f0f10; border-right:1px solid rgba(255,255,255,.06);}
-    .sidebar:hover,.sidebar:focus-within{width:236px;}
-    .sidebar .logo-img{width:42px !important; height:42px !important; margin:0 0 6px 1px !important; align-self:flex-start; box-shadow:0 0 0 2px rgba(254,47,103,.35);}
-    .sidebar .brand{font-size:19px; letter-spacing:.18em; text-align:left !important; padding-left:2px; max-height:0; opacity:0; margin:0; overflow:hidden; white-space:nowrap; transition:max-height .22s ease, opacity .18s ease, margin .22s ease;}
-    .sidebar:hover .brand,.sidebar:focus-within .brand{max-height:30px; opacity:1; margin-bottom:12px; font-size:19px; letter-spacing:.18em;}
-    .sidebar .nav-group:first-of-type{margin-top:6px;}
-    .nav-item{padding:0; height:44px; white-space:nowrap; overflow:hidden;}
+    .content{margin-left:220px;}
+    .sidebar,.sidebar:hover,.sidebar:focus-within{width:220px; height:100vh; height:100dvh; top:0; bottom:auto; padding:22px 14px 16px; gap:4px; background:#0f0f10; border-right:1px solid rgba(255,255,255,.06); box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; overflow-x:hidden; overflow-y:auto; transition:none;}
+    .sidebar .logo-img{width:64px !important; height:64px !important; margin:0 auto 10px !important; align-self:center; border-radius:50%; object-fit:cover; box-shadow:0 0 0 2px rgba(254,47,103,.35);}
+    .sidebar .brand,.sidebar:hover .brand,.sidebar:focus-within .brand{font-size:18px; letter-spacing:.2em; text-align:center !important; padding:0 0 0 .2em; max-height:none; opacity:1; margin:0 0 20px; overflow:visible; white-space:nowrap; text-shadow:none; background:none; transition:none;}
+    .nav-item{padding:0 8px 0 4px; height:44px; white-space:nowrap; overflow:hidden; gap:6px;}
     .nav-item.active::before{display:none;}
-    .nav-item .nl{opacity:0; transition:opacity .15s;}
-    .sidebar:hover .nav-item .nl,.sidebar:focus-within .nav-item .nl{opacity:1;}
-    .profile-item{padding:0 3px; height:52px; margin-top:auto; gap:8px;}
-    .profile-item .avatar{width:36px; height:36px; margin:0 3px;}
-    .profile-item .pi-text{opacity:0; transition:opacity .15s; min-width:0;}
-    .sidebar:hover .profile-item .pi-text,.sidebar:focus-within .profile-item .pi-text{opacity:1;}
+    .sidebar .nav-item .nl,.sidebar .profile-item .pi-text{opacity:1; transition:none;}
+    .profile-item{padding:0 8px 0 4px; height:54px; margin-top:auto; gap:8px;}
+    .profile-item .avatar{width:36px; height:36px; margin:0 4px;}
+    .profile-item .pi-text{min-width:0;}
   }
   @media(max-width:720px){
     .nav-item{border-radius:12px; min-width:64px; padding:6px 6px 5px; gap:3px;}
@@ -332,6 +328,7 @@
     .nav-item .nl{font-size:10.5px; font-weight:600;}
     .nav-item.active::before{display:none;}
     .nav-item.active{background:rgba(254,47,103,.14);}
+    .sidebar{background:#0f0f10; -webkit-backdrop-filter:none; backdrop-filter:none;}
   }
 
   /* sub-menu (Input Clear, Riwayat, dst) -> tab bar bergaris, bukan pil bulat */
