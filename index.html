@@ -307,12 +307,13 @@
   .profile-item:hover{background:rgba(255,255,255,.06);}
   .sidebar .brand{margin-bottom:14px;}
   .sidebar::after{content:none;}
+  .logo-img{border-radius:0 !important; object-fit:contain !important; box-shadow:none !important;}
   .sidebar .brand{text-shadow:none !important; background:none !important; filter:none !important;}
 
   @media(min-width:721px){
     .content{margin-left:220px;}
     .sidebar,.sidebar:hover,.sidebar:focus-within{width:220px; height:100vh; height:100dvh; top:0; bottom:auto; padding:22px 14px 16px; gap:4px; background:#0f0f10; border-right:1px solid rgba(255,255,255,.06); box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none; overflow-x:hidden; overflow-y:auto; transition:none;}
-    .sidebar .logo-img{width:64px !important; height:64px !important; margin:0 auto 10px !important; align-self:center; border-radius:50%; object-fit:cover; box-shadow:0 0 0 2px rgba(254,47,103,.35);}
+    .sidebar .logo-img{width:96px !important; height:96px !important; margin:0 auto 4px !important; align-self:center;}
     .sidebar .brand,.sidebar:hover .brand,.sidebar:focus-within .brand{font-size:18px; letter-spacing:.2em; text-align:center !important; padding:0 0 0 .2em; max-height:none; opacity:1; margin:0 0 20px; overflow:visible; white-space:nowrap; text-shadow:none; background:none; transition:none;}
     .nav-item{padding:0 8px 0 4px; height:44px; white-space:nowrap; overflow:hidden; gap:6px;}
     .nav-item.active::before{display:none;}
@@ -350,6 +351,13 @@
   .skin-detail-art{position:relative; width:300px; max-width:100%; min-height:200px; background:#0d0d0d; border-radius:18px; overflow:hidden;}
   .skin-detail-art::before{content:"Gambar skin belum tersedia"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; color:#5d5d5d;}
   .skin-detail-art img{position:relative; margin:0; border:none; max-height:none;}
+
+  .mini-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin-top:12px; max-height:620px; overflow-y:auto;}
+  .mini-card{background:var(--panel2); border:1px solid var(--border); border-radius:18px; padding:14px; min-width:0;}
+  .mini-card .n{font-weight:600; font-size:14px;} .mini-card .c{font-size:12px; color:var(--muted); margin-top:2px;}
+  .gc-ups{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+  .gc-ups img,.lore-it img{width:38px; height:38px; border-radius:50%; object-fit:cover; background:#000; display:block;}
+  .lore-it{display:flex; align-items:center; gap:10px; cursor:pointer;} .lore-it:hover{border-color:rgba(254,47,103,.55);}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -383,6 +391,9 @@
       <div class="nav-item" data-view="operators" title="Operators"><span class="ni">🎖️</span><span class="nl">Operators</span></div>
       <div class="nav-item" data-view="items" title="Item"><span class="ni">📦</span><span class="nl">Item</span></div>
       <div class="nav-item" data-view="skins" title="Skin"><span class="ni">👗</span><span class="nl">Skin</span></div>
+      <div class="nav-item" data-view="gacha"><span class="nl">Banner</span></div>
+      <div class="nav-item" data-view="medalgame"><span class="nl">Medal Game</span></div>
+      <div class="nav-item" data-view="lore"><span class="nl">Lore</span></div>
       <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
       <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
@@ -538,6 +549,12 @@
         <div id="item-detail"><div class="card"><div class="empty">Klik item untuk melihat infonya.</div></div></div>
       </div>
 
+      <div id="view-gacha" class="view hidden"><div class="card"><h2>Banner Gacha</h2>
+  <input id="gacha-search" placeholder="cari banner / operator rate-up..."><div class="hint" id="gacha-status">Memuat banner...</div><div id="gacha-grid" class="mini-grid"></div></div></div>
+      <div id="view-medalgame" class="view hidden"><div class="card"><h2>Medal Game</h2>
+  <input id="mg-search" placeholder="cari medal..."><div class="rf-grid"><select id="mg-type"><option value="">Semua tipe</option></select></div><div class="hint" id="mg-status">Memuat medal...</div><div id="mg-grid" class="mini-grid"></div></div></div>
+      <div id="view-lore" class="view hidden"><div class="card"><h2>Lore Operator</h2>
+  <input id="lore-search" placeholder="cari operator, mis. Amiya"><div class="hint" id="lore-status">Memuat profil...</div><div id="lore-list" class="mini-grid" style="max-height:300px;"></div></div><div id="lore-detail" style="margin-top:16px;"></div></div>
       <div id="view-skins" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
           <h2>Koleksi Skin</h2>
@@ -731,7 +748,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','home','myniche','challenge','ach','profile'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','gacha','medalgame','lore','home','myniche','challenge','ach','profile'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -740,6 +757,9 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'operators') initOperatorView();
     if(item.dataset.view === 'items') initItemView();
     if(item.dataset.view === 'skins') initSkinView();
+    if(item.dataset.view === 'gacha') initGacha();
+    if(item.dataset.view === 'medalgame') initMedalGame();
+    if(item.dataset.view === 'lore') initLore();
     if(item.dataset.view === 'myniche') renderMyNiche();
     if(item.dataset.view === 'challenge') renderChallenge();
     if(item.dataset.view === 'home') renderHome();
@@ -2317,6 +2337,91 @@ document.getElementById('skin-search').addEventListener('input', () => { if(skin
 document.getElementById('skin-group').addEventListener('change', () => { if(skinState === 'ready') renderSkinList(); });
 document.getElementById('skin-grid').addEventListener('click', e => { const c = e.target.closest('.skin-card'); if(c) openSkin(c.dataset.id); });
 
+/* ---------- BANNER / MEDAL GAME / LORE ---------- */
+const fmtD = t => t > 1e9 ? new Date(t * 1000).toLocaleDateString('id-ID', { year:'numeric', month:'short', day:'numeric' }) : '-';
+let gcS = 'idle', gcL = [];
+async function initGacha(){
+  if(gcS !== 'idle') return; gcS = 'loading';
+  const st = document.getElementById('gacha-status');
+  try{
+    const t = await opTable('gacha_table'), ch = (await opTableSafe('character_table')) || {};
+    gcL = (t.gachaPoolClient || []).map(g => {
+      const ui = (((g.gachaPoolDetail || {}).detailInfo || {}).upCharInfo || {}).perCharList || [];
+      const ups = [].concat(...ui.map(x => x.charIdList || []));
+      return { name:g.gachaPoolName || g.gachaPoolId, open:g.openTime, end:g.endTime, ups:ups.map(id => ({ id, n:ch[id] ? ch[id].name : id })) };
+    }).sort((a, b) => b.open - a.open);
+    if(!gcL.length) throw new Error('daftar banner kosong');
+    gcS = 'ready'; renderGacha();
+  }catch(e){ console.error(e); gcS = 'idle'; st.textContent = 'Gagal memuat banner: ' + (e.message || e); }
+}
+function renderGacha(){
+  const q = document.getElementById('gacha-search').value.trim().toLowerCase();
+  const l = gcL.filter(x => !q || x.name.toLowerCase().includes(q) || x.ups.some(u => u.n.toLowerCase().includes(q)));
+  document.getElementById('gacha-status').textContent = l.length + ' banner';
+  document.getElementById('gacha-grid').innerHTML = l.slice(0, 60).map(x =>
+    `<div class="mini-card"><div class="n">${esc(x.name)}</div><div class="c">${fmtD(x.open)} – ${fmtD(x.end)}</div>${x.ups.length ? `<div class="gc-ups">${x.ups.map(u => `<span title="${esc(u.n)}">${imgTag(avatarSrcs(u.id, u.n))}</span>`).join('')}</div>` : ''}</div>`
+  ).join('') || '<div class="empty">Tidak ada hasil.</div>';
+}
+document.getElementById('gacha-search').addEventListener('input', () => { if(gcS === 'ready') renderGacha(); });
+
+let mgS = 'idle', mgL = [];
+async function initMedalGame(){
+  if(mgS !== 'idle') return; mgS = 'loading';
+  const st = document.getElementById('mg-status');
+  try{
+    const t = await opTable('medal_table');
+    mgL = (t.medalList || []).map(m => ({ name:m.medalName || m.medalId, type:String(m.medalType || 'Lainnya'), rar:m.rarity, desc:m.description || '', how:m.getMethod || '' }));
+    if(!mgL.length) throw new Error('daftar medal kosong');
+    const cnt = {}; mgL.forEach(x => cnt[x.type] = (cnt[x.type] || 0) + 1);
+    const sel = document.getElementById('mg-type');
+    Object.keys(cnt).sort().forEach(g => sel.insertAdjacentHTML('beforeend', `<option value="${esc(g)}">${esc(g)} (${cnt[g]})</option>`));
+    mgS = 'ready'; renderMedalGame();
+  }catch(e){ console.error(e); mgS = 'idle'; st.textContent = 'Gagal memuat medal: ' + (e.message || e); }
+}
+function renderMedalGame(){
+  const q = document.getElementById('mg-search').value.trim().toLowerCase(), g = document.getElementById('mg-type').value;
+  const l = mgL.filter(x => (!g || x.type === g) && (!q || x.name.toLowerCase().includes(q) || x.desc.toLowerCase().includes(q)));
+  document.getElementById('mg-status').textContent = l.length + ' medal' + (l.length > 80 ? ' (80 pertama ditampilkan)' : '');
+  document.getElementById('mg-grid').innerHTML = l.slice(0, 80).map(x =>
+    `<div class="mini-card"><div class="n">${esc(x.name)}</div><div class="c">${esc(x.type)}</div><div style="font-size:12.5px; margin-top:8px;">${fillDesc(x.desc, [])}</div>${x.how ? `<div class="c" style="margin-top:6px;">${fillDesc(x.how, [])}</div>` : ''}</div>`
+  ).join('') || '<div class="empty">Tidak ada hasil.</div>';
+}
+document.getElementById('mg-search').addEventListener('input', () => { if(mgS === 'ready') renderMedalGame(); });
+document.getElementById('mg-type').addEventListener('change', () => { if(mgS === 'ready') renderMedalGame(); });
+
+let lrS = 'idle', lrL = [], lrH = {};
+async function initLore(){
+  if(lrS !== 'idle') return; lrS = 'loading';
+  const st = document.getElementById('lore-status');
+  try{
+    const h = await opTable('handbook_info_table'), ch = await opTable('character_table');
+    lrH = h.handbookDict || {};
+    lrL = Object.keys(lrH).filter(id => ch[id] && id.indexOf('char_') === 0).map(id => ({ id, n:ch[id].name })).sort((a, b) => a.n.localeCompare(b.n));
+    if(!lrL.length) throw new Error('data profil kosong');
+    lrS = 'ready'; renderLoreList();
+  }catch(e){ console.error(e); lrS = 'idle'; st.textContent = 'Gagal memuat profil: ' + (e.message || e); }
+}
+function renderLoreList(){
+  const q = document.getElementById('lore-search').value.trim().toLowerCase();
+  const l = lrL.filter(x => !q || x.n.toLowerCase().includes(q));
+  document.getElementById('lore-status').textContent = l.length + ' operator' + (l.length > 60 ? ' (60 pertama ditampilkan)' : '');
+  document.getElementById('lore-list').innerHTML = l.slice(0, 60).map(x =>
+    `<div class="mini-card lore-it" data-id="${esc(x.id)}">${imgTag(avatarSrcs(x.id, x.n))}<div class="n">${esc(x.n)}</div></div>`
+  ).join('') || '<div class="empty">Tidak ada hasil.</div>';
+}
+function openLore(id){
+  const x = lrL.find(y => y.id === id); if(!x) return;
+  const secs = ((lrH[id] || {}).storyTextAudio || []).map(a => {
+    const tx = (a.stories || []).map(z => z.storyText || '').filter(Boolean).join('\n\n');
+    return tx ? `<h3 class="sub-h">${esc(a.storyTitle || '')}</h3><div>${fillDesc(tx, [])}</div>` : '';
+  }).join('');
+  const box = document.getElementById('lore-detail');
+  box.innerHTML = `<div class="card"><h2>${esc(x.n)}</h2>${secs || '<div class="empty">Belum ada profil.</div>'}</div>`;
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+document.getElementById('lore-search').addEventListener('input', () => { if(lrS === 'ready') renderLoreList(); });
+document.getElementById('lore-list').addEventListener('click', e => { const c = e.target.closest('.lore-it'); if(c) openLore(c.dataset.id); });
+
 /* ---------- NAV GROUPS (sidebar diringkas, fungsi tab asli tetap dipakai) ---------- */
 (function(){
   const IC = {
@@ -2334,6 +2439,8 @@ document.getElementById('skin-grid').addEventListener('click', e => { const c = 
     shield:'<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8 7.5 9.5 4.4-1.5 7.5-4.9 7.5-9.5V6L12 3z"/><path d="m9 12 2.2 2.2L15.2 10"/>',
     box:'<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9z"/><path d="m3.5 7.5 8.5 4.5 8.5-4.5M12 12v9"/>',
     shirt:'<path d="M8.5 3.5 3 6.5l2 4 2.5-1V20.5h9V9.5l2.5 1 2-4-5.5-3c-.5 1.7-1.9 2.7-3.5 2.7S9 5.2 8.5 3.5z"/>',
+    star:'<path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9L3.5 9.7l5.9-.8z"/>',
+    book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/>',
     db:'<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/>'
   };
   const svg = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
@@ -2342,7 +2449,7 @@ document.getElementById('skin-grid').addEventListener('click', e => { const c = 
     { label:'Clear Log', icon:'clog',  views:[['input','Input Clear','plus'], ['riwayat','Riwayat','hist']] },
     { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
-    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt']] }
+    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['gacha','Banner','star'], ['medalgame','Medal Game','medal'], ['lore','Lore','book']] }
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
   const profile = document.querySelector('.sidebar .profile-item');
