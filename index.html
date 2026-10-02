@@ -358,6 +358,11 @@
   .gc-ups{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
   .gc-ups img,.lore-it img{width:38px; height:38px; border-radius:50%; object-fit:cover; background:#000; display:block;}
   .lore-it{display:flex; align-items:center; gap:10px; cursor:pointer;} .lore-it:hover{border-color:rgba(254,47,103,.55);}
+
+  .kc-row{display:flex; gap:10px; flex-wrap:wrap;} .kc-row>div{flex:1 1 120px; min-width:0;}
+  .mat{display:flex; align-items:center; gap:10px;} .mat img{width:44px; height:44px; object-fit:contain; flex-shrink:0;}
+  .sq-chk{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:6px;} .sq-chk label{display:flex; align-items:center; gap:6px; margin:0; font-weight:500; cursor:pointer;} .sq-chk input{width:auto;}
+  #nr-info{font-size:12.5px; margin-top:8px;} #nr-info .bad{color:#ff8fb0;} #nr-edit{margin-top:10px; font-size:13px;} #nr-edit summary{cursor:pointer; color:var(--muted);}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -394,6 +399,10 @@
       <div class="nav-item" data-view="gacha"><span class="nl">Banner</span></div>
       <div class="nav-item" data-view="medalgame"><span class="nl">Medal Game</span></div>
       <div class="nav-item" data-view="lore"><span class="nl">Lore</span></div>
+      <div class="nav-item" data-view="calc"><span class="nl">Kalkulator</span></div>
+      <div class="nav-item" data-view="squad"><span class="nl">Squad Acak</span></div>
+      <div class="nav-item" data-view="is"><span class="nl">IS</span></div>
+      <div class="nav-item" data-view="cc"><span class="nl">CC</span></div>
       <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
       <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
@@ -457,6 +466,12 @@
           <label>Niche</label>
           <select id="f-niche"><option value="">-- pilih niche --</option><option value="__new__">+ Niche Baru...</option></select>
           <input id="f-niche-new" type="text" placeholder="Nama niche baru" class="hidden" style="margin-top:8px;">
+          <div id="nr-info"></div>
+          <details id="nr-edit" class="hidden"><summary>⚙ Atur aturan niche (admin)</summary>
+            <label>Rarity maksimal</label><select id="nr-max"></select>
+            <label>Maks. jumlah operator (0 = bebas)</label><input id="nr-ops" type="number" min="0" value="0">
+            <label>Kelas yang dilarang</label><div id="nr-prof" class="sq-chk"></div>
+            <button id="nr-save" style="margin-top:12px;">Simpan Aturan</button></details>
           <label>Jumlah Operator</label>
           <input id="f-opcount" type="number" min="0" placeholder="mis. 4">
           <label>Nama Operator</label>
@@ -555,6 +570,20 @@
   <input id="mg-search" placeholder="cari medal..."><div class="rf-grid"><select id="mg-type"><option value="">Semua tipe</option></select></div><div class="hint" id="mg-status">Memuat medal...</div><div id="mg-grid" class="mini-grid"></div></div></div>
       <div id="view-lore" class="view hidden"><div class="card"><h2>Lore Operator</h2>
   <input id="lore-search" placeholder="cari operator, mis. Amiya"><div class="hint" id="lore-status">Memuat profil...</div><div id="lore-list" class="mini-grid" style="max-height:300px;"></div></div><div id="lore-detail" style="margin-top:16px;"></div></div>
+      <div id="view-calc" class="view hidden"><div class="card"><h2>Kalkulator Material</h2>
+  <input id="kc-search" placeholder="cari operator..."><select id="kc-op" style="margin-top:8px;"></select>
+  <div class="kc-row"><div><label>Elite dari</label><select id="kc-e0"></select></div><div><label>ke</label><select id="kc-e1"></select></div><div><label>Skill lv dari</label><select id="kc-s0"></select></div><div><label>ke</label><select id="kc-s1"></select></div></div>
+  <label>Mastery (target tiap skill)</label><div id="kc-m" class="kc-row"></div><div class="hint" id="kc-status">Memuat operator...</div></div>
+  <div class="card" style="margin-top:16px;"><h2>Total Kebutuhan</h2><div id="kc-out" class="mini-grid" style="max-height:none;"><div class="empty">Pilih operator.</div></div></div></div>
+      <div id="view-squad" class="view hidden"><div class="card"><h2>Randomizer Squad</h2>
+  <div class="kc-row"><div><label>Jumlah operator</label><input id="sq-n" type="number" min="1" max="24" value="8"></div><div><label>Rarity min</label><select id="sq-rmin"></select></div><div><label>Rarity maks</label><select id="sq-rmax"></select></div></div>
+  <label>Kelas (kosong = semua)</label><div id="sq-prof" class="sq-chk"></div><div class="hint" id="sq-status">Memuat operator...</div>
+  <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"><button id="sq-go">🎲 Acak Squad</button><button id="sq-use" class="ghost hidden">Pakai di Input Clear</button></div></div>
+  <div id="sq-out" class="mini-grid" style="max-height:none;"></div></div>
+      <div id="view-is" class="view hidden"><div class="card"><h2>Integrated Strategies — Relic</h2>
+  <input id="is-search" placeholder="cari relic..."><div class="rf-grid"><select id="is-topic"><option value="">Semua tema</option></select></div><div class="hint" id="is-status">Memuat data...</div><div id="is-grid" class="mini-grid"></div></div></div>
+      <div id="view-cc" class="view hidden"><div class="card"><h2>Contingency Contract</h2>
+  <div class="hint" id="cc-status">Memuat data...</div><div id="cc-grid" class="mini-grid"></div></div></div>
       <div id="view-skins" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
           <h2>Koleksi Skin</h2>
@@ -748,7 +777,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','gacha','medalgame','lore','home','myniche','challenge','ach','profile'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','gacha','medalgame','lore','calc','squad','is','cc','home','myniche','challenge','ach','profile'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -760,6 +789,11 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'gacha') initGacha();
     if(item.dataset.view === 'medalgame') initMedalGame();
     if(item.dataset.view === 'lore') initLore();
+    if(item.dataset.view === 'calc') initCalc();
+    if(item.dataset.view === 'squad') initSquad();
+    if(item.dataset.view === 'is') initIS();
+    if(item.dataset.view === 'cc') initCC();
+    if(item.dataset.view === 'input') nrStart();
     if(item.dataset.view === 'myniche') renderMyNiche();
     if(item.dataset.view === 'challenge') renderChallenge();
     if(item.dataset.view === 'home') renderHome();
@@ -2422,6 +2456,158 @@ function openLore(id){
 document.getElementById('lore-search').addEventListener('input', () => { if(lrS === 'ready') renderLoreList(); });
 document.getElementById('lore-list').addEventListener('click', e => { const c = e.target.closest('.lore-it'); if(c) openLore(c.dataset.id); });
 
+/* ---------- KALKULATOR / SQUAD / IS / CC / ATURAN NICHE ---------- */
+const kg = id => document.getElementById(id);
+const rng = (a, b) => { const o = []; for(let i = a; i <= b; i++) o.push(`<option value="${i}">${i}</option>`); return o.join(''); };
+let kcS = 'idle', kcOps = [], kcItems = {}, chAll = {};
+async function loadChars(){
+  if(kcOps.length) return;
+  chAll = await opTable('character_table');
+  kcOps = Object.keys(chAll).filter(id => id.indexOf('char_') === 0 && !chAll[id].isNotObtainable).map(id => ({ id, n:chAll[id].name, c:chAll[id], r:rarityNum(chAll[id].rarity) })).sort((a, b) => a.n.localeCompare(b.n));
+}
+async function initCalc(){
+  if(kcS !== 'idle') return; kcS = 'loading';
+  try{
+    await loadChars();
+    const it = (await opTableSafe('item_table')) || {};
+    Object.values(it.items || it).forEach(x => { if(x && x.itemId) kcItems[x.itemId] = x; });
+    kg('kc-e0').innerHTML = rng(0, 2); kg('kc-e1').innerHTML = rng(0, 2); kg('kc-e1').value = 2;
+    kg('kc-s0').innerHTML = rng(1, 7); kg('kc-s1').innerHTML = rng(1, 7); kg('kc-s1').value = 7;
+    kcFill(); kcS = 'ready'; kg('kc-status').textContent = 'Material elite, level skill 1–7, dan mastery. LMD & EXP level belum dihitung.';
+  }catch(e){ console.error(e); kcS = 'idle'; kg('kc-status').textContent = 'Gagal memuat: ' + (e.message || e); }
+}
+function kcFill(){
+  const q = kg('kc-search').value.trim().toLowerCase();
+  kg('kc-op').innerHTML = kcOps.filter(x => !q || x.n.toLowerCase().includes(q)).slice(0, 300).map(x => `<option value="${esc(x.id)}">${esc(x.n)} (${x.r}★)</option>`).join('');
+  kcMast();
+}
+function kcMast(){
+  const o = kcOps.find(x => x.id === kg('kc-op').value), n = o ? (o.c.skills || []).length : 0;
+  kg('kc-m').innerHTML = [...Array(n)].map((_, k) => `<div><label>Skill ${k + 1}</label><select>${rng(0, 3)}</select></div>`).join('');
+  kg('kc-m').querySelectorAll('select').forEach(x => x.addEventListener('change', kcCalc));
+  kcCalc();
+}
+function kcCalc(){
+  const o = kcOps.find(x => x.id === kg('kc-op').value), out = kg('kc-out'); if(!o){ out.innerHTML = '<div class="empty">Pilih operator.</div>'; return; }
+  const c = o.c, e0 = +kg('kc-e0').value, e1 = +kg('kc-e1').value, s0 = +kg('kc-s0').value, s1 = +kg('kc-s1').value, tot = {};
+  const add = a => (a || []).forEach(x => { tot[x.id] = (tot[x.id] || 0) + x.count; });
+  for(let i = e0 + 1; i <= e1 && i < (c.phases || []).length; i++) add(c.phases[i].evolveCost);
+  for(let l = s0; l < s1; l++) add(((c.allSkillLvlup || [])[l - 1] || {}).lvlUpCost);
+  kg('kc-m').querySelectorAll('select').forEach((sel, k) => { const cond = ((c.skills || [])[k] || {}).levelUpCostCond || []; for(let j = 0; j < +sel.value && j < cond.length; j++) add(cond[j].levelUpCost); });
+  const ids = Object.keys(tot).sort((a, b) => ((kcItems[b] || {}).sortId || 0) - ((kcItems[a] || {}).sortId || 0));
+  out.innerHTML = ids.map(id => { const it = kcItems[id] || {}; return `<div class="mini-card mat">${imgTag(itemSrcs(it.iconId || id))}<div><div class="n">${esc(it.name || id)}</div><div class="c">×${tot[id].toLocaleString('id-ID')}</div></div></div>`; }).join('') || '<div class="empty">Tidak ada material dibutuhkan.</div>';
+}
+['kc-e0', 'kc-e1', 'kc-s0', 'kc-s1'].forEach(i => kg(i).addEventListener('change', kcCalc));
+kg('kc-op').addEventListener('change', kcMast);
+kg('kc-search').addEventListener('input', () => { if(kcS === 'ready') kcFill(); });
+
+const PROF_OK = Object.keys(PROF).filter(k => k !== 'TOKEN' && k !== 'TRAP');
+const profBoxes = (id, name) => PROF_OK.map(k => `<label><input type="checkbox" name="${name}" value="${k}">${PROF[k]}</label>`).join('');
+let sqS = 'idle', sqRes = [];
+async function initSqRaw(){ await loadChars(); }
+async function initSquad(){
+  if(sqS !== 'idle') return; sqS = 'loading';
+  try{
+    await loadChars();
+    kg('sq-rmin').innerHTML = rng(1, 6); kg('sq-rmax').innerHTML = rng(1, 6); kg('sq-rmax').value = 6;
+    kg('sq-prof').innerHTML = profBoxes('sq-prof', 'sqp');
+    sqS = 'ready'; kg('sq-status').textContent = kcOps.length + ' operator tersedia.';
+  }catch(e){ console.error(e); sqS = 'idle'; kg('sq-status').textContent = 'Gagal memuat: ' + (e.message || e); }
+}
+kg('sq-go').addEventListener('click', () => {
+  if(sqS !== 'ready') return;
+  const lo = +kg('sq-rmin').value, hi = +kg('sq-rmax').value, n = Math.max(1, Math.min(24, +kg('sq-n').value || 8));
+  const pr = [...kg('sq-prof').querySelectorAll('input:checked')].map(x => x.value);
+  const pool = kcOps.filter(x => x.r >= lo && x.r <= hi && (!pr.length || pr.includes(x.c.profession)));
+  for(let i = pool.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  sqRes = pool.slice(0, n);
+  kg('sq-status').textContent = sqRes.length + ' dari ' + pool.length + ' operator yang cocok.';
+  kg('sq-out').innerHTML = sqRes.map(x => `<div class="mini-card lore-it">${imgTag(avatarSrcs(x.id, x.n))}<div><div class="n">${esc(x.n)}</div><div class="c">${x.r}★ · ${esc(PROF[x.c.profession] || x.c.profession)}</div></div></div>`).join('') || '<div class="empty">Tidak ada operator yang cocok.</div>';
+  kg('sq-use').classList.toggle('hidden', !sqRes.length);
+});
+kg('sq-use').addEventListener('click', () => {
+  sqRes.forEach(x => { if(!selectedOps.includes(x.n)) selectedOps.push(x.n); });
+  renderOpChips(); document.querySelector('.nav-item[data-view="input"]').click();
+});
+
+let isS = 'idle', isL = [];
+async function initIS(){
+  if(isS !== 'idle') return; isS = 'loading';
+  try{
+    const t = await opTable('roguelike_topic_table'), tp = t.topics || {}, det = t.details || {}, names = {};
+    Object.keys(det).forEach(tid => { const tn = (tp[tid] && tp[tid].name) || tid; names[tn] = 1;
+      Object.values(det[tid].items || {}).forEach(r => { if(r && r.name) isL.push({ topic:tn, n:r.name, type:String(r.type || ''), rar:r.rarity || '', d:r.description || r.usage || '', how:r.obtainApproach || '' }); }); });
+    if(!isL.length) throw new Error('relic tidak ditemukan di data');
+    Object.keys(names).forEach(n => kg('is-topic').insertAdjacentHTML('beforeend', `<option value="${esc(n)}">${esc(n)}</option>`));
+    isS = 'ready'; renderIS();
+  }catch(e){ console.error(e); isS = 'idle'; kg('is-status').textContent = 'Gagal memuat IS: ' + (e.message || e); }
+}
+function renderIS(){
+  const q = kg('is-search').value.trim().toLowerCase(), g = kg('is-topic').value;
+  const l = isL.filter(x => (!g || x.topic === g) && (!q || x.n.toLowerCase().includes(q) || x.d.toLowerCase().includes(q)));
+  kg('is-status').textContent = l.length + ' item' + (l.length > 80 ? ' (80 pertama ditampilkan)' : '');
+  kg('is-grid').innerHTML = l.slice(0, 80).map(x => `<div class="mini-card"><div class="n">${esc(x.n)}</div><div class="c">${esc(x.topic)}${x.type ? ' · ' + esc(x.type) : ''}</div><div style="font-size:12.5px; margin-top:8px;">${fillDesc(x.d, [])}</div>${x.how ? `<div class="c" style="margin-top:6px;">${fillDesc(x.how, [])}</div>` : ''}</div>`).join('') || '<div class="empty">Tidak ada hasil.</div>';
+}
+kg('is-search').addEventListener('input', () => { if(isS === 'ready') renderIS(); });
+kg('is-topic').addEventListener('change', () => { if(isS === 'ready') renderIS(); });
+
+let ccS = 'idle';
+async function initCC(){
+  if(ccS !== 'idle') return; ccS = 'loading';
+  try{
+    const t = (await opTableSafe('crisis_v2_table')) || (await opTable('crisis_table'));
+    const m = t.seasonInfoDataMap || t.seasonInfo || t.seasons || {};
+    const l = Object.values(m).filter(x => x && (x.name || x.seasonName || x.seasonId)).sort((a, b) => (b.startTs || 0) - (a.startTs || 0));
+    if(!l.length) throw new Error('data season tidak ditemukan');
+    kg('cc-status').textContent = l.length + ' season';
+    kg('cc-grid').innerHTML = l.map(x => `<div class="mini-card"><div class="n">${esc(x.name || x.seasonName || x.seasonId)}</div><div class="c">${fmtD(x.startTs)} – ${fmtD(x.endTs)}</div><div class="c">${esc(x.seasonId || '')}</div></div>`).join('');
+    ccS = 'ready';
+  }catch(e){ console.error(e); ccS = 'idle'; kg('cc-status').textContent = 'Gagal memuat CC: ' + (e.message || e); }
+}
+
+/* aturan niche: disimpan di Firestore koleksi niche_rules, dibuat admin; dicek saat input */
+let nrMap = {}, nrOn = false, nrNames = null;
+const nrId = n => encodeURIComponent(n).replace(/\./g, '%2E');
+const curNiche = () => { const v = kg('f-niche').value; return v === '__new__' ? kg('f-niche-new').value.trim() : v; };
+async function nrStart(){
+  if(!nrNames){ try{ await loadChars(); nrNames = {}; kcOps.forEach(x => { nrNames[x.n.toLowerCase()] = x; }); }catch(e){ console.warn(e); } }
+  kg('nr-max').innerHTML = '<option value="0">Tanpa batas</option>' + rng(1, 6).replace(/(\d)<\/option>/g, '$1★</option>');
+  if(!kg('nr-prof').children.length) kg('nr-prof').innerHTML = profBoxes('nr-prof', 'nrp');
+  kg('nr-edit').classList.toggle('hidden', currentUser() !== SUPER_ADMIN);
+  if(nrOn) return; nrOn = true;
+  try{ firebase.firestore().collection('niche_rules').onSnapshot(q => { nrMap = {}; q.docs.forEach(d => { const x = d.data(); if(x.niche) nrMap[x.niche] = x; }); nrShow(); }, e => { nrOn = false; console.warn('niche_rules', e); }); }catch(e){ nrOn = false; }
+}
+function nrCheck(niche, ops){
+  const r = nrMap[niche], out = []; if(!r || !nrNames) return out;
+  ops.forEach(n => { const o = nrNames[String(n).toLowerCase()]; if(!o) return;
+    if(r.maxRarity && o.r > r.maxRarity) out.push(`${n} (${o.r}★) melebihi batas ${r.maxRarity}★`);
+    if((r.bannedProf || []).includes(o.c.profession)) out.push(`${n}: kelas ${PROF[o.c.profession] || o.c.profession} dilarang`);
+  });
+  if(r.maxOps && ops.length > r.maxOps) out.push(`Jumlah operator ${ops.length} melebihi batas ${r.maxOps}`);
+  return out;
+}
+function nrShow(){
+  const n = curNiche(), r = nrMap[n], box = kg('nr-info');
+  if(r){ const bits = []; if(r.maxRarity) bits.push('maks ' + r.maxRarity + '★'); if(r.maxOps) bits.push('maks ' + r.maxOps + ' operator'); if((r.bannedProf || []).length) bits.push('tanpa ' + r.bannedProf.map(k => PROF[k] || k).join(', '));
+    const bad = nrCheck(n, selectedOps.slice());
+    box.innerHTML = '<span class="muted">Aturan: ' + (bits.join(' · ') || 'tidak ada batasan') + '</span>' + bad.map(b => `<div class="bad">⚠ ${esc(b)}</div>`).join('');
+    kg('nr-max').value = r.maxRarity || 0; kg('nr-ops').value = r.maxOps || 0;
+    kg('nr-prof').querySelectorAll('input').forEach(x => { x.checked = (r.bannedProf || []).includes(x.value); });
+  } else box.innerHTML = '';
+}
+kg('f-niche').addEventListener('change', nrShow);
+kg('f-niche-new').addEventListener('input', nrShow);
+new MutationObserver(nrShow).observe(kg('f-ops-chips'), { childList:true });
+kg('nr-save').addEventListener('click', async () => {
+  const n = curNiche(); if(!n){ alert('Pilih atau isi niche dulu.'); return; }
+  try{ await firebase.firestore().collection('niche_rules').doc(nrId(n)).set({ niche:n, maxRarity:+kg('nr-max').value || 0, maxOps:+kg('nr-ops').value || 0, bannedProf:[...kg('nr-prof').querySelectorAll('input:checked')].map(x => x.value), updatedBy:currentUser(), updatedAt:Date.now() }); }
+  catch(e){ console.error(e); alert('Gagal menyimpan aturan. Cek aturan Firestore untuk koleksi niche_rules.'); }
+});
+kg('btn-submit').addEventListener('click', e => {
+  const n = curNiche(), bad = nrCheck(n, selectedOps.slice());
+  if(bad.length && !confirm('Squad ini melanggar aturan niche "' + n + '":\n\n- ' + bad.join('\n- ') + '\n\nTetap simpan?')) e.stopImmediatePropagation();
+}, true);
+
 /* ---------- NAV GROUPS (sidebar diringkas, fungsi tab asli tetap dipakai) ---------- */
 (function(){
   const IC = {
@@ -2441,6 +2627,8 @@ document.getElementById('lore-list').addEventListener('click', e => { const c = 
     shirt:'<path d="M8.5 3.5 3 6.5l2 4 2.5-1V20.5h9V9.5l2.5 1 2-4-5.5-3c-.5 1.7-1.9 2.7-3.5 2.7S9 5.2 8.5 3.5z"/>',
     star:'<path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9L3.5 9.7l5.9-.8z"/>',
     book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/>',
+    calc:'<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/>',
+    dice:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/>',
     db:'<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/>'
   };
   const svg = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
@@ -2449,7 +2637,8 @@ document.getElementById('lore-list').addEventListener('click', e => { const c = 
     { label:'Clear Log', icon:'clog',  views:[['input','Input Clear','plus'], ['riwayat','Riwayat','hist']] },
     { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
-    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['gacha','Banner','star'], ['medalgame','Medal Game','medal'], ['lore','Lore','book']] }
+    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['gacha','Banner','star'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['cc','CC','target']] },
+    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice']] }
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
   const profile = document.querySelector('.sidebar .profile-item');
