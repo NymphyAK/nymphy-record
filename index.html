@@ -386,6 +386,13 @@
   .nav-subitem:focus-visible{outline:2px solid var(--red); outline-offset:-2px;}
   @media(min-width:721px){ .subtabs{display:none !important;} }
   @media(max-width:720px){ .nav-grp{display:contents;} .nav-subs,.nav-group .chev{display:none;} }
+
+  .pager{display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin:8px 0 4px;}
+  .pager button{width:auto; padding:6px 12px; font-size:13px;} .pager button:disabled{opacity:.4; cursor:default;}
+  .pager span{font-size:13px; color:var(--muted); display:inline-flex; align-items:center; gap:6px;}
+  .pager input{width:64px; padding:6px; text-align:center; margin:0;}
+  .mini-card .bm ~ .mat .n{padding-right:34px;}
+  .skin-card{position:relative;}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -542,7 +549,7 @@
       <div id="view-stage" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
           <h2>Stage Info</h2>
-          <input id="stage-search" placeholder="cari nama / kode stage, mis. 4-4 atau Nerves">
+          <input id="stage-search" placeholder="cari nama / kode stage / nama event, mis. 4-4, Nerves, atau nama event">
           <div class="hint" id="stage-status">Memuat daftar stage...</div>
           <div id="stage-list" class="stage-list"></div>
         </div>
@@ -566,8 +573,8 @@
         <div class="card" style="margin-bottom:16px;">
           <h2>Operators</h2>
           <input id="op-search" placeholder="cari operator, mis. Zima, Guard, Earthshaker, Ursus...">
-          <div class="hint" id="op-status">Memuat daftar operator...</div>
-          <div id="op-list" class="op-list"></div>
+          <div class="hint" id="op-status">Memuat daftar operator...</div><div id="op-pager" class="pager"></div>
+          <div id="op-list" class="skin-grid"></div>
         </div>
         <div id="op-detail"><div class="card"><div class="empty">Klik operator untuk melihat detailnya.</div></div></div>
       </div>
@@ -588,7 +595,7 @@
       <div id="view-medalgame" class="view hidden"><div class="card"><h2>Medal Game</h2>
   <input id="mg-search" placeholder="cari medal..."><div class="rf-grid"><select id="mg-type"><option value="">Semua tipe</option></select></div><div class="hint" id="mg-status">Memuat medal...</div><div id="mg-grid" class="mini-grid"></div></div></div>
       <div id="view-lore" class="view hidden"><div class="card"><h2>Lore Operator</h2>
-  <input id="lore-search" placeholder="cari operator, mis. Amiya"><div class="hint" id="lore-status">Memuat profil...</div><div id="lore-list" class="mini-grid" style="max-height:300px;"></div></div><div id="lore-detail" style="margin-top:16px;"></div></div>
+  <input id="lore-search" placeholder="cari operator, mis. Amiya"><div class="hint" id="lore-status">Memuat profil...</div><div id="lore-pager" class="pager"></div><div id="lore-list" class="skin-grid"></div></div><div id="lore-detail" style="margin-top:16px;"></div></div>
       <div id="view-calc" class="view hidden"><div class="card"><h2>Kalkulator Material</h2>
   <input id="kc-search" placeholder="cari operator..."><select id="kc-op" style="margin-top:8px;"></select>
   <div class="kc-row"><div><label>Elite dari</label><select id="kc-e0"></select></div><div><label>ke</label><select id="kc-e1"></select></div><div><label>Skill lv dari</label><select id="kc-s0"></select></div><div><label>ke</label><select id="kc-s1"></select></div></div>
@@ -605,7 +612,7 @@
   <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"><button id="sqb-copy">🔗 Salin link squad</button><button id="sqb-from" class="ghost">Ambil dari hasil acak</button><button id="sqb-use" class="ghost">Pakai di Input Clear</button><button id="sqb-clear" class="ghost">Kosongkan</button></div>
   <input id="sqb-link" readonly placeholder="link squad muncul di sini" style="margin-top:8px;"></div></div>
       <div id="view-is" class="view hidden"><div class="card"><h2>Integrated Strategies — Relic</h2>
-  <input id="is-search" placeholder="cari relic..."><div class="rf-grid"><select id="is-topic"><option value="">Semua tema</option></select></div><div class="hint" id="is-status">Memuat data...</div><div id="is-grid" class="mini-grid"></div></div></div>
+  <input id="is-search" placeholder="cari relic..."><div class="rf-grid"><select id="is-topic"><option value="">Semua tema</option></select></div><div class="hint" id="is-status">Memuat data...</div><div id="is-pager" class="pager"></div><div id="is-grid" class="mini-grid"></div></div></div>
       <div id="view-streak" class="view hidden"><div class="card"><h2>Streak Member</h2><div class="hint" style="margin-bottom:10px;">Hari berturut-turut yang ada clear. Streak aktif dihitung sampai hari ini atau kemarin.</div><div id="st-out"></div></div></div>
       <div id="view-unused" class="view hidden"><div class="card"><h2>Operator Belum Pernah Dipakai</h2>
   <input id="un-search" placeholder="cari operator..."><div class="rf-grid"><select id="un-r"><option value="0">Semua rarity</option></select></div><div class="hint" id="un-status">Memuat operator...</div><div id="un-grid" class="mini-grid"></div></div></div>
@@ -1478,7 +1485,7 @@ function addStage(e, fallbackId, seen){
   const id = e.stageId || fallbackId;
   if(!id || seen.has(id)) return;
   seen.add(id);
-  stageList.push({ id, code: e.code || id, name: e.name || e.code || id, levelId: e.levelId || '', type: e.stageType || '', boss: !!e.bossMark, diff: e.difficulty || '', story: !!e.isStoryOnly, ap: typeof e.apCost === 'number' ? e.apCost : NaN });
+  stageList.push({ id, code: e.code || id, name: e.name || e.code || id, levelId: e.levelId || '', type: e.stageType || '', boss: !!e.bossMark, diff: e.difficulty || '', story: !!e.isStoryOnly, ap: typeof e.apCost === 'number' ? e.apCost : NaN, zone: e.zoneId || '', ev: '', evn: '' });
 }
 async function initStageView(){
   if(stageState !== 'idle') return;
@@ -1497,7 +1504,7 @@ async function initStageView(){
     // 2) cadangan: HellaAPI (bisa tidak lengkap)
     if(!ok){
       status.textContent = 'Data mentah gagal, memuat dari API (mungkin tidak lengkap)...';
-      const q = ['excel.stageId','excel.code','excel.name','excel.levelId','excel.stageType','excel.bossMark','excel.difficulty','excel.isStoryOnly','excel.apCost'].map(f => 'include=' + f).join('&');
+      const q = ['excel.stageId','excel.code','excel.name','excel.levelId','excel.stageType','excel.bossMark','excel.difficulty','excel.isStoryOnly','excel.apCost','excel.zoneId'].map(f => 'include=' + f).join('&');
       const docs = await (await fetch(STAGE_API + '?' + q)).json();
       docs.forEach(d => [].concat(d.value || []).forEach(v => addStage(v.excel || {}, d.canon, seen)));
     }
@@ -1505,20 +1512,36 @@ async function initStageView(){
     stageState = 'ready';
     buildRandFilters();
     renderStageList();
+    enrichStageEvents();
   }catch(err){
     console.error(err); stageState = 'idle';
     status.textContent = 'Gagal memuat stage: ' + (err && err.message ? err.message : err) + ' (buka Console untuk detail). Tab ini akan mencoba lagi saat dibuka ulang.';
   }
 }
+// nama event / chapter tiap stage: dari zone_table (nama zona) + activity_table (nama event, dicocokkan lewat prefix zoneId)
+async function enrichStageEvents(){
+  try{
+    const [zt, at] = await Promise.all([opTableSafe('zone_table'), opTableSafe('activity_table')]);
+    const zones = (zt && (zt.zones || zt)) || {}, info = (at && (at.basicInfo || at)) || {}, cache = {};
+    const zInfo = z => cache[z] || (cache[z] = (() => {
+      const zo = zones[z] || {}, names = Object.keys(zo).filter(k => /^zoneName/.test(k) && typeof zo[k] === 'string' && zo[k].trim()).map(k => zo[k].trim());
+      const act = z.replace(/_zone\d+.*$/i, ''), ai = info[act], evName = ai && (ai.displayName || ai.name) || '';
+      const shown = evName || names.find(n => !/^(chapter|ch\.?)\s*\d+$/i.test(n)) || names[0] || '';
+      return { search:[evName, ...names, act !== z ? act : ''].filter(Boolean).join(' ').toLowerCase(), shown };
+    })());
+    stageList.forEach(st => { if(st.zone){ const i = zInfo(st.zone); st.ev = i.search; st.evn = i.shown; } });
+    if(stageState === 'ready') renderStageList();
+  }catch(e){ console.warn('nama event stage gagal dimuat', e); }
+}
 function stageMatches(){
   const q = document.getElementById('stage-search').value.trim().toLowerCase();
-  return q ? stageList.filter(s => s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q)) : stageList;
+  return q ? stageList.filter(s => s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q) || s.ev.includes(q)) : stageList;
 }
 function renderStageList(){
   const q = document.getElementById('stage-search').value.trim(), list = stageMatches();
   document.getElementById('stage-status').textContent = list.length + (q ? ' stage cocok' : ' stage tersedia') + (list.length > 120 ? ' (menampilkan 120 pertama, persempit pencarian)' : '');
   document.getElementById('stage-list').innerHTML = list.slice(0, 120).map(s =>
-    `<div class="stage-row" data-id="${esc(s.id)}"><span>${esc(s.name)}</span><span class="code">${esc(s.code)}</span></div>`
+    `<div class="stage-row" data-id="${esc(s.id)}"><span style="min-width:0;">${esc(s.name)}${s.evn ? `<small style="display:block; color:var(--muted); font-size:11.5px;">${esc(s.evn)}</small>` : ''}</span><span class="code">${esc(s.code)}</span></div>`
   ).join('') || '<div class="empty">Tidak ada hasil.</div>';
 }
 function imgOk(url){ return new Promise(r => { const i = new Image(); i.onload = () => r(true); i.onerror = () => r(false); i.src = url; }); }
@@ -1700,15 +1723,19 @@ function opMatches(){
   if(!q) return opList;
   return opList.filter(o => (o.name + ' ' + o.prof + ' ' + o.sub + ' ' + o.rarity + '*').toLowerCase().includes(q));
 }
+let opPage = 0;
 function renderOpList(){
   const q = document.getElementById('op-search').value.trim(), list = opMatches();
-  document.getElementById('op-status').textContent = list.length + (q ? ' operator cocok' : ' operator tersedia') + (list.length > 80 ? ' (menampilkan 80 pertama)' : '');
-  document.getElementById('op-list').innerHTML = list.slice(0, 80).map(o =>
-    `<div class="op-row" data-id="${esc(o.id)}">${bmBtn('operator', o.id, o.name, o.rarity + '★ ' + o.prof, avatarSrcs(o.id, o.name))}${imgTag(avatarSrcs(o.id, o.name))}<div style="min-width:0;"><div class="n">${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)}</div></div></div>`
-  ).join('') || '<div class="empty">Tidak ada hasil.</div>';
+  const PS = 80, pages = Math.max(1, Math.ceil(list.length / PS)); opPage = Math.min(Math.max(opPage, 0), pages - 1);
+  document.getElementById('op-status').textContent = list.length ? (opPage * PS + 1) + '–' + Math.min(list.length, (opPage + 1) * PS) + ' dari ' + list.length + (q ? ' operator cocok' : ' operator') : '0 operator';
+  pagerRender(document.getElementById('op-pager'), opPage, pages); document.getElementById('op-list').scrollTop = 0;
+  document.getElementById('op-list').innerHTML = list.slice(opPage * PS, (opPage + 1) * PS).map(o =>
+    `<div class="skin-card" data-id="${esc(o.id)}">${bmBtn('operator', o.id, o.name, o.rarity + '★ ' + o.prof, avatarSrcs(o.id, o.name))}<div class="skin-art">${imgTag(artSrcs(o.id, o.name, 2))}</div><div class="t"><div class="n">${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)}</div></div></div>`
+  ).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
 }
-document.getElementById('op-search').addEventListener('input', () => { if(opState === 'ready') renderOpList(); });
-document.getElementById('op-list').addEventListener('click', e => { const r = e.target.closest('.op-row'); if(r) selectOperator(r.dataset.id); });
+pagerBind(document.getElementById('op-pager'), n => { opPage = n; renderOpList(); });
+document.getElementById('op-search').addEventListener('input', () => { opPage = 0; if(opState === 'ready') renderOpList(); });
+document.getElementById('op-list').addEventListener('click', e => { const r = e.target.closest('.skin-card'); if(r) selectOperator(r.dataset.id); });
 
 function attrAt(phase, lvl){
   const kf = phase.attributesKeyFrames, first = kf[0], last = kf[kf.length - 1];
@@ -2454,13 +2481,16 @@ async function initLore(){
     lrS = 'ready'; renderLoreList();
   }catch(e){ console.error(e); lrS = 'idle'; st.textContent = 'Gagal memuat profil: ' + (e.message || e); }
 }
+let lrPage = 0;
 function renderLoreList(){
   const q = document.getElementById('lore-search').value.trim().toLowerCase();
   const l = lrL.filter(x => !q || x.n.toLowerCase().includes(q));
-  document.getElementById('lore-status').textContent = l.length + ' operator' + (l.length > 60 ? ' (60 pertama ditampilkan)' : '');
-  document.getElementById('lore-list').innerHTML = l.slice(0, 60).map(x =>
-    `<div class="mini-card lore-it" data-id="${esc(x.id)}">${imgTag(avatarSrcs(x.id, x.n))}<div class="n">${esc(x.n)}</div></div>`
-  ).join('') || '<div class="empty">Tidak ada hasil.</div>';
+  const PS = 60, pages = Math.max(1, Math.ceil(l.length / PS)); lrPage = Math.min(Math.max(lrPage, 0), pages - 1);
+  document.getElementById('lore-status').textContent = l.length ? (lrPage * PS + 1) + '–' + Math.min(l.length, (lrPage + 1) * PS) + ' dari ' + l.length + ' operator' : '0 operator';
+  pagerRender(document.getElementById('lore-pager'), lrPage, pages); document.getElementById('lore-list').scrollTop = 0;
+  document.getElementById('lore-list').innerHTML = l.slice(lrPage * PS, (lrPage + 1) * PS).map(x =>
+    `<div class="skin-card" data-id="${esc(x.id)}"><div class="skin-art">${imgTag(artSrcs(x.id, x.n, 2))}</div><div class="t"><div class="n">${esc(x.n)}</div></div></div>`
+  ).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
 }
 function openLore(id){
   const x = lrL.find(y => y.id === id); if(!x) return;
@@ -2472,8 +2502,9 @@ function openLore(id){
   box.innerHTML = `<div class="card"><h2>${esc(x.n)}</h2>${secs || '<div class="empty">Belum ada profil.</div>'}</div>`;
   box.scrollIntoView({ behavior:'smooth', block:'start' });
 }
-document.getElementById('lore-search').addEventListener('input', () => { if(lrS === 'ready') renderLoreList(); });
-document.getElementById('lore-list').addEventListener('click', e => { const c = e.target.closest('.lore-it'); if(c) openLore(c.dataset.id); });
+pagerBind(document.getElementById('lore-pager'), n => { lrPage = n; renderLoreList(); });
+document.getElementById('lore-search').addEventListener('input', () => { lrPage = 0; if(lrS === 'ready') renderLoreList(); });
+document.getElementById('lore-list').addEventListener('click', e => { const c = e.target.closest('.skin-card'); if(c) openLore(c.dataset.id); });
 
 /* ---------- KALKULATOR / SQUAD / IS / CC / ATURAN NICHE ---------- */
 const kg = id => document.getElementById(id);
@@ -2549,7 +2580,7 @@ kg('sq-use').addEventListener('click', () => {
   renderOpChips(); document.querySelector('.nav-item[data-view="input"]').click();
 });
 
-let isS = 'idle', isL = [];
+let isS = 'idle', isL = [], isPage = 0;
 async function initIS(){
   if(isS !== 'idle') return; isS = 'loading';
   try{
@@ -2564,11 +2595,21 @@ async function initIS(){
 function renderIS(){
   const q = kg('is-search').value.trim().toLowerCase(), g = kg('is-topic').value;
   const l = isL.filter(x => (!g || x.topic === g) && (!q || x.n.toLowerCase().includes(q) || x.d.toLowerCase().includes(q)));
-  kg('is-status').textContent = l.length + ' item' + (l.length > 80 ? ' (80 pertama ditampilkan)' : '');
-  kg('is-grid').innerHTML = l.slice(0, 80).map(x => `<div class="mini-card">${bmBtn('relic', x.topic + ':' + x.id, x.n, x.topic, relicSrcs(x))}<div class="mat" style="margin-bottom:8px;">${imgTag(relicSrcs(x))}<div><div class="n">${esc(x.n)}</div><div class="c">${esc(x.topic)}${x.type ? ' · ' + esc(x.type) : ''}</div></div></div><div style="font-size:12.5px;">${fillDesc(x.d, [])}</div>${x.how ? `<div class="c" style="margin-top:6px;">${fillDesc(x.how, [])}</div>` : ''}</div>`).join('') || '<div class="empty">Tidak ada hasil.</div>';
+  const PS = 80, pages = Math.max(1, Math.ceil(l.length / PS)); isPage = Math.min(Math.max(isPage, 0), pages - 1);
+  kg('is-status').textContent = l.length ? (isPage * PS + 1) + '–' + Math.min(l.length, (isPage + 1) * PS) + ' dari ' + l.length + ' item' : '0 item';
+  pagerRender(kg('is-pager'), isPage, pages); kg('is-grid').scrollTop = 0;
+  kg('is-grid').innerHTML = l.slice(isPage * PS, (isPage + 1) * PS).map(x => `<div class="mini-card">${bmBtn('relic', x.topic + ':' + x.id, x.n, x.topic, relicSrcs(x))}<div class="mat" style="margin-bottom:8px;">${imgTag(relicSrcs(x))}<div><div class="n">${esc(x.n)}</div><div class="c">${esc(x.topic)}${x.type ? ' · ' + esc(x.type) : ''}</div></div></div><div style="font-size:12.5px;">${fillDesc(x.d, [])}</div>${x.how ? `<div class="c" style="margin-top:6px;">${fillDesc(x.how, [])}</div>` : ''}</div>`).join('') || '<div class="empty">Tidak ada hasil.</div>';
 }
-kg('is-search').addEventListener('input', () => { if(isS === 'ready') renderIS(); });
-kg('is-topic').addEventListener('change', () => { if(isS === 'ready') renderIS(); });
+function pagerRender(el, page, pages){
+  el.innerHTML = pages < 2 ? '' : `<button class="ghost" data-pg="0" ${page === 0 ? 'disabled' : ''}>«</button><button class="ghost" data-pg="${page - 1}" ${page === 0 ? 'disabled' : ''}>‹ Sebelumnya</button><span>Hal. <input type="number" min="1" max="${pages}" value="${page + 1}" data-pgin> / ${pages}</span><button class="ghost" data-pg="${page + 1}" ${page >= pages - 1 ? 'disabled' : ''}>Berikutnya ›</button><button class="ghost" data-pg="${pages - 1}" ${page >= pages - 1 ? 'disabled' : ''}>»</button>`;
+}
+function pagerBind(el, set){
+  el.addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if(b && !b.disabled) set(+b.dataset.pg); });
+  el.addEventListener('change', e => { if(e.target.matches('[data-pgin]')) set((parseInt(e.target.value, 10) || 1) - 1); });
+}
+pagerBind(kg('is-pager'), n => { isPage = n; renderIS(); });
+kg('is-search').addEventListener('input', () => { isPage = 0; if(isS === 'ready') renderIS(); });
+kg('is-topic').addEventListener('change', () => { isPage = 0; if(isS === 'ready') renderIS(); });
 
 /* ---------- EXPORT / STREAK / BELUM DIPAKAI / PITY / MUSUH ---------- */
 function dl(name, text, type){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
