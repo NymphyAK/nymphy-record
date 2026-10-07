@@ -369,6 +369,23 @@
   .mini-card,.op-row{position:relative;}
   .bm{position:absolute; top:8px; right:8px; z-index:2; width:30px; height:30px; padding:0; margin:0; border-radius:50%; font-size:16px; line-height:1; background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.18); color:#bbb; cursor:pointer;} .bm.on{color:#ffc83d; border-color:#ffc83d;}
   [data-cd]{font-variant-numeric:tabular-nums;}
+
+  /* submenu di sidebar (desktop): tab bar atas disembunyikan, isinya pindah ke bawah menu grup */
+  .nav-grp{display:flex; flex-direction:column; gap:2px; flex-shrink:0;}
+  .nav-group .chev{margin-left:auto; display:flex; opacity:.55; transition:transform .2s;}
+  .nav-group .chev svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .nav-grp.open .chev{transform:rotate(180deg);} .nav-grp.single .chev{display:none;}
+  .nav-subs{display:grid; grid-template-rows:0fr; transition:grid-template-rows .22s ease;}
+  .nav-grp.open .nav-subs{grid-template-rows:1fr;}
+  .nav-subs-in{overflow:hidden; min-height:0; margin-left:24px; padding-left:8px; border-left:1px solid rgba(255,255,255,.09); display:flex; flex-direction:column; gap:2px;}
+  .nav-subs-in > :first-child{margin-top:2px;} .nav-subs-in > :last-child{margin-bottom:4px;}
+  .nav-subitem{display:flex; align-items:center; gap:10px; height:36px; padding:0 10px; border-radius:10px; border:1px solid transparent; font-size:13px; font-weight:600; color:#8d8d8d; cursor:pointer; white-space:nowrap; user-select:none; flex-shrink:0;}
+  .nav-subitem svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0;}
+  .nav-subitem:hover{color:#fff; background:rgba(255,255,255,.05);}
+  .nav-subitem.on{color:#fff; background:rgba(254,47,103,.12); border-color:rgba(254,47,103,.26);} .nav-subitem.on svg{color:var(--red);}
+  .nav-subitem:focus-visible{outline:2px solid var(--red); outline-offset:-2px;}
+  @media(min-width:721px){ .subtabs{display:none !important;} }
+  @media(max-width:720px){ .nav-grp{display:contents;} .nav-subs,.nav-group .chev{display:none;} }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -466,7 +483,7 @@
 
       <div id="view-input" class="view hidden">
         <div class="card" style="max-width:520px;">
-          <h2>Input Data Clear</h2>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;"><h2 style="margin:0;">Input Data Clear</h2><button class="ghost" id="in-back">← Riwayat</button></div>
           <label class="rf-chk" style="margin-bottom:8px;"><input type="checkbox" id="f-weekly" style="width:auto;"> 🏆 Clear untuk Weekly Challenge (stage terisi otomatis)</label>
           <div class="hint" id="f-weekly-hint"></div>
           <label>Stage</label>
@@ -494,7 +511,7 @@
 
       <div id="view-riwayat" class="view hidden">
         <div class="card">
-          <h2>Riwayat Data</h2>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;"><h2 style="margin:0;">Riwayat Data</h2><button id="rw-input">➕ Input Clear</button></div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;"><button class="ghost" id="rw-csv">⬇ Export CSV</button><button class="ghost" id="rw-json">⬇ Backup JSON</button></div>
           <div class="rw-filter">
             <input id="rw-search" type="search" placeholder="cari stage, niche, operator, player, admin..." autocomplete="off">
@@ -2738,12 +2755,13 @@ window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800)
     calc:'<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/>',
     dice:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/>',
     flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.4 1 2 1.8 2.3C11 8.5 11 5.5 12 3z"/>',
+    chev:'<path d="m6 9 6 6 6-6"/>',
     db:'<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/>'
   };
   const svg = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
   const GROUPS = [
     { label:'Beranda',   icon:'home',  views:[['home','Home','home'], ['dashboard','Dashboard','dash']] },
-    { label:'Clear Log', icon:'clog',  views:[['input','Input Clear','plus'], ['riwayat','Riwayat','hist']] },
+    { label:'Clear Log', icon:'clog',  views:[['riwayat','Riwayat','hist'], ['input','Input Clear','plus',true]] },
     { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target'], ['streak','Streak','flame']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
     { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['enemy','Musuh','target']] },
@@ -2751,36 +2769,56 @@ window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800)
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
   const profile = document.querySelector('.sidebar .profile-item');
+  let openG = null;
+  const setOpen = g => { openG = g; GROUPS.forEach(x => { if(!x.grp) return; const on = x === g; x.grp.classList.toggle('open', on); x.el.setAttribute('aria-expanded', on); }); };
+  const curView = () => { const a = document.querySelector('.nav-item[data-view].active'); return a && a.dataset.view; };
   GROUPS.forEach(g => {
-    g.last = g.views[0][0];
+    g.vis = g.views.filter(x => !x[3]); g.last = g.vis[0][0];
     g.views.forEach(([v, label]) => {
       const o = orig(v); if(o) o.classList.add('nav-sub');
       const view = document.getElementById('view-' + v);
-      if(view){
+      if(view && g.vis.length > 1){
         const bar = document.createElement('div'); bar.className = 'subtabs';
-        bar.innerHTML = g.views.map(([k, l, ic]) => `<div class="subtab" role="tab" tabindex="0" data-view="${k}">${svg(ic)}<span>${l}</span></div>`).join('');
+        bar.innerHTML = g.vis.map(([k, l, ic]) => `<div class="subtab" role="tab" tabindex="0" data-view="${k}">${svg(ic)}<span>${l}</span></div>`).join('');
         view.insertBefore(bar, view.firstChild);
       }
     });
     const el = document.createElement('div');
     el.className = 'nav-item nav-group'; el.title = g.label; el.setAttribute('role', 'button'); el.tabIndex = 0;
-    el.innerHTML = `<span class="ni">${svg(g.icon)}</span><span class="nl">${g.label}</span>`;
-    const go = () => { const o = orig(g.last); if(o) o.click(); };
+    el.innerHTML = `<span class="ni">${svg(g.icon)}</span><span class="nl">${g.label}</span><span class="chev">${svg('chev')}</span>`;
+    const grp = document.createElement('div'); grp.className = 'nav-grp';
+    const subs = document.createElement('div'); subs.className = 'nav-subs';
+    subs.innerHTML = '<div class="nav-subs-in">' + g.vis.map(([k, l, ic]) => `<div class="nav-subitem" role="button" tabindex="0" data-go="${k}">${svg(ic)}<span>${l}</span></div>`).join('') + '</div>';
+    const go = () => {
+      if(g.vis.length < 2){ if(curView() !== g.last){ const o = orig(g.last); if(o) o.click(); } return; }   // grup tanpa submenu: langsung ke halamannya
+      if(openG === g){ setOpen(null); return; }          // klik lagi = tutup submenu
+      setOpen(g);
+      if(!g.views.some(x => x[0] === curView())){ const o = orig(g.last); if(o) o.click(); }
+    };
     el.addEventListener('click', go);
     el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
-    profile.parentNode.insertBefore(el, profile);
-    g.el = el;
+    if(g.vis.length < 2){ grp.classList.add('single'); grp.append(el); } else grp.append(el, subs);
+    profile.parentNode.insertBefore(grp, profile);
+    g.el = el; g.grp = grp;
   });
   const go = v => { const o = orig(v); if(o) o.click(); };
   document.querySelectorAll('.subtab').forEach(t => {
     t.addEventListener('click', () => go(t.dataset.view));
     t.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(t.dataset.view); } });
   });
+  document.querySelectorAll('.nav-subitem').forEach(t => {
+    t.addEventListener('click', () => go(t.dataset.go));
+    t.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(t.dataset.go); } });
+  });
   function sync(){
-    const a = document.querySelector('.nav-item[data-view].active'), v = a && a.dataset.view;
-    GROUPS.forEach(g => { const on = g.views.some(x => x[0] === v); if(on) g.last = v; g.el.classList.toggle('active', on); });
+    const v = curView(); let act = null;
+    GROUPS.forEach(g => { const on = g.views.some(x => x[0] === v); if(on){ if(g.vis.some(x => x[0] === v)) g.last = v; act = g; } g.el.classList.toggle('active', on); });
     document.querySelectorAll('.subtab').forEach(t => t.classList.toggle('on', t.dataset.view === v));
+    document.querySelectorAll('.nav-subitem').forEach(t => t.classList.toggle('on', t.dataset.go === v));
+    if(act && act.vis.length > 1 && openG !== act) setOpen(act); else if(act && act.vis.length < 2) setOpen(null);
   }
+  document.getElementById('rw-input').addEventListener('click', () => go('input'));
+  document.getElementById('in-back').addEventListener('click', () => go('riwayat'));
   const mo = new MutationObserver(sync);
   document.querySelectorAll('.nav-item[data-view]').forEach(n => mo.observe(n, { attributes:true, attributeFilter:['class'] }));
   sync();
