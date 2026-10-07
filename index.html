@@ -418,6 +418,7 @@
   .bt-slot{width:34px; height:34px; border-radius:6px; background:rgba(0,0,0,.5); border:1px dashed rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; color:#8d8d8d; font-weight:700; font-size:14px; overflow:hidden; flex-shrink:0;}
   .bt-slot.on{border:1px solid var(--c); background:#000; padding:0;} .bt-slot.on img{width:100%; height:100%; object-fit:cover; display:block;}
   .bt-slot.on:hover{border-color:var(--red); filter:brightness(.7);}
+  .bt-slot{position:relative;} .bt-el{position:absolute; right:0; bottom:0; background:rgba(0,0,0,.78); color:#fff; font-style:normal; font-size:9px; line-height:1; padding:2px 3px; border-top-left-radius:4px; font-weight:700; pointer-events:none;}
   @media(max-width:720px){ .base-wrap{grid-template-columns:1fr;} .bt-left{grid-template-columns:repeat(2,minmax(0,1fr));} .bt-right{display:grid; grid-template-columns:1fr 1fr;} .bt-slot{width:38px; height:38px;} }
   .bt-sel{width:100%; padding:4px 24px 4px 8px; font-size:12px; border-radius:8px; margin:0;}
   .sim-sticky{position:sticky; top:80px; z-index:18;}
@@ -676,14 +677,14 @@
           <div id="sl-list"></div></div>
         <div class="card sim-sticky" style="margin-bottom:16px;">
           <label style="margin-top:0;">Tambah operator ke ruangan terpilih: <b id="sim-active" style="color:var(--red);">-</b></label>
-          <div style="display:flex; gap:8px; align-items:flex-start;"><div class="pick-wrap" style="flex:1; min-width:0;"><input id="sim-search" placeholder="klik sebuah ruangan, lalu cari operator..." autocomplete="off"><div id="sim-list" class="pick-list hidden"></div></div><button class="ghost" id="sim-clear" style="margin-top:0; height:42px; flex-shrink:0;">Kosongkan semua</button></div>
+          <div style="display:flex; gap:8px; align-items:flex-start;"><select id="sim-elite" title="Elite operator yang dipakai saat ditambahkan" style="width:118px; flex-shrink:0; height:42px;"><option value="max">Elite Maks</option><option value="0">Elite 0</option><option value="1">Elite 1</option><option value="2">Elite 2</option></select><div class="pick-wrap" style="flex:1; min-width:0;"><input id="sim-search" placeholder="klik sebuah ruangan, lalu cari operator..." autocomplete="off"><div id="sim-list" class="pick-list hidden"></div></div><button class="ghost" id="sim-clear" style="margin-top:0; height:42px; flex-shrink:0;">Kosongkan semua</button></div>
           <div class="hint" id="sim-status">Memuat data base...</div>
         </div>
         <div id="sim-rooms" class="base-wrap"></div>
         <div class="card" id="sim-detail" style="margin:16px 0;"></div>
         <div class="card" style="margin-bottom:16px;"><h2>Ringkasan Base</h2><div id="sim-sum"><div class="empty">Belum ada operator.</div></div></div>
         <div class="card" style="margin-bottom:16px;"><h2>Estimasi Produksi (LMD &amp; EXP)</h2><div id="sim-prod"></div></div>
-        <div class="hint" style="margin-top:10px;">Skill dihitung pada elite maksimal tiap operator, dari teks deskripsi skill (perkiraan). Skill Control Center yang menyebut ruangan tertentu ditambahkan ke ruangan itu. Efek bersyarat (⚠) hanya dihitung nilai dasarnya.</div>
+        <div class="hint" style="margin-top:10px;">Skill dihitung pada elite yang dipilih tiap operator (pilih di kotak Elite sebelum menambah operator, atau ubah di tabel Detail ruangan; default Elite Maks), dari teks deskripsi skill (perkiraan). Skill Control Center yang menyebut ruangan tertentu ditambahkan ke ruangan itu. Efek bersyarat (⚠) hanya dihitung nilai dasarnya.</div>
       </div>
 
       <div id="view-pity" class="view hidden"><div class="card" style="max-width:520px;"><h2>Kalkulator Pull</h2>
@@ -2769,8 +2770,8 @@ const SIM_PRESETS = { '243':[T_,M_,P_,T_,M_,P_,M_,M_,P_], '252':[T_,M_,P_,T_,M_,
 const SIM_LEFT = [T_, M_, P_, 'EMPTY'];
 const SIM_CAP = { CONTROL:5, TRADING:3, MANUFACTURE:3, POWER:3, DORMITORY:5, MEETING:2, HIRE:1, WORKSHOP:3, TRAINING:2 };
 const SIM_NAME = { CONTROL:'Control Center', TRADING:'Trading Post', MANUFACTURE:'Factory', POWER:'Power Plant', DORMITORY:'Dormitory', MEETING:'Reception Room', HIRE:'Office', WORKSHOP:'Workshop', TRAINING:'Training Room' };
-let simGrid = SIM_PRESETS['243'].slice(), simDorm = 4, simEdit = false, simSlots = {}, simActive = '', simReady = false;
-try{ const sv = JSON.parse(localStorage.getItem('sim_v2') || 'null'); if(sv && Array.isArray(sv.grid) && sv.grid.length === 9 && sv.grid.every(t => SIM_LEFT.includes(t))){ simGrid = sv.grid; simDorm = Math.min(4, Math.max(1, +sv.dorm || 4)); simSlots = sv.slots || {}; } }catch(e){}
+let simGrid = SIM_PRESETS['243'].slice(), simDorm = 4, simEdit = false, simSlots = {}, simElite = {}, simActive = '', simReady = false;
+try{ const sv = JSON.parse(localStorage.getItem('sim_v2') || 'null'); if(sv && Array.isArray(sv.grid) && sv.grid.length === 9 && sv.grid.every(t => SIM_LEFT.includes(t))){ simGrid = sv.grid; simDorm = Math.min(4, Math.max(1, +sv.dorm || 4)); simSlots = sv.slots || {}; simElite = sv.elite || {}; } }catch(e){}
 function simRooms(){
   const out = [], add = (key, t, label) => out.push({ key, type:t, label, cap:SIM_CAP[t] });
   const cnt = {}; simGrid.forEach(t => { cnt[t] = (cnt[t] || 0) + 1; });
@@ -2786,7 +2787,7 @@ function simSetGrid(g){
   simGrid = g.slice(); const m = Object.keys(SIM_PRESETS).find(k => SIM_PRESETS[k].every((t, i) => t === simGrid[i]));
   kg('sim-preset').value = m || 'custom';
 }
-function simSave(){ try{ localStorage.setItem('sim_v2', JSON.stringify({ grid:simGrid, dorm:simDorm, slots:simSlots, cfg:simCfg })); }catch(e){} }
+function simSave(){ try{ const u = simUsed(); Object.keys(simElite).forEach(k => { if(!u.has(k)) delete simElite[k]; }); localStorage.setItem('sim_v2', JSON.stringify({ grid:simGrid, dorm:simDorm, slots:simSlots, elite:simElite, cfg:simCfg })); }catch(e){} }
 async function initBaseSim(){
   if(!simReady){
     try{
@@ -2799,12 +2800,14 @@ async function initBaseSim(){
 }
 const simMaxElite = id => { const o = opList.find(x => x.id === id); return o ? bsMaxPhase(o) : 0; };
 const simUsed = () => new Set(Object.values(simSlots).flat());
+// elite yang dipakai operator di simulasi (default: elite maksimal operator itu)
+const simEl = id => { const m = simMaxElite(id), v = simElite[id]; return v == null ? m : Math.max(0, Math.min(m, +v || 0)); };
 function simCalc(room){
   const r = { eff:0, cap:0, mood:0, approx:false, rows:[], toRoom:{} };
   (simSlots[room.key] || []).forEach(id => {
     const o = opList.find(x => x.id === id); if(!o) return;
-    bsSkills(id, simMaxElite(id)).filter(f => f.roomType === room.type).forEach(f => {
-      const p = bsParse(f); if(p.cond) r.approx = true; r.rows.push({ op:o.name, f, p });
+    bsSkills(id, simEl(id)).filter(f => f.roomType === room.type).forEach(f => {
+      const p = bsParse(f); if(p.cond) r.approx = true; r.rows.push({ id, op:o.name, f, p });
       if(room.type === 'CONTROL'){
         const t = p.txt;
         if(p.eff){ const tg = /trading post/i.test(t) ? 'TRADING' : /manufactur|factory|production/i.test(t) ? 'MANUFACTURE' : /power plant|drone/i.test(t) ? 'POWER' : /dormitor/i.test(t) ? 'DORMITORY' : ''; if(tg) r.toRoom[tg] = (r.toRoom[tg] || 0) + p.eff; else r.eff += p.eff; }
@@ -2827,7 +2830,7 @@ function renderBaseSim(){
     const stat = total ? 'Efisiensi ' + (total > 0 ? '+' : '') + fx(total) + '%' + (bonus ? ' (CC +' + fx(bonus) + '%)' : '') : (r.type === 'CONTROL' && Object.keys(c.toRoom).length ? Object.entries(c.toRoom).map(([k, v]) => SIM_NAME[k] + ' +' + fx(v) + '%').join(', ') : '');
     const extra = (c.cap ? ' · Kap. +' + c.cap : '') + (c.mood ? ' · Morale ' + (c.mood > 0 ? '+' : '') + fx(c.mood) : '') + (c.approx ? ' ⚠' : '');
     const slots = [...Array(r.cap)].map((_, i) => { const id = ids[i], o = id && opList.find(x => x.id === id);
-      return o ? `<span class="bt-slot on" data-rm="${r.key}" data-id="${esc(id)}" title="${esc(o.name)} (klik untuk hapus)">${imgTag(avatarSrcs(o.id, o.name))}</span>` : '<span class="bt-slot">?</span>'; }).join('');
+      return o ? `<span class="bt-slot on" data-rm="${r.key}" data-id="${esc(id)}" title="${esc(o.name)} · Elite ${simEl(o.id)} (klik untuk hapus)">${imgTag(avatarSrcs(o.id, o.name))}<i class="bt-el">E${simEl(o.id)}</i></span>` : '<span class="bt-slot">?</span>'; }).join('');
     const sel = gp => simEdit && gp != null ? `<select class="bt-sel" data-gp="${gp}">${SIM_LEFT.map(t => `<option value="${t}" ${simGrid[gp] === t ? 'selected' : ''}>${t === 'EMPTY' ? 'Kosong' : SIM_NAME[t]}</option>`).join('')}</select>` : '';
     return `<div class="bt${r.key === simActive ? ' act' : ''}" data-t="${r.type}" data-room="${r.key}"><div class="bt-h"><span class="bt-gear">⚙</span><span class="bt-n">${esc(r.label)}</span><span class="bt-c">${ids.length}/${r.cap}</span></div>${sel(r.key[0] === 'G' ? +r.key.slice(1) : null)}<div class="bt-s">${esc(stat + extra)}</div><div class="bt-slots">${slots}</div></div>`;
   };
@@ -2835,8 +2838,13 @@ function renderBaseSim(){
   kg('sim-rooms').innerHTML = `<div class="bt-left">${simGrid.map((t, i) => { const r = rooms.find(x => x.key === 'G' + i); return r ? tile(r) : emptyTile(i); }).join('')}</div>
     <div class="bt-mid">${tile(rooms.find(r => r.type === 'CONTROL'))}${rooms.filter(r => r.type === 'DORMITORY').map(tile).join('')}</div>
     <div class="bt-right">${['MEETING', 'WORKSHOP', 'HIRE', 'TRAINING'].map(t => tile(rooms.find(r => r.type === t))).join('')}</div>`;
-  { const ar = rooms.find(r => r.key === simActive), ac = calc[simActive];
-    kg('sim-detail').innerHTML = `<h2>Detail: ${esc(ar.label)}</h2>` + (ac.rows.length ? `<div class="tbwrap"><table class="tb"><tr><th>Operator</th><th>Skill</th><th>Efek</th></tr>${ac.rows.map(x => `<tr><td>${esc(x.op)}</td><td><b>${esc(x.f.buffName)}</b>${x.p.cond ? ' ⚠' : ''}</td><td>${esc(x.p.txt)}</td></tr>`).join('')}</table></div>` : '<div class="empty">Ruangan ini masih kosong. Cari operator di kolom atas untuk menambahkannya.</div>'); }
+  { const ar = rooms.find(r => r.key === simActive), ac = calc[simActive], ids = simSlots[simActive] || [];
+    const body = ids.map(id => { const o = opList.find(x => x.id === id); if(!o) return '';
+      const mx = simMaxElite(id), cur = simEl(id), rs = ac.rows.filter(x => x.id === id);
+      const sel = `<select data-el-op="${esc(id)}" style="width:auto; min-width:96px; margin-top:4px;">${[...Array(mx + 1)].map((_, e) => `<option value="${e}" ${e === cur ? 'selected' : ''}>Elite ${e}</option>`).join('')}</select>`;
+      if(!rs.length) return `<tr><td>${esc(o.name)}<br>${sel}</td><td colspan="2" class="muted">Tidak ada skill ${esc(ar.label)} pada Elite ${cur}</td></tr>`;
+      return rs.map((x, i) => `<tr>${i === 0 ? `<td rowspan="${rs.length}">${esc(x.op)}<br>${sel}</td>` : ''}<td><b>${esc(x.f.buffName)}</b>${x.p.cond ? ' ⚠' : ''}</td><td>${esc(x.p.txt)}</td></tr>`).join(''); }).join('');
+    kg('sim-detail').innerHTML = `<h2>Detail: ${esc(ar.label)}</h2>` + (ids.length ? `<div class="tbwrap"><table class="tb"><tr><th>Operator / Elite</th><th>Skill</th><th>Efek</th></tr>${body}</table></div>` : '<div class="empty">Ruangan ini masih kosong. Cari operator di kolom atas untuk menambahkannya.</div>'); }
   simProdRender(rooms, calc, ctl);
   // ringkasan per tipe ruangan
   const types = ['TRADING', 'MANUFACTURE', 'POWER', 'DORMITORY', 'MEETING', 'HIRE', 'WORKSHOP', 'TRAINING'], rows = [];
@@ -2916,9 +2924,9 @@ function renderSimLayouts(){
     const ty = (x.grid || []).filter(t => t !== 'EMPTY'), c = k => ty.filter(t => t === k).length;
     return `<div class="sl-row"><div class="i"><b>${esc(x.name)}</b><div class="hint">${c('TRADING')}T · ${c('MANUFACTURE')}F · ${c('POWER')}P · ${x.dorm || 4} dorm · ${n} operator${d ? ' · ' + esc(d) : ''}</div></div><button class="ghost" data-sl-load="${esc(x.id)}">Muat</button><button class="ghost" data-sl-over="${esc(x.id)}">Timpa</button><button class="ghost" data-sl-del="${esc(x.id)}">Hapus</button></div>`; }).join('') || '<div class="hint" style="margin-top:8px;">Belum ada layout tersimpan.</div>';
 }
-const slSnap = () => ({ grid: simGrid.slice(), dorm: simDorm, slots: JSON.parse(JSON.stringify(simSlots)), cfg: JSON.parse(JSON.stringify(simCfg)), t: Date.now() });
+const slSnap = () => ({ grid: simGrid.slice(), dorm: simDorm, slots: JSON.parse(JSON.stringify(simSlots)), elite: { ...simElite }, cfg: JSON.parse(JSON.stringify(simCfg)), t: Date.now() });
 function slApply(x){
-  simGrid = (x.grid || []).slice(); simDorm = Math.min(4, Math.max(1, +x.dorm || 4)); simSlots = JSON.parse(JSON.stringify(x.slots || {}));
+  simGrid = (x.grid || []).slice(); simDorm = Math.min(4, Math.max(1, +x.dorm || 4)); simSlots = JSON.parse(JSON.stringify(x.slots || {})); simElite = { ...(x.elite || {}) };
   if(x.cfg) simCfg = { ...simCfg, ...x.cfg, prod: { ...(x.cfg.prod || {}) } };
   kg('sim-dorm').value = simDorm; const m = Object.keys(SIM_PRESETS).find(k => SIM_PRESETS[k].every((t, i) => t === simGrid[i])); kg('sim-preset').value = m || 'custom';
   simActive = ''; renderBaseSim();
@@ -2947,8 +2955,11 @@ makeOpPicker('sim-search', 'sim-list', name => {
   if(simUsed().has(o.id)){ st.textContent = o.name + ' sudah ditempatkan di ruangan lain.'; return; }
   const ids = simSlots[room.key] || (simSlots[room.key] = []);
   if(ids.length >= room.cap){ st.textContent = room.label + ' sudah penuh (' + room.cap + ').'; return; }
-  if(!bsSkills(o.id, bsMaxPhase(o)).some(f => f.roomType === room.type)){ st.textContent = o.name + ' tidak punya skill base untuk ' + room.label + '.'; return; }
-  st.textContent = ''; ids.push(o.id); renderBaseSim();
+  const pv = kg('sim-elite').value, mx = bsMaxPhase(o), el = pv === 'max' ? mx : Math.min(mx, +pv);
+  if(!bsSkills(o.id, el).some(f => f.roomType === room.type)){ st.textContent = o.name + ' tidak punya skill base untuk ' + room.label + ' pada Elite ' + el + (el < mx ? ' (coba elite lebih tinggi).' : '.'); return; }
+  st.textContent = pv !== 'max' && +pv > mx ? o.name + ' maksimal Elite ' + mx + ', dipakai Elite ' + mx + '.' : '';
+  if(pv === 'max') delete simElite[o.id]; else simElite[o.id] = el;
+  ids.push(o.id); renderBaseSim();
 }, false);
 kg('sim-rooms').addEventListener('click', e => {
   const x = e.target.closest('[data-rm]');
@@ -2960,7 +2971,8 @@ kg('sim-preset').addEventListener('change', e => { if(SIM_PRESETS[e.target.value
 kg('sim-dorm').addEventListener('change', e => { simDorm = +e.target.value; renderBaseSim(); });
 kg('sim-edit').addEventListener('change', e => { simEdit = e.target.checked; renderBaseSim(); });
 kg('sim-rooms').addEventListener('change', e => { const t = e.target.closest('[data-gp]'); if(!t) return; const g = simGrid.slice(); g[+t.dataset.gp] = t.value; simSetGrid(g); renderBaseSim(); });
-kg('sim-clear').addEventListener('click', () => { simSlots = {}; renderBaseSim(); });
+kg('sim-clear').addEventListener('click', () => { simSlots = {}; simElite = {}; renderBaseSim(); });
+kg('sim-detail').addEventListener('change', e => { const t = e.target.closest('[data-el-op]'); if(!t) return; simElite[t.dataset.elOp] = +t.value; renderBaseSim(); });
 
 /* ---------- EXPORT / STREAK / BELUM DIPAKAI / PITY / MUSUH ---------- */
 function dl(name, text, type){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
