@@ -393,6 +393,10 @@
   .pager input{width:64px; padding:6px; text-align:center; margin:0;}
   .mini-card .bm ~ .mat .n{padding-right:34px;}
   .skin-card{position:relative;}
+  #op-list,#lore-list{grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; max-height:760px;}
+  #op-list .skin-card .n,#lore-list .skin-card .n{font-size:14.5px;} #op-list .skin-card .t,#lore-list .skin-card .t{padding:10px 12px;}
+  @media(max-width:1000px){ #op-list,#lore-list{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  @media(max-width:640px){ #op-list,#lore-list{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;} }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -586,7 +590,7 @@
           <div class="rf-grid">
             <select id="item-rar"><option value="">Semua rarity</option><option value="5">5★</option><option value="4">4★</option><option value="3">3★</option><option value="2">2★</option><option value="1">1★</option></select>
           </div>
-          <div class="hint" id="item-status">Memuat daftar item...</div>
+          <div class="hint" id="item-status">Memuat daftar item...</div><div id="item-pager" class="pager"></div>
           <div id="item-grid" class="op-list"></div>
         </div>
         <div id="item-detail"><div class="card"><div class="empty">Klik item untuk melihat infonya.</div></div></div>
@@ -2306,10 +2310,12 @@ function itemMatches(){
   const r = document.getElementById('item-rar').value;
   return itemList.filter(i => (!q || i.name.toLowerCase().includes(q)) && (!r || rarityNum(i.rarity) === +r));
 }
+let itemPage = 0;
 function renderItemList(){
-  const l = itemMatches();
-  document.getElementById('item-status').textContent = l.length + ' item' + (l.length > 60 ? ' (60 pertama ditampilkan, persempit pencarian)' : '');
-  document.getElementById('item-grid').innerHTML = l.slice(0, 60).map(i =>
+  const l = itemMatches(), PS = 60, pages = Math.max(1, Math.ceil(l.length / PS)); itemPage = Math.min(Math.max(itemPage, 0), pages - 1);
+  document.getElementById('item-status').textContent = l.length ? (itemPage * PS + 1) + '–' + Math.min(l.length, (itemPage + 1) * PS) + ' dari ' + l.length + ' item' : '0 item';
+  pagerRender(document.getElementById('item-pager'), itemPage, pages); document.getElementById('item-grid').scrollTop = 0;
+  document.getElementById('item-grid').innerHTML = l.slice(itemPage * PS, (itemPage + 1) * PS).map(i =>
     `<div class="op-row" data-id="${esc(i.itemId)}">${imgTag(itemSrcs(i.iconId || i.itemId))}<div style="min-width:0;"><div class="n">${esc(i.name)}</div><div class="c">${'★'.repeat(rarityNum(i.rarity))} · ${esc(ITEM_CLS[i.classifyType] || '')}</div></div></div>`
   ).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
 }
@@ -2358,8 +2364,9 @@ async function openItem(id){
     ${!pgRows && rows ? `<div class="tbwrap"><table class="tb"><tr><th>Stage</th><th>Peluang</th></tr>${rows}</table></div>` : ''}
   </div>`;
 }
-document.getElementById('item-search').addEventListener('input', () => { if(itemState === 'ready') renderItemList(); });
-document.getElementById('item-rar').addEventListener('change', () => { if(itemState === 'ready') renderItemList(); });
+pagerBind(document.getElementById('item-pager'), n => { itemPage = n; renderItemList(); });
+document.getElementById('item-search').addEventListener('input', () => { itemPage = 0; if(itemState === 'ready') renderItemList(); });
+document.getElementById('item-rar').addEventListener('change', () => { itemPage = 0; if(itemState === 'ready') renderItemList(); });
 document.getElementById('item-grid').addEventListener('click', e => { const c = e.target.closest('.op-row'); if(c) openItem(c.dataset.id); });
 
 /* ---------- SKIN COLLECTION ---------- */
