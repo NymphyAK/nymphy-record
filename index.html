@@ -437,6 +437,8 @@
       <div class="nav-item" data-view="is"><span class="nl">IS</span></div>
       <div class="nav-item" data-view="streak"><span class="nl">Streak</span></div>
       <div class="nav-item" data-view="unused"><span class="nl">Belum Dipakai</span></div>
+      <div class="nav-item" data-view="baseskill"><span class="nl">Base Skill</span></div>
+      <div class="nav-item" data-view="basesim"><span class="nl">Simulasi Base</span></div>
       <div class="nav-item" data-view="pity"><span class="nl">Pity</span></div>
       <div class="nav-item" data-view="enemy"><span class="nl">Musuh</span></div>
       <div class="nav-item" data-view="bookmark"><span class="nl">Bookmark</span></div>
@@ -620,6 +622,33 @@
       <div id="view-streak" class="view hidden"><div class="card"><h2>Streak Member</h2><div class="hint" style="margin-bottom:10px;">Hari berturut-turut yang ada clear. Streak aktif dihitung sampai hari ini atau kemarin.</div><div id="st-out"></div></div></div>
       <div id="view-unused" class="view hidden"><div class="card"><h2>Operator Belum Pernah Dipakai</h2>
   <input id="un-search" placeholder="cari operator..."><div class="rf-grid"><select id="un-r"><option value="0">Semua rarity</option></select></div><div class="hint" id="un-status">Memuat operator...</div><div id="un-grid" class="mini-grid"></div></div></div>
+      <div id="view-baseskill" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Kalkulator Base Skill</h2>
+          <div class="hint" style="margin-bottom:8px;">Pilih operator, atur elite &amp; ruangan, lalu lihat total output per ruangan (efisiensi, kapasitas, morale).</div>
+          <div class="pick-wrap"><input id="bs-search" placeholder="cari operator untuk ditambahkan..." autocomplete="off"><div id="bs-list" class="pick-list hidden"></div></div>
+          <div class="hint" id="bs-status">Memuat data base...</div>
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"><button class="ghost" id="bs-clear">Kosongkan</button></div>
+        </div>
+        <div id="bs-ops" class="mini-grid" style="max-height:none; margin-bottom:16px;"></div>
+        <div class="card"><h2>Total Output per Ruangan</h2><div id="bs-out"><div class="empty">Belum ada operator dipilih.</div></div>
+          <div class="hint" style="margin-top:10px;">Angka dihitung dari teks deskripsi skill (nilai dasar). Skill bertanda ⚠ bersyarat (mis. per operator/kondisi tertentu), jadi nilainya perkiraan. Bonus dasar fasilitas belum dihitung.</div></div>
+      </div>
+
+      <div id="view-basesim" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Simulasi Base</h2>
+          <div class="kc-row"><div><label>Layout</label><select id="sim-preset"><option value="243">2 Trading · 4 Factory · 3 Power (243)</option><option value="252">2 Trading · 5 Factory · 2 Power (252)</option><option value="153">1 Trading · 5 Factory · 3 Power (153)</option><option value="333">3 Trading · 3 Factory · 3 Power (333)</option></select></div></div>
+          <label>Tambah operator ke ruangan terpilih: <b id="sim-active" style="color:var(--red);">-</b></label>
+          <div class="pick-wrap"><input id="sim-search" placeholder="klik sebuah ruangan, lalu cari operator..." autocomplete="off"><div id="sim-list" class="pick-list hidden"></div></div>
+          <div class="hint" id="sim-status">Memuat data base...</div>
+          <div style="margin-top:10px;"><button class="ghost" id="sim-clear">Kosongkan semua</button></div>
+        </div>
+        <div class="card" style="margin-bottom:16px;"><h2>Ringkasan Base</h2><div id="sim-sum"><div class="empty">Belum ada operator.</div></div></div>
+        <div id="sim-rooms" class="mini-grid" style="max-height:none;"></div>
+        <div class="hint" style="margin-top:10px;">Skill dihitung pada elite maksimal tiap operator, dari teks deskripsi skill (perkiraan). Skill Control Center yang menyebut ruangan tertentu ditambahkan ke ruangan itu. Efek bersyarat (⚠) hanya dihitung nilai dasarnya.</div>
+      </div>
+
       <div id="view-pity" class="view hidden"><div class="card" style="max-width:520px;"><h2>Kalkulator Pull</h2>
   <label>Pull sejak 6★ terakhir (0–98)</label><input id="py-k" type="number" min="0" max="98" value="0">
   <label>Jumlah pull yang dimiliki</label><input id="py-n" type="number" min="0" value="60">
@@ -821,7 +850,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','medalgame','lore','calc','squad','is','streak','unused','pity','enemy','home','myniche','challenge','ach','profile','bookmark'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','medalgame','lore','calc','squad','is','streak','unused','baseskill','basesim','pity','enemy','home','myniche','challenge','ach','profile','bookmark'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -838,6 +867,8 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'is') initIS();
     if(item.dataset.view === 'streak') renderStreak();
     if(item.dataset.view === 'unused') initUnused();
+    if(item.dataset.view === 'baseskill') initBaseSkill();
+    if(item.dataset.view === 'basesim') initBaseSim();
     if(item.dataset.view === 'pity') pityCalc();
     if(item.dataset.view === 'enemy') initEnemy();
     if(item.dataset.view === 'myniche') renderMyNiche();
@@ -2618,6 +2649,170 @@ pagerBind(kg('is-pager'), n => { isPage = n; renderIS(); });
 kg('is-search').addEventListener('input', () => { isPage = 0; if(isS === 'ready') renderIS(); });
 kg('is-topic').addEventListener('change', () => { isPage = 0; if(isS === 'ready') renderIS(); });
 
+
+/* ---------- KALKULATOR BASE SKILL ---------- */
+let bsS = 'idle', bsData = null, bsSel = [];
+const bsRoomName = r => ROOM[r] || r || '-';
+async function initBaseSkill(){
+  if(bsS === 'ready'){ renderBaseSkill(); return; }
+  if(bsS === 'loading') return; bsS = 'loading';
+  try{
+    await opReady(); bsData = await opTable('building_data');
+    bsS = 'ready'; kg('bs-status').textContent = 'Cari operator lalu pilih untuk menambahkannya.'; renderBaseSkill();
+  }catch(e){ console.error(e); bsS = 'idle'; kg('bs-status').textContent = 'Gagal memuat data base: ' + (e.message || e); }
+}
+function bsMaxPhase(o){ return Math.max(0, ((o.c.phases || []).length) - 1); }
+// skill aktif tiap slot pada elite tertentu (slot berantai: ambil yang tertinggi yang sudah terbuka)
+function bsSkills(id, elite){
+  const ch = bsData && bsData.chars && bsData.chars[id], out = [];
+  ((ch && ch.buffChar) || []).forEach(slot => {
+    let pick = null;
+    (slot.buffData || []).forEach(b => { const ph = +String((b.cond || {}).phase || 'PHASE_0').replace('PHASE_', '') || 0; if(ph <= elite) pick = b; });
+    const f = pick && bsData.buffs && bsData.buffs[pick.buffId]; if(f) out.push(f);
+  });
+  return out;
+}
+function bsParse(f){
+  const txt = String(f.description || '').replace(/<[^>]+>/g, '').replace(/\\n/g, ' ');
+  const room = f.roomType, num = a => a.reduce((x, y) => x + y, 0);
+  const cond = /(for each|for every|\bper\b|\beach\b|\bevery\b|\bif\b|up to|depending|according|at most)/i.test(txt);
+  let eff = 0, cap = 0, mood = 0;
+  if(/efficiency|speed|rate/i.test(txt)) eff = num([...txt.matchAll(/([+-]\s?\d+(?:\.\d+)?)\s?%/g)].map(m => parseFloat(m[1].replace(/\s/g, ''))));
+  cap = num([...txt.matchAll(/capacity[^+\d-]{0,25}\+\s?(\d+)/gi)].map(m => +m[1]));
+  if((room === 'DORMITORY' || room === 'CONTROL') && /morale|mood/i.test(txt)){ const m = txt.match(/([+-]?\d+\.\d+)/); if(m) mood = parseFloat(m[1]); }
+  return { txt, cond, eff, cap, mood };
+}
+function bsDefaultRoom(o, elite){
+  let best = null, bv = -1;
+  bsSkills(o.id, elite).forEach(f => { const v = bsParse(f).eff + 1; if(v > bv){ bv = v; best = f.roomType; } });
+  return best || '';
+}
+function bsAdd(name){
+  const o = opList.find(x => x.name.toLowerCase() === name.toLowerCase()); if(!o || bsSel.some(x => x.id === o.id)) return;
+  const el = bsMaxPhase(o); bsSel.push({ id:o.id, elite:el, room:bsDefaultRoom(o, el) }); renderBaseSkill();
+}
+function renderBaseSkill(){
+  if(bsS !== 'ready') return;
+  kg('bs-ops').innerHTML = bsSel.map((s, i) => {
+    const o = opList.find(x => x.id === s.id), sk = bsSkills(s.id, s.elite), rooms = [...new Set(sk.map(f => f.roomType))];
+    return `<div class="mini-card"><div class="mat" style="margin-bottom:8px;">${imgTag(avatarSrcs(o.id, o.name))}<div><div class="n">${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)}</div></div></div>
+      <div class="kc-row"><div><label>Elite</label><select data-bs="elite" data-i="${i}">${[...Array(bsMaxPhase(o) + 1)].map((_, e) => `<option value="${e}" ${e === s.elite ? 'selected' : ''}>E${e}</option>`).join('')}</select></div>
+      <div><label>Ruangan</label><select data-bs="room" data-i="${i}"><option value="">Tidak ditempatkan</option>${rooms.map(r => `<option value="${r}" ${r === s.room ? 'selected' : ''}>${esc(bsRoomName(r))}</option>`).join('')}</select></div></div>
+      <button class="ghost" data-bs="rm" data-i="${i}" style="margin-top:8px;">Hapus</button></div>`;
+  }).join('');
+  const rooms = {};
+  bsSel.forEach(s => {
+    if(!s.room) return; const o = opList.find(x => x.id === s.id);
+    bsSkills(s.id, s.elite).filter(f => f.roomType === s.room).forEach(f => {
+      const r = rooms[s.room] || (rooms[s.room] = { eff:0, cap:0, mood:0, approx:false, rows:[] }), p = bsParse(f);
+      r.eff += p.eff; r.cap += p.cap; r.mood += p.mood; if(p.cond) r.approx = true; r.rows.push({ op:o.name, f, p });
+    });
+  });
+  const keys = Object.keys(rooms);
+  const fx = v => (Math.round(v * 100) / 100);
+  kg('bs-out').innerHTML = keys.map(k => { const r = rooms[k];
+    return `<div class="sub-h">${esc(bsRoomName(k))}${r.approx ? ' ⚠' : ''}</div><div class="stat-cards" style="margin-bottom:8px;">
+      ${r.eff ? `<div class="stat-card"><div class="num">${r.eff > 0 ? '+' : ''}${fx(r.eff)}%</div><div class="lbl">Total efisiensi</div></div>` : ''}
+      ${r.cap ? `<div class="stat-card"><div class="num">+${r.cap}</div><div class="lbl">Total kapasitas</div></div>` : ''}
+      ${r.mood ? `<div class="stat-card"><div class="num">${r.mood > 0 ? '+' : ''}${fx(r.mood)}</div><div class="lbl">Total morale / jam</div></div>` : ''}</div>
+      <div class="tbwrap"><table class="tb"><tr><th>Operator</th><th>Skill</th><th>Efek</th></tr>${r.rows.map(x => `<tr><td>${esc(x.op)}</td><td><b>${esc(x.f.buffName)}</b>${x.p.cond ? ' ⚠' : ''}</td><td>${esc(x.p.txt)}</td></tr>`).join('')}</table></div>`; }).join('') || '<div class="empty">Belum ada operator yang ditempatkan di ruangan.</div>';
+}
+makeOpPicker('bs-search', 'bs-list', name => bsAdd(name), false);
+kg('bs-ops').addEventListener('change', e => {
+  const t = e.target.closest('[data-bs]'); if(!t) return; const s = bsSel[+t.dataset.i]; if(!s) return;
+  if(t.dataset.bs === 'elite'){ s.elite = +t.value; const o = opList.find(x => x.id === s.id); if(!bsSkills(s.id, s.elite).some(f => f.roomType === s.room)) s.room = bsDefaultRoom(o, s.elite); }
+  else if(t.dataset.bs === 'room') s.room = t.value;
+  renderBaseSkill();
+});
+kg('bs-ops').addEventListener('click', e => { const b = e.target.closest('[data-bs="rm"]'); if(b){ bsSel.splice(+b.dataset.i, 1); renderBaseSkill(); } });
+kg('bs-clear').addEventListener('click', () => { bsSel = []; renderBaseSkill(); });
+
+
+/* ---------- SIMULASI BASE ---------- */
+const SIM_PRESETS = { '243':{TRADING:2,MANUFACTURE:4,POWER:3}, '252':{TRADING:2,MANUFACTURE:5,POWER:2}, '153':{TRADING:1,MANUFACTURE:5,POWER:3}, '333':{TRADING:3,MANUFACTURE:3,POWER:3} };
+const SIM_CAP = { CONTROL:5, TRADING:3, MANUFACTURE:3, POWER:3, DORMITORY:5, MEETING:2, HIRE:1, WORKSHOP:3, TRAINING:2 };
+const SIM_NAME = { CONTROL:'Control Center', TRADING:'Trading Post', MANUFACTURE:'Factory', POWER:'Power Plant', DORMITORY:'Dormitory', MEETING:'Reception Room', HIRE:'Office', WORKSHOP:'Workshop', TRAINING:'Training Room' };
+let simPreset = '243', simSlots = {}, simActive = '', simReady = false;
+try{ const sv = JSON.parse(localStorage.getItem('sim_v1') || 'null'); if(sv && SIM_PRESETS[sv.preset]){ simPreset = sv.preset; simSlots = sv.slots || {}; } }catch(e){}
+function simRooms(){
+  const c = SIM_PRESETS[simPreset], out = [], add = (t, n) => { for(let i = 0; i < n; i++) out.push({ key:t + i, type:t, label:SIM_NAME[t] + (n > 1 ? ' ' + (i + 1) : ''), cap:SIM_CAP[t] }); };
+  add('CONTROL', 1); add('TRADING', c.TRADING); add('MANUFACTURE', c.MANUFACTURE); add('POWER', c.POWER); add('DORMITORY', 4); add('MEETING', 1); add('HIRE', 1); add('WORKSHOP', 1); add('TRAINING', 1);
+  return out;
+}
+function simSave(){ try{ localStorage.setItem('sim_v1', JSON.stringify({ preset:simPreset, slots:simSlots })); }catch(e){} }
+async function initBaseSim(){
+  if(!simReady){
+    try{
+      kg('sim-preset').value = simPreset;
+      await opReady(); if(!bsData) bsData = await opTable('building_data');
+      simReady = true; kg('sim-status').textContent = 'Klik kartu ruangan untuk memilihnya, lalu cari operator.';
+    }catch(e){ console.error(e); kg('sim-status').textContent = 'Gagal memuat data base: ' + (e.message || e); return; }
+  }
+  renderBaseSim();
+}
+const simMaxElite = id => { const o = opList.find(x => x.id === id); return o ? bsMaxPhase(o) : 0; };
+const simUsed = () => new Set(Object.values(simSlots).flat());
+function simCalc(room){
+  const r = { eff:0, cap:0, mood:0, approx:false, rows:[], toRoom:{} };
+  (simSlots[room.key] || []).forEach(id => {
+    const o = opList.find(x => x.id === id); if(!o) return;
+    bsSkills(id, simMaxElite(id)).filter(f => f.roomType === room.type).forEach(f => {
+      const p = bsParse(f); if(p.cond) r.approx = true; r.rows.push({ op:o.name, f, p });
+      if(room.type === 'CONTROL'){
+        const t = p.txt;
+        if(p.eff){ const tg = /trading post/i.test(t) ? 'TRADING' : /manufactur|factory|production/i.test(t) ? 'MANUFACTURE' : /power plant|drone/i.test(t) ? 'POWER' : /dormitor/i.test(t) ? 'DORMITORY' : ''; if(tg) r.toRoom[tg] = (r.toRoom[tg] || 0) + p.eff; else r.eff += p.eff; }
+        r.mood += p.mood; r.cap += p.cap;
+      }else{ r.eff += p.eff; r.cap += p.cap; r.mood += p.mood; }
+    });
+  });
+  return r;
+}
+function renderBaseSim(){
+  if(!simReady) return;
+  const rooms = simRooms(), fx = v => Math.round(v * 100) / 100;
+  const valid = new Set(rooms.map(r => r.key)); Object.keys(simSlots).forEach(k => { if(!valid.has(k)) delete simSlots[k]; });
+  if(!valid.has(simActive)) simActive = rooms[0].key;
+  const calc = {}; rooms.forEach(r => { calc[r.key] = simCalc(r); });
+  const ctl = calc['CONTROL0'];
+  kg('sim-active').textContent = (rooms.find(r => r.key === simActive) || {}).label || '-';
+  kg('sim-rooms').innerHTML = rooms.map(r => {
+    const c = calc[r.key], ids = simSlots[r.key] || [], bonus = ctl.toRoom[r.type] || 0, total = r.type === 'CONTROL' ? 0 : c.eff + bonus;
+    return `<div class="mini-card${r.key === simActive ? ' hm-warn' : ''}" data-room="${r.key}" style="cursor:pointer;"><div class="n">${esc(r.label)} <span class="c" style="display:inline;">${ids.length}/${r.cap}</span></div>
+      <div class="chips" style="margin-bottom:8px;">${ids.map(id => { const o = opList.find(x => x.id === id); return `<span class="chip">${esc(o ? o.name : id)}<b class="chip-x" data-rm="${r.key}" data-id="${esc(id)}">×</b></span>`; }).join('') || '<span class="hint">kosong</span>'}</div>
+      <div class="c">${total ? 'Efisiensi ' + (total > 0 ? '+' : '') + fx(total) + '%' + (bonus ? ' (termasuk +' + fx(bonus) + '% dari Control Center)' : '') : (r.type === 'CONTROL' && Object.keys(c.toRoom).length ? Object.entries(c.toRoom).map(([k, v]) => SIM_NAME[k] + ' +' + fx(v) + '%').join(', ') : '')}${c.cap ? ' · Kapasitas +' + c.cap : ''}${c.mood ? ' · Morale ' + (c.mood > 0 ? '+' : '') + fx(c.mood) : ''}${c.approx ? ' ⚠' : ''}</div></div>`;
+  }).join('');
+  // ringkasan per tipe ruangan
+  const types = ['TRADING', 'MANUFACTURE', 'POWER', 'DORMITORY', 'MEETING', 'HIRE', 'WORKSHOP', 'TRAINING'], rows = [];
+  types.forEach(t => {
+    const rs = rooms.filter(r => r.type === t), staffed = rs.filter(r => (simSlots[r.key] || []).length);
+    if(!staffed.length) return;
+    let eff = 0, cap = 0, mood = 0, approx = false;
+    rs.forEach(r => { const c = calc[r.key]; eff += c.eff + (c.rows.length || (simSlots[r.key] || []).length ? (ctl.toRoom[t] || 0) : 0); cap += c.cap; mood += c.mood; if(c.approx) approx = true; });
+    rows.push(`<tr><td><b>${SIM_NAME[t]}</b>${approx ? ' ⚠' : ''}</td><td>${staffed.length}/${rs.length}</td><td>${eff ? (eff > 0 ? '+' : '') + fx(eff) + '%' : '–'}</td><td>${eff && staffed.length ? (eff / staffed.length > 0 ? '+' : '') + fx(eff / staffed.length) + '%' : '–'}</td><td>${cap ? '+' + cap : '–'}</td><td>${mood ? (mood > 0 ? '+' : '') + fx(mood) : '–'}</td></tr>`);
+  });
+  const cm = calc['CONTROL0'];
+  if((simSlots['CONTROL0'] || []).length) rows.unshift(`<tr><td><b>Control Center</b>${cm.approx ? ' ⚠' : ''}</td><td>${(simSlots['CONTROL0'] || []).length}/5</td><td colspan="2">${Object.entries(cm.toRoom).map(([k, v]) => SIM_NAME[k] + ' +' + fx(v) + '%').join(', ') || '–'}</td><td>–</td><td>${cm.mood ? (cm.mood > 0 ? '+' : '') + fx(cm.mood) : '–'}</td></tr>`);
+  const n = simUsed().size;
+  kg('sim-sum').innerHTML = rows.length ? `<div class="hint" style="margin-bottom:8px;">${n} operator ditempatkan</div><div class="tbwrap"><table class="tb"><tr><th>Ruangan</th><th>Terisi</th><th>Total efisiensi</th><th>Rata-rata/ruangan</th><th>Kapasitas</th><th>Morale/jam</th></tr>${rows.join('')}</table></div>` : '<div class="empty">Belum ada operator.</div>';
+  simSave();
+}
+makeOpPicker('sim-search', 'sim-list', name => {
+  const o = opList.find(x => x.name.toLowerCase() === name.toLowerCase()); if(!o) return;
+  const room = simRooms().find(r => r.key === simActive), st = kg('sim-status'); if(!room) return;
+  if(simUsed().has(o.id)){ st.textContent = o.name + ' sudah ditempatkan di ruangan lain.'; return; }
+  const ids = simSlots[room.key] || (simSlots[room.key] = []);
+  if(ids.length >= room.cap){ st.textContent = room.label + ' sudah penuh (' + room.cap + ').'; return; }
+  if(!bsSkills(o.id, bsMaxPhase(o)).some(f => f.roomType === room.type)){ st.textContent = o.name + ' tidak punya skill base untuk ' + room.label + '.'; return; }
+  st.textContent = ''; ids.push(o.id); renderBaseSim();
+}, false);
+kg('sim-rooms').addEventListener('click', e => {
+  const x = e.target.closest('[data-rm]');
+  if(x){ simSlots[x.dataset.rm] = (simSlots[x.dataset.rm] || []).filter(i => i !== x.dataset.id); renderBaseSim(); e.stopPropagation(); return; }
+  const c = e.target.closest('[data-room]'); if(c){ simActive = c.dataset.room; renderBaseSim(); kg('sim-search').focus(); }
+});
+kg('sim-preset').addEventListener('change', e => { simPreset = e.target.value; renderBaseSim(); });
+kg('sim-clear').addEventListener('click', () => { simSlots = {}; renderBaseSim(); });
+
 /* ---------- EXPORT / STREAK / BELUM DIPAKAI / PITY / MUSUH ---------- */
 function dl(name, text, type){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
 const stamp = () => new Date().toISOString().slice(0, 10);
@@ -2813,7 +3008,7 @@ window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800)
     { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target'], ['streak','Streak','flame']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
     { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['enemy','Musuh','target']] },
-    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['pity','Pity','star'], ['bookmark','Bookmark','star']] }
+    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['baseskill','Base Skill','box'], ['basesim','Simulasi Base','map'], ['pity','Pity','star'], ['bookmark','Bookmark','star']] }
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
   const profile = document.querySelector('.sidebar .profile-item');
