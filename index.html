@@ -678,14 +678,14 @@
           <div id="sl-list"></div></div>
         <div class="card sim-sticky" style="margin-bottom:16px;">
           <label style="margin-top:0;">Tambah operator ke ruangan terpilih: <b id="sim-active" style="color:var(--red);">-</b></label>
-          <div style="display:flex; gap:8px; align-items:flex-start;"><select id="sim-elite" title="Elite operator yang dipakai saat ditambahkan" style="width:118px; flex-shrink:0; height:42px;"><option value="max">Elite Maks</option><option value="0">Elite 0</option><option value="1">Elite 1</option><option value="2">Elite 2</option></select><div class="pick-wrap" style="flex:1; min-width:0;"><input id="sim-search" placeholder="klik sebuah ruangan, lalu cari operator..." autocomplete="off"><div id="sim-list" class="pick-list hidden"></div></div><button class="ghost" id="sim-clear" style="margin-top:0; height:42px; flex-shrink:0;">Kosongkan semua</button></div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;"><select id="sim-fac" title="Filter operator berdasarkan fasilitas yang bisa mereka isi" style="width:158px; flex-shrink:0; height:42px;"><option value="auto">Fasilitas: ruangan terpilih</option><option value="all">Fasilitas: semua</option><option value="TRADING">Trading Post</option><option value="MANUFACTURE">Factory</option><option value="POWER">Power Plant</option><option value="CONTROL">Control Center</option><option value="DORMITORY">Dormitory</option><option value="MEETING">Reception Room</option><option value="HIRE">Office</option><option value="WORKSHOP">Workshop</option><option value="TRAINING">Training Room</option></select><select id="sim-elite" title="Elite operator yang dipakai saat ditambahkan" style="width:118px; flex-shrink:0; height:42px;"><option value="max">Elite Maks</option><option value="0">Elite 0</option><option value="1">Elite 1</option><option value="2">Elite 2</option></select><div class="pick-wrap" style="flex:1 1 200px; min-width:0;"><input id="sim-search" placeholder="klik sebuah ruangan, lalu cari operator..." autocomplete="off"><div id="sim-list" class="pick-list hidden"></div></div><button class="ghost" id="sim-clear" style="margin-top:0; height:42px; flex-shrink:0;">Kosongkan semua</button></div>
           <div class="hint" id="sim-status">Memuat data base...</div>
         </div>
         <div id="sim-rooms" class="base-wrap"></div>
         <div class="card" id="sim-detail" style="margin:16px 0;"></div>
         <div class="card" style="margin-bottom:16px;"><h2>Ringkasan Base</h2><div id="sim-sum"><div class="empty">Belum ada operator.</div></div></div>
         <div class="card" style="margin-bottom:16px;"><h2>Estimasi Produksi (LMD &amp; EXP)</h2><div id="sim-prod"></div></div>
-        <div class="hint" style="margin-top:10px;">Skill dihitung pada elite yang dipilih tiap operator (pilih di kotak Elite sebelum menambah operator, atau ubah di tabel Detail ruangan; default Elite Maks), dari teks deskripsi skill (perkiraan). Skill Control Center yang menyebut ruangan tertentu ditambahkan ke ruangan itu. Efek bersyarat (⚠) hanya dihitung nilai dasarnya.</div>
+        <div class="hint" style="margin-top:10px;">Daftar pencarian operator bisa difilter per fasilitas (default: sesuai ruangan terpilih) dan mengikuti elite yang dipilih. Skill dihitung pada elite yang dipilih tiap operator (pilih di kotak Elite sebelum menambah operator, atau ubah di tabel Detail ruangan; default Elite Maks), dari teks deskripsi skill (perkiraan). Skill Control Center yang menyebut ruangan tertentu ditambahkan ke ruangan itu. Efek bersyarat (⚠) hanya dihitung nilai dasarnya.</div>
       </div>
 
       <div id="view-pity" class="view hidden"><div class="card" style="max-width:520px;"><h2>Kalkulator Pull</h2>
@@ -1979,7 +1979,7 @@ async function opReady(){
   while(opState === 'loading') await new Promise(r => setTimeout(r, 200));
   return opState === 'ready';
 }
-function makeOpPicker(inputId, listId, onPick, allowCustom, extra){
+function makeOpPicker(inputId, listId, onPick, allowCustom, extra, filt){
   const inp = document.getElementById(inputId), box = document.getElementById(listId);
   let tok = 0, current = [];
   async function show(){
@@ -1988,8 +1988,8 @@ function makeOpPicker(inputId, listId, onPick, allowCustom, extra){
     if(opState !== 'ready') box.innerHTML = '<div class="hint" style="padding:8px 10px;">Memuat database operator...</div>';
     const ok = await opReady(); if(my !== tok) return;
     if(!ok){ box.innerHTML = '<div class="hint" style="padding:8px 10px;">Database operator gagal dimuat.</div>'; current = []; return; }
-    current = (q ? opList.filter(o => (o.name + ' ' + o.prof + ' ' + o.sub).toLowerCase().includes(q)) : opList).slice(0, 8);
-    box.innerHTML = current.map(o => `<div class="pick-row" data-name="${encodeURIComponent(o.name)}">${imgTag(avatarSrcs(o.id, o.name))}<div style="min-width:0;"><div>${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)} · ${esc(o.sub)}</div>${extra ? extra(o) : ''}</div></div>`).join('')
+    current = (q ? opList.filter(o => (o.name + ' ' + o.prof + ' ' + o.sub).toLowerCase().includes(q)) : opList); if(filt) current = current.filter(filt); const total = current.length; current = current.slice(0, filt ? 30 : 8);
+    box.innerHTML = (filt && total ? `<div class="hint" style="padding:6px 10px;">${total} operator cocok${total > current.length ? ', menampilkan ' + current.length + ' teratas, ketik untuk mempersempit' : ''}</div>` : '') + current.map(o => `<div class="pick-row" data-name="${encodeURIComponent(o.name)}">${imgTag(avatarSrcs(o.id, o.name))}<div style="min-width:0;"><div>${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)} · ${esc(o.sub)}</div>${extra ? extra(o) : ''}</div></div>`).join('')
       || '<div class="hint" style="padding:8px 10px;">Tidak ada hasil' + (allowCustom && q ? ' — tekan Enter untuk memakai nama yang diketik.' : '.') + '</div>';
   }
   function pick(name){ if(name){ onPick(name); } inp.value = ''; show(); }
@@ -2950,16 +2950,19 @@ kg('sl-list').addEventListener('click', async e => {
   else if(dl2){ const x = arr.find(v => v.id === dl2.dataset.slDel); if(x && confirm('Hapus layout "' + x.name + '"?')){ await slPut(arr.filter(v => v.id !== x.id)); renderSimLayouts(); } }
 });
 
-// info base skill yang tampil di daftar pilihan operator (sesuai elite yang dipilih & ruangan aktif)
+// elite & fasilitas target yang dipakai untuk daftar pilihan operator
+function simPickEl(o){ const pv = kg('sim-elite').value, mx = bsMaxPhase(o); return pv === 'max' ? mx : Math.min(mx, +pv); }
+function simPickType(){ const m = kg('sim-fac').value; if(m === 'all') return ''; if(m !== 'auto') return m; const r = simRooms().find(x => x.key === simActive); return r ? r.type : ''; }
+function simPickOk(o){ if(!bsData) return true; const t = simPickType(); return !t || bsSkills(o.id, simPickEl(o)).some(f => f.roomType === t); }
+// info base skill yang tampil di daftar pilihan operator (sesuai elite yang dipilih & fasilitas target)
 function simPickInfo(o){
   if(!bsData) return '';
-  const room = simRooms().find(r => r.key === simActive), pv = kg('sim-elite').value, mx = bsMaxPhase(o), el = pv === 'max' ? mx : Math.min(mx, +pv);
+  const t = simPickType(), pv = kg('sim-elite').value, mx = bsMaxPhase(o), el = simPickEl(o);
   const fs = bsSkills(o.id, el), head = `<div class="c" style="margin-top:3px;">Base skill · Elite ${el}${pv !== 'max' && +pv > mx ? ' (maks Elite ' + mx + ')' : ''}</div>`;
   if(!fs.length) return head + '<div class="c">Tidak punya skill base.</div>';
-  const hit = f => room && f.roomType === room.type;
+  const hit = f => t && f.roomType === t;
   const rows = fs.slice().sort((a, b) => hit(b) - hit(a)).map(f => `<div class="pk-sk${hit(f) ? ' m' : ''}"><b>${esc(f.buffName)}</b> <span class="pill">${esc(bsRoomName(f.roomType))}</span><div>${fillDesc(f.description, [])}</div></div>`).join('');
-  const warn = room && !fs.some(hit) ? `<div class="c" style="color:#ff8fb0;">Tidak ada skill ${esc(room.label)} di Elite ${el}${el < mx ? ' — coba elite lebih tinggi' : ''}</div>` : '';
-  return head + rows + warn;
+  return head + rows;
 }
 makeOpPicker('sim-search', 'sim-list', name => {
   const o = opList.find(x => x.name.toLowerCase() === name.toLowerCase()); if(!o) return;
@@ -2972,7 +2975,7 @@ makeOpPicker('sim-search', 'sim-list', name => {
   st.textContent = pv !== 'max' && +pv > mx ? o.name + ' maksimal Elite ' + mx + ', dipakai Elite ' + mx + '.' : '';
   if(pv === 'max') delete simElite[o.id]; else simElite[o.id] = el;
   ids.push(o.id); renderBaseSim();
-}, false, simPickInfo);
+}, false, simPickInfo, simPickOk);
 kg('sim-rooms').addEventListener('click', e => {
   const x = e.target.closest('[data-rm]');
   if(x){ simSlots[x.dataset.rm] = (simSlots[x.dataset.rm] || []).filter(i => i !== x.dataset.id); simActive = x.dataset.rm; renderBaseSim(); return; }
