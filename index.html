@@ -418,6 +418,7 @@
   .bt-slot{width:34px; height:34px; border-radius:6px; background:rgba(0,0,0,.5); border:1px dashed rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; color:#8d8d8d; font-weight:700; font-size:14px; overflow:hidden; flex-shrink:0;}
   .bt-slot.on{border:1px solid var(--c); background:#000; padding:0;} .bt-slot.on img{width:100%; height:100%; object-fit:cover; display:block;}
   .bt-slot.on:hover{border-color:var(--red); filter:brightness(.7);}
+  .pk-sk{margin-top:4px; padding:4px 6px; border-left:2px solid rgba(255,255,255,.15); font-size:11.5px; line-height:1.35; color:var(--muted); white-space:normal; opacity:.6;} .pk-sk.m{border-left-color:var(--red); opacity:1; color:var(--text);} .pk-sk b{color:var(--text);}
   .bt-slot{position:relative;} .bt-el{position:absolute; right:0; bottom:0; background:rgba(0,0,0,.78); color:#fff; font-style:normal; font-size:9px; line-height:1; padding:2px 3px; border-top-left-radius:4px; font-weight:700; pointer-events:none;}
   @media(max-width:720px){ .base-wrap{grid-template-columns:1fr;} .bt-left{grid-template-columns:repeat(2,minmax(0,1fr));} .bt-right{display:grid; grid-template-columns:1fr 1fr;} .bt-slot{width:38px; height:38px;} }
   .bt-sel{width:100%; padding:4px 24px 4px 8px; font-size:12px; border-radius:8px; margin:0;}
@@ -1978,7 +1979,7 @@ async function opReady(){
   while(opState === 'loading') await new Promise(r => setTimeout(r, 200));
   return opState === 'ready';
 }
-function makeOpPicker(inputId, listId, onPick, allowCustom){
+function makeOpPicker(inputId, listId, onPick, allowCustom, extra){
   const inp = document.getElementById(inputId), box = document.getElementById(listId);
   let tok = 0, current = [];
   async function show(){
@@ -1988,7 +1989,7 @@ function makeOpPicker(inputId, listId, onPick, allowCustom){
     const ok = await opReady(); if(my !== tok) return;
     if(!ok){ box.innerHTML = '<div class="hint" style="padding:8px 10px;">Database operator gagal dimuat.</div>'; current = []; return; }
     current = (q ? opList.filter(o => (o.name + ' ' + o.prof + ' ' + o.sub).toLowerCase().includes(q)) : opList).slice(0, 8);
-    box.innerHTML = current.map(o => `<div class="pick-row" data-name="${encodeURIComponent(o.name)}">${imgTag(avatarSrcs(o.id, o.name))}<div style="min-width:0;"><div>${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)} · ${esc(o.sub)}</div></div></div>`).join('')
+    box.innerHTML = current.map(o => `<div class="pick-row" data-name="${encodeURIComponent(o.name)}">${imgTag(avatarSrcs(o.id, o.name))}<div style="min-width:0;"><div>${esc(o.name)}</div><div class="c r${o.rarity}">${'★'.repeat(o.rarity)} ${esc(o.prof)} · ${esc(o.sub)}</div>${extra ? extra(o) : ''}</div></div>`).join('')
       || '<div class="hint" style="padding:8px 10px;">Tidak ada hasil' + (allowCustom && q ? ' — tekan Enter untuk memakai nama yang diketik.' : '.') + '</div>';
   }
   function pick(name){ if(name){ onPick(name); } inp.value = ''; show(); }
@@ -2949,6 +2950,17 @@ kg('sl-list').addEventListener('click', async e => {
   else if(dl2){ const x = arr.find(v => v.id === dl2.dataset.slDel); if(x && confirm('Hapus layout "' + x.name + '"?')){ await slPut(arr.filter(v => v.id !== x.id)); renderSimLayouts(); } }
 });
 
+// info base skill yang tampil di daftar pilihan operator (sesuai elite yang dipilih & ruangan aktif)
+function simPickInfo(o){
+  if(!bsData) return '';
+  const room = simRooms().find(r => r.key === simActive), pv = kg('sim-elite').value, mx = bsMaxPhase(o), el = pv === 'max' ? mx : Math.min(mx, +pv);
+  const fs = bsSkills(o.id, el), head = `<div class="c" style="margin-top:3px;">Base skill · Elite ${el}${pv !== 'max' && +pv > mx ? ' (maks Elite ' + mx + ')' : ''}</div>`;
+  if(!fs.length) return head + '<div class="c">Tidak punya skill base.</div>';
+  const hit = f => room && f.roomType === room.type;
+  const rows = fs.slice().sort((a, b) => hit(b) - hit(a)).map(f => `<div class="pk-sk${hit(f) ? ' m' : ''}"><b>${esc(f.buffName)}</b> <span class="pill">${esc(bsRoomName(f.roomType))}</span><div>${fillDesc(f.description, [])}</div></div>`).join('');
+  const warn = room && !fs.some(hit) ? `<div class="c" style="color:#ff8fb0;">Tidak ada skill ${esc(room.label)} di Elite ${el}${el < mx ? ' — coba elite lebih tinggi' : ''}</div>` : '';
+  return head + rows + warn;
+}
 makeOpPicker('sim-search', 'sim-list', name => {
   const o = opList.find(x => x.name.toLowerCase() === name.toLowerCase()); if(!o) return;
   const room = simRooms().find(r => r.key === simActive), st = kg('sim-status'); if(!room) return;
@@ -2960,7 +2972,7 @@ makeOpPicker('sim-search', 'sim-list', name => {
   st.textContent = pv !== 'max' && +pv > mx ? o.name + ' maksimal Elite ' + mx + ', dipakai Elite ' + mx + '.' : '';
   if(pv === 'max') delete simElite[o.id]; else simElite[o.id] = el;
   ids.push(o.id); renderBaseSim();
-}, false);
+}, false, simPickInfo);
 kg('sim-rooms').addEventListener('click', e => {
   const x = e.target.closest('[data-rm]');
   if(x){ simSlots[x.dataset.rm] = (simSlots[x.dataset.rm] || []).filter(i => i !== x.dataset.id); simActive = x.dataset.rm; renderBaseSim(); return; }
