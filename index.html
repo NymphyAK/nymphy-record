@@ -420,6 +420,8 @@
   .bt-slot.on:hover{border-color:var(--red); filter:brightness(.7);}
   @media(max-width:720px){ .base-wrap{grid-template-columns:1fr;} .bt-left{grid-template-columns:repeat(2,minmax(0,1fr));} .bt-right{display:grid; grid-template-columns:1fr 1fr;} .bt-slot{width:38px; height:38px;} }
   .bt-sel{width:100%; padding:4px 24px 4px 8px; font-size:12px; border-radius:8px; margin:0;}
+  .sim-sticky{position:sticky; top:80px; z-index:18;}
+  @media(max-width:720px){ .sim-sticky{top:58px;} }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -664,15 +666,16 @@
           <div class="kc-row"><div><label>Preset layout</label><select id="sim-preset"><option value="custom">Kustom</option><option value="243">243: 2 Trading · 4 Factory · 3 Power</option><option value="252">252: 2 Trading · 5 Factory · 2 Power</option><option value="153">153: 1 Trading · 5 Factory · 3 Power</option><option value="333">333: 3 Trading · 3 Factory · 3 Power</option></select></div>
           <div><label>Jumlah Dormitory</label><select id="sim-dorm"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div></div>
           <label class="rf-chk" style="margin-top:12px;"><input type="checkbox" id="sim-edit" style="width:auto;"> Atur tipe tiap petak di denah (kiri): Trading / Factory / Power / Kosong</label>
-          <label>Tambah operator ke ruangan terpilih: <b id="sim-active" style="color:var(--red);">-</b></label>
-          <div class="pick-wrap"><input id="sim-search" placeholder="klik sebuah ruangan, lalu cari operator..." autocomplete="off"><div id="sim-list" class="pick-list hidden"></div></div>
-          <div class="hint" id="sim-status">Memuat data base...</div>
-          <div style="margin-top:10px;"><button class="ghost" id="sim-clear">Kosongkan semua</button></div>
         </div>
+        <div class="card sim-sticky" style="margin-bottom:16px;">
+          <label style="margin-top:0;">Tambah operator ke ruangan terpilih: <b id="sim-active" style="color:var(--red);">-</b></label>
+          <div style="display:flex; gap:8px; align-items:flex-start;"><div class="pick-wrap" style="flex:1; min-width:0;"><input id="sim-search" placeholder="klik sebuah ruangan, lalu cari operator..." autocomplete="off"><div id="sim-list" class="pick-list hidden"></div></div><button class="ghost" id="sim-clear" style="margin-top:0; height:42px; flex-shrink:0;">Kosongkan semua</button></div>
+          <div class="hint" id="sim-status">Memuat data base...</div>
+        </div>
+        <div id="sim-rooms" class="base-wrap"></div>
+        <div class="card" id="sim-detail" style="margin:16px 0;"></div>
         <div class="card" style="margin-bottom:16px;"><h2>Ringkasan Base</h2><div id="sim-sum"><div class="empty">Belum ada operator.</div></div></div>
         <div class="card" style="margin-bottom:16px;"><h2>Estimasi Produksi (LMD &amp; EXP)</h2><div id="sim-prod"></div></div>
-        <div id="sim-rooms" class="base-wrap"></div>
-        <div class="card" id="sim-detail" style="margin-top:16px;"></div>
         <div class="hint" style="margin-top:10px;">Skill dihitung pada elite maksimal tiap operator, dari teks deskripsi skill (perkiraan). Skill Control Center yang menyebut ruangan tertentu ditambahkan ke ruangan itu. Efek bersyarat (⚠) hanya dihitung nilai dasarnya.</div>
       </div>
 
