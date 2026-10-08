@@ -462,6 +462,18 @@
   @media(max-width:520px){ .xm-opts{grid-template-columns:1fr;} .xh-card img{width:72px; height:72px;} .xh-val{font-size:22px;} }
 
   /* Song (Monster Siren) */
+
+  .sg-grid2{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:16px; margin-top:16px; align-items:start;}
+  .sg-embed{padding:12px; min-height:180px; display:flex; align-items:center; justify-content:center;}
+  .sg-embed iframe{width:100%; border:0; border-radius:14px; display:block;}
+  .sg-listcard{padding:14px;}
+  .sg-it{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:12px; cursor:pointer;}
+  .sg-it:hover{background:rgba(255,255,255,.05);} .sg-it.on{background:var(--red-soft);}
+  .sg-it .k{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:99px; background:rgba(255,255,255,.08); color:var(--muted); flex-shrink:0;}
+  .sg-it .t{flex:1; min-width:0; font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sg-it .x{background:transparent; border:none; box-shadow:none; width:auto; margin:0; padding:2px 8px; color:var(--muted); font-size:16px; cursor:pointer;}
+  .sg-it .x:hover{color:#fff;}
+  @media(max-width:900px){ .sg-grid2{grid-template-columns:1fr;} .sg-new{flex-wrap:wrap;} .sg-new input{max-width:none !important; flex:1 1 100%;} }
   .sg-grid{display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:16px; align-items:start; margin-top:16px;}
   .sg-main{min-width:0;}
   .sg-side{position:sticky; top:84px;}
@@ -885,23 +897,19 @@
       <div id="view-song" class="view sg hidden">
         <div class="card">
           <h2>Song</h2>
-          <div class="hint">Musik dari Monster Siren Records (OST Arknights). Pilih album atau lagu, buat playlist sendiri, dan baca liriknya sambil mendengarkan.</div>
-          <div class="op-tabs" id="sg-tabs"><button class="on" data-t="album">Album</button><button data-t="songs">Semua Lagu</button><button data-t="pl">Playlist</button></div>
-          <input id="sg-q" placeholder="cari album, lagu, atau artis..." autocomplete="off">
-        </div>
-        <div class="sg-grid">
-          <div class="card sg-main" id="sg-main"></div>
-          <div class="sg-side" id="sg-side"><div class="card sg-lyr-card"><div class="hint" style="margin:0;">LIRIK</div><div id="sg-lyr-t" style="font-weight:700; font-size:16px; margin-top:2px;">Lirik</div><div class="sg-lyr" id="sg-lyr"><div class="hint" style="text-align:center;">Putar lagu untuk menampilkan liriknya.</div></div></div></div>
-        </div>
-        <div class="sg-bar" id="sg-bar">
-          <div class="inf"><img id="sg-bar-img" alt="" referrerpolicy="no-referrer" style="visibility:hidden;"><div class="m"><div class="t" id="sg-bar-t">Belum ada lagu</div><div class="a" id="sg-bar-a">Pilih lagu untuk mulai</div></div><button class="sg-ic" id="sg-bar-add" title="Tambah ke playlist">＋</button></div>
-          <div>
-            <div class="ctl"><button class="sg-ic" id="sg-shuf" title="Acak">🔀</button><button class="sg-ic" id="sg-prev" title="Sebelumnya">⏮</button><button class="sg-ic sg-play" id="sg-pp" title="Putar / jeda">▶</button><button class="sg-ic" id="sg-next" title="Berikutnya">⏭</button><button class="sg-ic" id="sg-rep" title="Ulangi">🔁</button></div>
-            <div class="sk"><span id="sg-cur">0:00</span><input type="range" id="sg-seek" min="0" max="1000" value="0"><span id="sg-dur">0:00</span></div>
+          <div class="hint">Putar musik lewat pemutar resmi Spotify / YouTube. Tempel link lagu, album, atau playlist (misalnya OST Arknights dari Monster Siren Records), lalu klik untuk memutar.</div>
+          <div class="sg-new">
+            <input id="sg-url" placeholder="Tempel link Spotify atau YouTube..." autocomplete="off">
+            <input id="sg-title" placeholder="Judul (opsional)" autocomplete="off" style="max-width:200px;">
+            <button id="sg-add" type="button">＋ Tambah</button>
           </div>
-          <div class="rt"><button class="sg-ic sg-lyrbtn" id="sg-lyrbtn" title="Lirik">📝</button><span style="font-size:14px;">🔊</span><input type="range" id="sg-vol" min="0" max="100" value="80"></div>
+          <div class="hint" id="sg-msg" style="margin-top:0;"></div>
+          <div class="hint">Cari OST: <a href="https://open.spotify.com/search/Monster%20Siren%20Records" target="_blank" rel="noopener" style="color:var(--red);">Spotify</a> · <a href="https://www.youtube.com/results?search_query=Monster+Siren+Records+Arknights" target="_blank" rel="noopener" style="color:var(--red);">YouTube</a>. Buka lagunya, salin link, lalu tempel di atas.</div>
         </div>
-        <audio id="sg-audio" preload="none"></audio>
+        <div class="sg-grid2">
+          <div class="card sg-embed" id="sg-embed"><div class="hint" style="text-align:center; margin:0;">Belum ada yang diputar. Tambahkan link lalu pilih dari daftar.</div></div>
+          <div class="card sg-listcard"><div class="hint" style="margin:0 0 8px;">DAFTAR PUTAR</div><div id="sg-list"></div></div>
+        </div>
       </div>
 
       <div id="view-extras" class="view hidden">
@@ -3531,318 +3539,75 @@ async function sqbFromHash(){
 }
 window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800);
 
-/* ---------- SONG (Monster Siren) ---------- */
-document.body.insertAdjacentHTML('beforeend',
-  '<div id="sg-modal" class="modal-back hidden"><div class="modal-box" style="max-width:380px;"><button class="modal-close" id="sg-m-close">×</button><div id="sg-modal-body"></div></div></div>' +
-  '<div id="sg-mini" class="sg-mini hidden"><img id="sg-mini-img" alt="" referrerpolicy="no-referrer"><div class="m"><div class="t" id="sg-mini-t"></div><div class="a" id="sg-mini-a"></div></div><button class="sg-ic" id="sg-mini-pp" title="Putar / jeda">⏯</button><button class="sg-ic" id="sg-mini-next" title="Berikutnya">⏭</button></div>');
+/* ---------- SONG (embed resmi Spotify / YouTube) ---------- */
+/* Isi SG_DEFAULT dengan lagu bawaan yang tampil untuk semua pengunjung, contoh:
+   { t:'Judul', u:'https://open.spotify.com/album/XXXXXXXX' } */
+const SG_DEFAULT = [];
 const sg$ = id => document.getElementById(id);
-const SG_API = 'https://monster-siren.hypergryph.com/api';
-const SG_PROXY = [u => u, u => 'https://corsproxy.io/?url=' + encodeURIComponent(u), u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u), u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u), u => 'https://thingproxy.freeboard.io/fetch/' + u];
-const sgCache = {};
-function sgProxies(){
-  const list = SG_PROXY.slice();
-  try{ const c = (localStorage.getItem('sg_proxy') || '').trim(); if(c) list.unshift(u => c.includes('{url}') ? c.replace('{url}', encodeURIComponent(u)) : c + encodeURIComponent(u)); }catch(e){}
-  return list;
-}
-async function sgTry(url, text, mk){
-  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
-  try{
-    const r = await fetch(mk(url), { signal: ctl.signal }); if(!r.ok) throw new Error('HTTP ' + r.status);
-    const v = text ? await r.text() : await r.json();
-    if(!text && (!v || typeof v !== 'object')) throw new Error('respons tidak valid');
-    if(!text && v.code !== undefined && v.code !== 0) throw new Error(v.msg || 'API error');
-    return v;
-  } finally { clearTimeout(tm); }
-}
-async function sgGet(url, text){
-  const k = (text ? 't:' : 'j:') + url; if(sgCache[k] !== undefined) return sgCache[k];
-  const px = sgProxies(); let v;
-  try{ v = await sgTry(url, text, px[0]); }
-  catch(e){
-    try{ v = await Promise.any(px.slice(1).map(mk => sgTry(url, text, mk))); }
-    catch(e2){ throw new Error((e2 && e2.errors && e2.errors[0] && e2.errors[0].message) || (e2 && e2.message) || 'semua jalur gagal'); }
-  }
-  sgCache[k] = v; return v;
-}
 const sgLoad = (k, d) => { try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } };
 const sgSave = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
-const SG = { albums:[], songs:[], aMap:{}, sMap:{}, tab:'album', alb:null, albD:null, albErr:'', pl:null, q:'', lim:100, ctx:[], queue:[], qi:-1, hist:[], cur:null, det:null, lrc:[], li:-1, tok:0, loaded:false, loading:false, err:'', view:'', drag:false, addCid:null,
-  shuffle:!!sgLoad('sg_shuffle', false), repeat:+sgLoad('sg_repeat', 0) || 0, pls:sgLoad('sg_playlists_v1', []) };
-if(!Array.isArray(SG.pls)) SG.pls = [];
-const sgAudio = sg$('sg-audio');
-sgAudio.volume = Math.min(1, Math.max(0, +sgLoad('sg_vol', .8))); sg$('sg-vol').value = Math.round(sgAudio.volume * 100);
-const sgArt = s => ((s && (s.artists || s.artistes)) || []).join(', ');
-const sgFmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
-const sgCover = s => { const a = s && SG.aMap[s.albumCid]; return a ? a.coverUrl : ''; };
-const sgImg = (src, cls) => src ? `<img ${cls ? 'class="' + cls + '" ' : ''}src="${esc(src)}" loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.style.visibility='hidden'">` : '<div class="ph">🎵</div>';
-
-async function sgInit(){
-  if(SG.loaded || SG.loading) return;
-  SG.loading = true; SG.err = ''; sgRender();
-  try{
-    let albums, songs;
-    try{
-      const [a, s] = await Promise.all([sgGet(SG_API + '/albums'), sgGet(SG_API + '/songs')]);
-      albums = a.data || []; songs = (s.data && s.data.list) || [];
-      if(albums.length && songs.length) sgSave('sg_catalog_v1', { albums, songs, t: Date.now() });
-    }catch(e){
-      const c = sgLoad('sg_catalog_v1', null);
-      if(c && c.albums && c.songs){ albums = c.albums; songs = c.songs; } else throw e;
-    }
-    SG.albums = albums; SG.albums.forEach(x => { SG.aMap[x.cid] = x; });
-    SG.songs = songs; SG.songs.forEach(x => { SG.sMap[x.cid] = x; });
-    SG.loaded = true;
-  }catch(e){ SG.err = 'Gagal memuat data Monster Siren (' + (e.message || e) + '). Cek koneksi internet lalu coba lagi.'; }
-  SG.loading = false; sgRender();
-}
-function sgFilterSongs(list){
-  const q = SG.q.trim().toLowerCase(); if(!q) return list;
-  return list.filter(c => { const s = SG.sMap[c]; if(!s) return false; const al = SG.aMap[s.albumCid]; return (s.name + ' ' + sgArt(s) + ' ' + (al ? al.name : '')).toLowerCase().includes(q); });
-}
-function sgRowHtml(cid, i, o){
-  const s = SG.sMap[cid]; if(!s) return '';
-  const al = SG.aMap[s.albumCid], on = SG.cur === cid;
-  return `<div class="sg-row${on ? ' on' : ''}" data-cid="${esc(cid)}" data-i="${i}"><span class="i">${on ? '▶' : i + 1}</span>${o && o.noCov ? '' : sgImg(sgCover(s))}<div class="m"><div class="t">${esc(s.name)}</div><div class="s">${esc(sgArt(s) || 'Monster Siren Records')}${al ? ' · ' + esc(al.name) : ''}</div></div><button class="sg-ic" data-add="${esc(cid)}" title="Tambah ke playlist">＋</button>${o && o.rm ? `<button class="sg-ic" data-rm="${esc(cid)}" title="Hapus dari playlist">✕</button>` : ''}</div>`;
-}
-function sgRender(){
-  document.querySelectorAll('#sg-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === SG.tab));
-  const m = sg$('sg-main');
-  if(SG.loading){ m.innerHTML = '<div class="hint">Memuat katalog Monster Siren...</div>'; return; }
-  if(SG.err){ m.innerHTML = `<div class="hint" style="color:#ff8fb0;">${esc(SG.err)}</div><div class="sg-btns"><button data-act="retry">Coba lagi</button></div>`; return; }
-  if(!SG.loaded){ m.innerHTML = ''; return; }
-  const q = SG.q.trim().toLowerCase();
-  if(SG.tab === 'album'){
-    if(SG.alb){ sgRenderAlbum(m); return; }
-    const l = SG.albums.filter(a => !q || (a.name + ' ' + (a.artistes || a.artists || []).join(' ')).toLowerCase().includes(q));
-    SG.ctx = [];
-    m.innerHTML = `<div class="hint">${l.length} album</div><div class="sg-albums">` + l.map(a => `<div class="sg-al" data-al="${esc(a.cid)}">${sgImg(a.coverUrl)}<div class="n">${esc(a.name)}</div><div class="a">${esc((a.artistes || a.artists || []).join(', '))}</div></div>`).join('') + '</div>' + (l.length ? '' : '<div class="hint" style="margin-top:12px;">Album tidak ditemukan.</div>');
-  }else if(SG.tab === 'songs'){
-    const all = sgFilterSongs(SG.songs.map(s => s.cid)); SG.ctx = all;
-    m.innerHTML = `<div class="hint">${all.length} lagu</div>` + all.slice(0, SG.lim).map((c, i) => sgRowHtml(c, i)).join('') + (all.length > SG.lim ? `<button class="ghost sg-more" data-act="more">Tampilkan lebih banyak (${all.length - SG.lim})</button>` : '') + (all.length ? '' : '<div class="hint" style="margin-top:12px;">Lagu tidak ditemukan.</div>');
-  }else sgRenderPl(m);
-  sgMarkRows();
-}
-function sgRenderAlbum(m){
-  const al = SG.aMap[SG.alb], back = '<button class="ghost" data-act="back" style="width:auto;">← Semua album</button>';
-  if(SG.albErr){ m.innerHTML = back + `<div class="hint" style="color:#ff8fb0; margin-top:10px;">${esc(SG.albErr)}</div>`; return; }
-  if(!SG.albD){ m.innerHTML = back + '<div class="hint" style="margin-top:10px;">Memuat album...</div>'; return; }
-  const d = SG.albD, ids = (d.songs || []).map(s => s.cid); SG.ctx = ids;
-  m.innerHTML = back + `<div class="sg-ahead">${sgImg(d.coverUrl || (al && al.coverUrl))}<div><div class="hint" style="margin:0;">ALBUM</div><div class="n">${esc(d.name)}</div><div class="hint">${esc(d.belong || '')} · ${ids.length} lagu</div>${d.intro ? `<p>${esc(d.intro)}</p>` : ''}<div class="sg-btns"><button data-act="play-all">▶ Putar</button><button class="ghost" data-act="shuf-all">🔀 Acak</button><button class="ghost" data-act="alb-pl">＋ Jadikan playlist</button></div></div></div>` + ids.map((c, i) => sgRowHtml(c, i, { noCov:true })).join('');
-  sgMarkRows();
-}
-function sgRenderPl(m){
-  const q = SG.q.trim().toLowerCase();
-  if(SG.pl){
-    const p = SG.pls.find(x => x.id === SG.pl); if(!p){ SG.pl = null; sgRenderPl(m); return; }
-    const all = sgFilterSongs(p.tracks.filter(c => SG.sMap[c])); SG.ctx = all;
-    m.innerHTML = '<button class="ghost" data-act="back" style="width:auto;">← Semua playlist</button>' +
-      `<div class="sg-ahead"><div><div class="hint" style="margin:0;">PLAYLIST</div><div class="n">${esc(p.name)}</div><div class="hint">${p.tracks.length} lagu</div><div class="sg-btns"><button data-act="play-all">▶ Putar</button><button class="ghost" data-act="shuf-all">🔀 Acak</button><button class="ghost" data-act="pl-ren">✎ Ganti nama</button><button class="ghost" data-act="pl-del">🗑 Hapus</button></div></div></div>` +
-      (all.length ? all.map((c, i) => sgRowHtml(c, i, { rm:true })).join('') : `<div class="hint">${p.tracks.length ? 'Tidak ada lagu yang cocok.' : 'Playlist masih kosong. Tambahkan lagu lewat tombol ＋ di tab Album atau Semua Lagu.'}</div>`);
-    sgMarkRows(); return;
+let sgItems = sgLoad('sg_embed_v1', []); if(!Array.isArray(sgItems)) sgItems = [];
+let sgCur = null;
+function sgParse(raw){
+  let u; try{ u = new URL((raw || '').trim()); }catch(e){ return null; }
+  const h = u.hostname.replace(/^www\./, '').replace(/^m\./, '');
+  if(h === 'open.spotify.com'){
+    const m = u.pathname.replace(/^\/intl-[a-z-]+/i, '').match(/^\/(track|album|playlist|artist|episode|show)\/([A-Za-z0-9]+)/);
+    if(!m) return null;
+    return { k:'Spotify', src:'https://open.spotify.com/embed/' + m[1] + '/' + m[2], h: (m[1] === 'track' || m[1] === 'episode') ? 152 : 380 };
   }
-  SG.ctx = [];
-  const l = SG.pls.filter(p => !q || p.name.toLowerCase().includes(q));
-  m.innerHTML = '<div class="sg-new"><input id="sg-pl-name" placeholder="nama playlist baru..." maxlength="60" autocomplete="off"><button id="sg-pl-add">＋ Buat</button></div>' +
-    (l.length ? l.map(p => { const f = SG.sMap[p.tracks[0]]; return `<div class="sg-row" data-pl="${esc(p.id)}">${sgImg(sgCover(f))}<div class="m"><div class="t">${esc(p.name)}</div><div class="s">${p.tracks.length} lagu</div></div><button class="sg-ic" data-plplay="${esc(p.id)}" title="Putar">▶</button><button class="sg-ic" data-pldel="${esc(p.id)}" title="Hapus">🗑</button></div>`; }).join('') : `<div class="hint">${SG.pls.length ? 'Playlist tidak ditemukan.' : 'Belum ada playlist. Buat satu di atas, lalu tambahkan lagu dengan tombol ＋.'}</div>`);
-}
-function sgMarkRows(){
-  document.querySelectorAll('#sg-main .sg-row[data-cid]').forEach(r => { const on = r.dataset.cid === SG.cur; r.classList.toggle('on', on); const i = r.querySelector('.i'); if(i) i.textContent = on ? '▶' : (+r.dataset.i + 1); });
-}
-async function sgOpenAlbum(cid){
-  SG.alb = cid; SG.albD = null; SG.albErr = ''; sgRender();
-  try{
-    const r = await sgGet(`${SG_API}/album/${cid}/detail`); if(SG.alb !== cid) return;
-    SG.albD = r.data; (r.data.songs || []).forEach(s => { if(!SG.sMap[s.cid]) SG.sMap[s.cid] = { ...s, albumCid:cid }; });
-  }catch(e){ if(SG.alb === cid) SG.albErr = 'Gagal memuat album (' + (e.message || e) + ').'; }
-  if(SG.alb === cid) sgRender();
-}
-
-/* --- player --- */
-async function sgPlay(cid, list, noHist){
-  if(list) SG.queue = list.slice();
-  if(!SG.queue.includes(cid)) SG.queue = [cid];
-  if(SG.cur && SG.cur !== cid && !noHist){ SG.hist.push(SG.cur); if(SG.hist.length > 50) SG.hist.shift(); }
-  SG.qi = SG.queue.indexOf(cid); SG.cur = cid; SG.det = null;
-  const tok = ++SG.tok;
-  sgNow(true); sgMarkRows();
-  let d;
-  try{ d = (await sgGet(`${SG_API}/song/${cid}`)).data; }
-  catch(e){ if(tok === SG.tok){ sg$('sg-bar-a').textContent = 'Gagal memuat lagu'; } return; }
-  if(tok !== SG.tok) return;
-  SG.det = d;
-  sgAudio.src = d.sourceUrl; sgAudio.play().catch(() => {});
-  sgNow(); sgMedia(); sgLyrLoad(d, tok);
-}
-function sgNext(auto){
-  const q = SG.queue; if(!q.length) return; let ni;
-  if(SG.shuffle && q.length > 1){ do{ ni = Math.floor(Math.random() * q.length); }while(ni === SG.qi); }
-  else{ ni = SG.qi + 1; if(ni >= q.length){ if(auto && SG.repeat !== 1) return; ni = 0; } }
-  sgPlay(q[ni]);
-}
-function sgPrev(){
-  if(sgAudio.currentTime > 3){ sgAudio.currentTime = 0; return; }
-  if(SG.hist.length){ sgPlay(SG.hist.pop(), null, true); return; }
-  const q = SG.queue; if(!q.length) return;
-  sgPlay(q[(SG.qi - 1 + q.length) % q.length], null, true);
-}
-function sgToggle(){
-  if(!SG.cur){ const l = SG.ctx.length ? SG.ctx : SG.songs.map(s => s.cid); if(l.length) sgPlay(SG.shuffle ? l[Math.floor(Math.random() * l.length)] : l[0], l); return; }
-  if(!SG.det) return;
-  if(sgAudio.paused) sgAudio.play().catch(() => {}); else sgAudio.pause();
-}
-function sgPlayList(list, shuf){
-  if(!list.length) return;
-  SG.shuffle = !!shuf; sgSave('sg_shuffle', SG.shuffle); sgButtons();
-  sgPlay(shuf ? list[Math.floor(Math.random() * list.length)] : list[0], list);
-}
-function sgStop(){ try{ sgAudio.pause(); sgAudio.removeAttribute('src'); sgAudio.load(); }catch(e){} SG.cur = null; SG.det = null; SG.tok++; sgNow(); }
-function sgNow(loading){
-  const s = SG.cur && SG.sMap[SG.cur], cov = sgCover(s), img = sg$('sg-bar-img');
-  const art = SG.det ? (SG.det.artists || SG.det.artistes || []).join(', ') : sgArt(s);
-  sg$('sg-bar-t').textContent = s ? s.name : 'Belum ada lagu';
-  sg$('sg-bar-a').textContent = s ? (loading ? 'Memuat...' : (art || 'Monster Siren Records')) : 'Pilih lagu untuk mulai';
-  if(cov){ img.src = cov; img.style.visibility = 'visible'; } else img.style.visibility = 'hidden';
-  sg$('sg-lyr-t').textContent = s ? s.name : 'Lirik';
-  sg$('sg-mini-t').textContent = s ? s.name : ''; sg$('sg-mini-a').textContent = art || 'Monster Siren Records';
-  if(cov) sg$('sg-mini-img').src = cov;
-  sgButtons(); sgMini();
-}
-function sgButtons(){
-  sg$('sg-pp').textContent = sgAudio.paused ? '▶' : '⏸'; sg$('sg-mini-pp').textContent = sgAudio.paused ? '▶' : '⏸';
-  sg$('sg-shuf').classList.toggle('on', SG.shuffle);
-  const r = sg$('sg-rep'); r.classList.toggle('on', SG.repeat > 0); r.textContent = SG.repeat === 2 ? '🔂' : '🔁';
-}
-function sgMini(){ sg$('sg-mini').classList.toggle('hidden', !SG.cur || SG.view === 'song'); }
-function sgMedia(){
-  if(!('mediaSession' in navigator) || !SG.cur) return;
-  const s = SG.sMap[SG.cur], al = SG.aMap[s.albumCid];
-  try{
-    navigator.mediaSession.metadata = new MediaMetadata({ title:s.name, artist:sgArt(s) || 'Monster Siren Records', album:al ? al.name : '', artwork:al ? [{ src:al.coverUrl }] : [] });
-    navigator.mediaSession.setActionHandler('play', () => sgAudio.play());
-    navigator.mediaSession.setActionHandler('pause', () => sgAudio.pause());
-    navigator.mediaSession.setActionHandler('previoustrack', sgPrev);
-    navigator.mediaSession.setActionHandler('nexttrack', () => sgNext());
-  }catch(e){}
-}
-
-/* --- lirik --- */
-function sgParseLrc(txt){
-  const out = []; let timed = false;
-  String(txt || '').replace(/\r/g, '').split('\n').forEach(line => {
-    const tags = [...line.matchAll(/\[(\d+):(\d+(?:[.:]\d+)?)\]/g)], text = line.replace(/\[[^\]]*\]/g, '').trim();
-    if(tags.length){ timed = true; tags.forEach(m => out.push({ t:+m[1] * 60 + parseFloat(m[2].replace(':', '.')), x:text })); }
-    else if(text) out.push({ t:-1, x:text });
-  });
-  return timed ? { timed:true, lines:out.filter(l => l.t >= 0).sort((a, b) => a.t - b.t) } : { timed:false, lines:out };
-}
-async function sgLyrLoad(d, tok){
-  const box = sg$('sg-lyr'); SG.lrc = []; SG.li = -1; box.scrollTop = 0;
-  const msg = t => { box.innerHTML = `<div class="hint" style="text-align:center;">${t}</div>`; };
-  if(!d.lyricUrl){ msg('Lagu ini tidak punya lirik.'); return; }
-  msg('Memuat lirik...');
-  try{
-    const p = sgParseLrc(await sgGet(d.lyricUrl, true)); if(tok !== SG.tok) return;
-    if(!p.lines.length){ msg('Lirik kosong.'); return; }
-    if(p.timed) SG.lrc = p.lines;
-    box.innerHTML = p.lines.map((l, i) => `<div class="sg-l${p.timed ? '' : ' plain'}" data-i="${i}">${l.x ? esc(l.x) : '♪'}</div>`).join('');
-    sgSync();
-  }catch(e){ if(tok === SG.tok) msg(`Lirik gagal dimuat. <a href="${esc(d.lyricUrl)}" target="_blank" rel="noopener" style="color:var(--red);">Buka langsung</a>`); }
-}
-function sgSync(){
-  const L = SG.lrc; if(!L.length) return;
-  const t = sgAudio.currentTime + .25; let lo = 0, hi = L.length - 1, idx = -1;
-  while(lo <= hi){ const mid = (lo + hi) >> 1; if(L[mid].t <= t){ idx = mid; lo = mid + 1; } else hi = mid - 1; }
-  if(idx === SG.li) return; SG.li = idx;
-  const box = sg$('sg-lyr'); box.querySelectorAll('.sg-l.on').forEach(x => x.classList.remove('on'));
-  if(idx >= 0 && box.children[idx]){ const el = box.children[idx]; el.classList.add('on'); box.scrollTo({ top:el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior:'smooth' }); }
-}
-sg$('sg-lyr').addEventListener('click', e => { const l = e.target.closest('.sg-l'); if(l && SG.lrc[+l.dataset.i]){ sgAudio.currentTime = SG.lrc[+l.dataset.i].t; sgAudio.play().catch(() => {}); } });
-
-/* --- playlist --- */
-const sgPlSave = () => sgSave('sg_playlists_v1', SG.pls);
-function sgPlNew(name, tracks){
-  name = (name || '').trim().slice(0, 60); if(!name) return null;
-  const p = { id:'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name, tracks:[...new Set(tracks || [])] };
-  SG.pls.push(p); sgPlSave(); return p;
-}
-function sgModalRender(){
-  const cid = SG.addCid, s = SG.sMap[cid];
-  sg$('sg-modal-body').innerHTML = `<h3 style="margin:0 0 2px; font-size:16px;">Tambah ke playlist</h3><div class="hint" style="margin:0 0 12px;">${esc(s ? s.name : '')}</div>` +
-    (SG.pls.length ? SG.pls.map(p => `<div class="sg-mrow" data-pid="${esc(p.id)}"><span>${esc(p.name)} <span class="hint">· ${p.tracks.length} lagu</span></span><b>${p.tracks.includes(cid) ? '✓' : '＋'}</b></div>`).join('') : '<div class="hint">Belum ada playlist.</div>') +
-    '<div style="display:flex; gap:8px; margin-top:12px;"><input id="sg-m-new" placeholder="nama playlist baru..." maxlength="60" autocomplete="off"><button id="sg-m-create" style="width:auto; margin:0;">Buat</button></div>';
-}
-function sgAddModal(cid){ if(!cid) return; SG.addCid = cid; sgModalRender(); sg$('sg-modal').classList.remove('hidden'); }
-function sgModalCreate(){
-  const inp = sg$('sg-m-new'), p = sgPlNew(inp.value, [SG.addCid]); if(!p) return;
-  sgModalRender(); if(SG.tab === 'pl') sgRender();
-}
-sg$('sg-modal').addEventListener('click', e => {
-  if(e.target === sg$('sg-modal') || e.target.id === 'sg-m-close'){ sg$('sg-modal').classList.add('hidden'); return; }
-  if(e.target.id === 'sg-m-create'){ sgModalCreate(); return; }
-  const r = e.target.closest('.sg-mrow'); if(!r) return;
-  const p = SG.pls.find(x => x.id === r.dataset.pid); if(!p) return;
-  const i = p.tracks.indexOf(SG.addCid); if(i >= 0) p.tracks.splice(i, 1); else p.tracks.push(SG.addCid);
-  sgPlSave(); sgModalRender(); if(SG.tab === 'pl') sgRender();
-});
-sg$('sg-modal').addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'sg-m-new'){ e.preventDefault(); sgModalCreate(); } });
-
-/* --- events --- */
-sg$('sg-main').addEventListener('click', e => {
-  const t = e.target, g = s => t.closest(s);
-  let b;
-  if(b = g('[data-add]')){ sgAddModal(b.dataset.add); return; }
-  if(b = g('[data-rm]')){ const p = SG.pls.find(x => x.id === SG.pl); if(p){ p.tracks = p.tracks.filter(c => c !== b.dataset.rm); sgPlSave(); sgRender(); } return; }
-  if(b = g('[data-plplay]')){ const p = SG.pls.find(x => x.id === b.dataset.plplay); if(p) sgPlayList(p.tracks.filter(c => SG.sMap[c]), SG.shuffle); return; }
-  if(b = g('[data-pldel]')){ const p = SG.pls.find(x => x.id === b.dataset.pldel); if(p && confirm('Hapus playlist "' + p.name + '"?')){ SG.pls = SG.pls.filter(x => x !== p); sgPlSave(); sgRender(); } return; }
-  if(b = g('[data-pl]')){ SG.pl = b.dataset.pl; SG.q = ''; sg$('sg-q').value = ''; sgRender(); return; }
-  if(b = g('.sg-row[data-cid]')){ sgPlay(b.dataset.cid, SG.ctx); return; }
-  if(b = g('[data-al]')){ sgOpenAlbum(b.dataset.al); return; }
-  if(g('#sg-pl-add')){ const i = sg$('sg-pl-name'), p = sgPlNew(i.value, []); if(p){ SG.pl = p.id; sgRender(); } return; }
-  if(b = g('[data-act]')){
-    const a = b.dataset.act;
-    if(a === 'retry'){ SG.loaded = false; sgInit(); }
-    else if(a === 'more'){ SG.lim += 100; sgRender(); }
-    else if(a === 'back'){ if(SG.tab === 'pl') SG.pl = null; else SG.alb = null; sgRender(); }
-    else if(a === 'play-all') sgPlayList(SG.ctx, SG.shuffle);
-    else if(a === 'shuf-all') sgPlayList(SG.ctx, true);
-    else if(a === 'alb-pl' && SG.albD){ sgPlNew(SG.albD.name, SG.ctx); b.textContent = '✓ Playlist dibuat'; }
-    else if(a === 'pl-ren'){ const p = SG.pls.find(x => x.id === SG.pl); const n = p && prompt('Nama baru playlist:', p.name); if(n && n.trim()){ p.name = n.trim().slice(0, 60); sgPlSave(); sgRender(); } }
-    else if(a === 'pl-del'){ const p = SG.pls.find(x => x.id === SG.pl); if(p && confirm('Hapus playlist "' + p.name + '"?')){ SG.pls = SG.pls.filter(x => x !== p); SG.pl = null; sgPlSave(); sgRender(); } }
+  let id = '', list = '';
+  if(h === 'youtu.be') id = u.pathname.slice(1).split('/')[0];
+  else if(h === 'youtube.com' || h === 'music.youtube.com'){
+    if(u.pathname === '/watch') id = u.searchParams.get('v') || '';
+    else if(/^\/(embed|shorts)\//.test(u.pathname)) id = u.pathname.split('/')[2];
+    list = u.searchParams.get('list') || '';
+  } else return null;
+  if(id && /^[\w-]{6,20}$/.test(id)){
+    return { k:'YouTube', src:'https://www.youtube-nocookie.com/embed/' + id + (list ? '?list=' + encodeURIComponent(list) : ''), h:315 };
   }
+  if(list) return { k:'YouTube', src:'https://www.youtube-nocookie.com/embed/videoseries?list=' + encodeURIComponent(list), h:315 };
+  return null;
+}
+const sgAll = () => SG_DEFAULT.map(x => ({ ...x, def:true })).concat(sgItems);
+function sgRenderList(){
+  const all = sgAll(), box = sg$('sg-list');
+  if(!all.length){ box.innerHTML = '<div class="hint">Daftar masih kosong. Tempel link di atas untuk menambah.</div>'; return; }
+  box.innerHTML = all.map((x, i) => { const p = sgParse(x.u); return `<div class="sg-it${sgCur === x.u ? ' on' : ''}" data-i="${i}"><span class="k">${p ? p.k : '?'}</span><span class="t">${esc(x.t || x.u)}</span>${x.def ? '' : '<button class="x" data-del="' + i + '" title="Hapus">×</button>'}</div>`; }).join('');
+}
+function sgPlayItem(i){
+  const x = sgAll()[i]; if(!x) return; const p = sgParse(x.u); if(!p) return;
+  sgCur = x.u;
+  const box = sg$('sg-embed');
+  box.innerHTML = '';
+  const f = document.createElement('iframe');
+  f.src = p.src; f.height = p.h; f.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'; f.loading = 'lazy'; f.referrerPolicy = 'strict-origin-when-cross-origin';
+  if(p.k === 'YouTube') f.style.aspectRatio = '16 / 9', f.removeAttribute('height'), f.style.height = 'auto';
+  box.appendChild(f); sgRenderList();
+}
+function sgAddItem(){
+  const u = sg$('sg-url').value.trim(), msg = sg$('sg-msg');
+  const p = sgParse(u);
+  if(!p){ msg.style.color = '#ff6b8b'; msg.textContent = 'Link tidak dikenali. Pakai link Spotify (track/album/playlist) atau YouTube (video/playlist).'; return; }
+  if(sgAll().some(x => x.u === u)){ msg.style.color = '#ff6b8b'; msg.textContent = 'Link itu sudah ada di daftar.'; return; }
+  const t = sg$('sg-title').value.trim().slice(0, 80) || (p.k + ' · ' + (sgItems.length + SG_DEFAULT.length + 1));
+  sgItems.push({ t, u }); sgSave('sg_embed_v1', sgItems);
+  sg$('sg-url').value = ''; sg$('sg-title').value = ''; msg.style.color = ''; msg.textContent = 'Ditambahkan.';
+  sgRenderList(); sgPlayItem(sgAll().length - 1);
+}
+sg$('sg-add').addEventListener('click', sgAddItem);
+sg$('sg-url').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); sgAddItem(); } });
+sg$('sg-list').addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if(del){ e.stopPropagation(); const i = +del.dataset.del - SG_DEFAULT.length; const x = sgItems[i]; if(!x) return;
+    sgItems.splice(i, 1); sgSave('sg_embed_v1', sgItems);
+    if(sgCur === x.u){ sgCur = null; sg$('sg-embed').innerHTML = '<div class="hint" style="text-align:center; margin:0;">Pilih lagu dari daftar.</div>'; }
+    sgRenderList(); return; }
+  const it = e.target.closest('.sg-it'); if(it) sgPlayItem(+it.dataset.i);
 });
-sg$('sg-main').addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'sg-pl-name'){ e.preventDefault(); sg$('sg-pl-add').click(); } });
-sg$('sg-tabs').addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  if(SG.tab === b.dataset.t && !SG.alb && !SG.pl) return;
-  SG.tab = b.dataset.t; SG.alb = null; SG.pl = null; SG.q = ''; SG.lim = 100; sg$('sg-q').value = ''; sgRender();
-});
-sg$('sg-q').addEventListener('input', e => { SG.q = e.target.value; SG.lim = 100; if(SG.tab === 'album') SG.alb = null; sgRender(); });
-sg$('sg-pp').addEventListener('click', sgToggle);
-sg$('sg-next').addEventListener('click', () => sgNext());
-sg$('sg-prev').addEventListener('click', sgPrev);
-sg$('sg-shuf').addEventListener('click', () => { SG.shuffle = !SG.shuffle; sgSave('sg_shuffle', SG.shuffle); sgButtons(); });
-sg$('sg-rep').addEventListener('click', () => { SG.repeat = (SG.repeat + 1) % 3; sgSave('sg_repeat', SG.repeat); sgButtons(); });
-sg$('sg-bar-add').addEventListener('click', () => sgAddModal(SG.cur));
-sg$('sg-lyrbtn').addEventListener('click', () => sg$('sg-side').classList.toggle('show'));
-sg$('sg-vol').addEventListener('input', e => { sgAudio.volume = e.target.value / 100; sgSave('sg_vol', sgAudio.volume); });
-const sgSeek = sg$('sg-seek');
-sgSeek.addEventListener('input', () => { SG.drag = true; sg$('sg-cur').textContent = sgFmt(sgSeek.value / 1000 * (sgAudio.duration || 0)); });
-sgSeek.addEventListener('change', () => { if(sgAudio.duration) sgAudio.currentTime = sgSeek.value / 1000 * sgAudio.duration; SG.drag = false; });
-sgAudio.addEventListener('timeupdate', () => {
-  if(!SG.drag){ sgSeek.value = sgAudio.duration ? sgAudio.currentTime / sgAudio.duration * 1000 : 0; sg$('sg-cur').textContent = sgFmt(sgAudio.currentTime); }
-  sgSync();
-});
-sgAudio.addEventListener('loadedmetadata', () => { sg$('sg-dur').textContent = sgFmt(sgAudio.duration); });
-sgAudio.addEventListener('play', sgButtons); sgAudio.addEventListener('pause', sgButtons);
-sgAudio.addEventListener('ended', () => { if(SG.repeat === 2){ sgAudio.currentTime = 0; sgAudio.play().catch(() => {}); } else sgNext(true); sgButtons(); });
-sgAudio.addEventListener('error', () => { if(SG.cur && sgAudio.getAttribute('src')) sg$('sg-bar-a').textContent = 'Gagal memutar audio'; });
-sg$('sg-mini').addEventListener('click', e => {
-  if(e.target.closest('#sg-mini-pp')){ sgToggle(); return; }
-  if(e.target.closest('#sg-mini-next')){ sgNext(); return; }
-  const n = document.querySelector('.nav-item[data-view="song"]'); if(n) n.click();
-});
-function songNav(v){ SG.view = v; if(v === 'song') sgInit(); sgMini(); }
-sgButtons();
+function sgStop(){ sgCur = null; sg$('sg-embed').innerHTML = '<div class="hint" style="text-align:center; margin:0;">Belum ada yang diputar. Tambahkan link lalu pilih dari daftar.</div>'; sgRenderList(); }
+function songNav(v){ if(v === 'song') sgRenderList(); }
+sgRenderList();
 
 /* ---------- NAV GROUPS (sidebar diringkas, fungsi tab asli tetap dipakai) ---------- */
 (function(){
