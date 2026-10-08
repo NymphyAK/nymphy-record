@@ -431,6 +431,27 @@
   .bs-sk .c{font-size:11px; color:var(--muted); margin:2px 0 4px;}
   .sl-row{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); flex-wrap:wrap;} .sl-row:last-child{border-bottom:none;}
   .sl-row .i{flex:1; min-width:160px;} .sl-row button{margin:0; width:auto;}
+
+  /* Extras: minigame */
+  .xw-board{overflow-x:auto; margin-top:12px; padding-bottom:4px;}
+  .xw-row{display:grid; grid-template-columns:minmax(160px,1.6fr) repeat(6,minmax(66px,1fr)); gap:4px; margin-bottom:4px; min-width:600px;}
+  .xw-c{background:var(--panel2); border:1px solid var(--border); border-radius:4px; padding:6px; font-size:12px; display:flex; align-items:center; justify-content:center; text-align:center; min-height:44px; word-break:break-word;}
+  .xw-c.xw-h{background:transparent; border:0; min-height:0; font-size:10.5px; color:var(--muted); text-transform:uppercase;}
+  .xw-c.xw-name{justify-content:flex-start; gap:8px; font-weight:600; text-align:left;}
+  .xw-av{width:32px; height:32px; border-radius:4px; object-fit:cover; background:#000; flex-shrink:0;}
+  .xw-ok{background:rgba(34,160,90,.35) !important; border-color:rgba(34,160,90,.7) !important;}
+  .xw-part{background:rgba(229,185,69,.28) !important; border-color:rgba(229,185,69,.7) !important;}
+  .xw-no{background:rgba(254,47,103,.14); border-color:rgba(254,47,103,.4);}
+  .xm-opts{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;}
+  .xm-opts button{width:100%; margin:0; text-align:left; padding:10px 12px; font-size:13px;}
+  .xm-opts button.ok{border-color:#22a05a; background:rgba(34,160,90,.3);}
+  .xm-opts button.bad{border-color:#FE2F67; background:rgba(254,47,103,.25);}
+  .xh-wrap{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;}
+  .xh-card{background:var(--panel2); border:1px solid var(--border); border-radius:4px 14px 4px 14px; padding:14px; text-align:center;}
+  .xh-card img{width:96px; height:96px; object-fit:cover; border-radius:12px; background:#000; margin-bottom:8px;}
+  .xh-val{font-size:26px; font-weight:700; margin-top:6px;}
+  .xh-btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px;}
+  @media(max-width:520px){ .xm-opts{grid-template-columns:1fr;} .xh-card img{width:72px; height:72px;} .xh-val{font-size:22px;} }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -476,10 +497,11 @@
       <div class="nav-item" data-view="pity"><span class="nl">Pity</span></div>
       <div class="nav-item" data-view="enemy"><span class="nl">Musuh</span></div>
       <div class="nav-item" data-view="bookmark"><span class="nl">Bookmark</span></div>
-      <div class="nav-item" data-view="links" title="Link"><span class="ni">🔗</span><span class="nl">Link</span></div>
       <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
       <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
+      <div class="nav-item" data-view="extras" title="Extras"><span class="ni">🎮</span><span class="nl">Extras</span></div>
+      <div class="nav-item" data-view="links" title="Link"><span class="ni">🔗</span><span class="nl">Link</span></div>
       <div class="nav-item profile-item" data-view="profile" title="Profil">
         <div class="avatar" id="sidebar-avatar"></div>
         <div class="pi-text"><div class="pi-name" id="sidebar-username"></div><div class="pi-sub">Lihat profil</div></div>
@@ -783,6 +805,49 @@
         <div id="ach-list"></div>
       </div>
 
+      <div id="view-home" class="view hidden">
+        <div class="card" id="home-weekly" style="margin-bottom:16px;"><div class="hint">Memuat weekly challenge...</div></div>
+                <div class="card"><h2>Event Live di Arknights Global</h2><div id="home-events"><div class="hint">Memuat daftar event...</div></div></div>
+      </div>
+
+      <div id="view-extras" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Extras</h2>
+          <div class="hint">Minigame santai berbasis data Arknights.</div>
+          <div class="op-tabs" id="xg-tabs"><button class="on" data-t="wordle">Wordle Operator</button><button data-t="map">Guess the Map</button><button data-t="hol">Higher or Lower</button></div>
+        </div>
+
+        <div id="xg-p-wordle" class="card">
+          <h2>Wordle Operator</h2>
+          <div class="hint">Tebak operator rahasia dalam 8 kali. Hijau = cocok, kuning = faction sebagian cocok (satu grup/team), panah = nilai target lebih tinggi (↑) atau lebih rendah (↓). DP = DP cost saat E0.</div>
+          <div class="pick-wrap" id="xw-wrap" style="margin-top:10px;"><input id="xw-in" placeholder="ketik nama operator..." autocomplete="off"><div id="xw-list" class="pick-list hidden"></div></div>
+          <div style="display:flex; gap:8px; margin-top:8px;"><button class="ghost" id="xw-giveup">Menyerah</button><button class="ghost" id="xw-new">Game baru</button></div>
+          <div id="xw-status" style="margin-top:10px; font-size:13.5px;"></div>
+          <div class="xw-board" id="xw-board"></div>
+        </div>
+
+        <div id="xg-p-map" class="card hidden">
+          <h2>Guess the Map</h2>
+          <div class="hint">Tebak stage dari bentuk petanya.</div>
+          <div id="xm-score" class="hint" style="margin-top:8px; font-size:13px;"></div>
+          <div id="xm-img"></div>
+          <div class="xm-opts" id="xm-opts"></div>
+          <div id="xm-info" style="margin-top:10px; font-size:13.5px;"></div>
+          <div style="display:flex; gap:8px; margin-top:10px;"><button id="xm-next" class="hidden" style="width:auto;">Map berikutnya</button><button class="ghost" id="xm-reset">Ulang skor</button></div>
+        </div>
+
+        <div id="xg-p-hol" class="card hidden">
+          <h2>Higher or Lower</h2>
+          <div class="hint">Bandingkan stat dua operator (E2 Lv max, tanpa trust dan potensial). Tebak apakah operator kanan lebih tinggi atau lebih rendah dari kiri.</div>
+          <label>Stat</label>
+          <select id="xh-stat" style="max-width:200px;"><option value="atk">ATK</option><option value="hp">HP</option><option value="def">DEF</option><option value="res">RES</option><option value="cost">DP Cost (E0)</option></select>
+          <div id="xh-score" class="hint" style="margin-top:8px; font-size:13px;"></div>
+          <div class="xh-wrap"><div class="xh-card" id="xh-left"></div><div class="xh-card" id="xh-right"></div></div>
+          <div class="xh-btns"><button id="xh-hi" style="width:auto;">⬆ Lebih tinggi</button><button id="xh-lo" style="width:auto;">⬇ Lebih rendah</button><button id="xh-again" class="hidden" style="width:auto;">Main lagi</button></div>
+          <div id="xh-msg" style="margin-top:10px; text-align:center; font-size:13.5px;"></div>
+        </div>
+      </div>
+
       <div id="view-links" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
           <h2>Link Web Lain</h2>
@@ -796,11 +861,6 @@
           <button id="lnk-add">Tambah Link</button>
         </div>
         <div id="lnk-list"></div>
-      </div>
-
-      <div id="view-home" class="view hidden">
-        <div class="card" id="home-weekly" style="margin-bottom:16px;"><div class="hint">Memuat weekly challenge...</div></div>
-                <div class="card"><h2>Event Live di Arknights Global</h2><div id="home-events"><div class="hint">Memuat daftar event...</div></div></div>
       </div>
 
       <div id="view-profile" class="view hidden">
@@ -905,7 +965,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','medalgame','lore','calc','squad','is','streak','unused','baseskill','basesim','pity','enemy','home','myniche','challenge','ach','profile','bookmark','links'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','medalgame','lore','calc','squad','is','streak','unused','baseskill','basesim','pity','enemy','home','myniche','challenge','ach','profile','bookmark','links','extras'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -931,6 +991,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'home') renderHome();
     if(item.dataset.view === 'ach'){ achStart(); renderAch(); }
     if(item.dataset.view === 'links'){ linksStart(); renderLinks(); }
+    if(item.dataset.view === 'extras') extrasStart();
     if(item.dataset.view === 'profile') achStart();
   });
 });
@@ -2338,6 +2399,164 @@ lnk$('lnk-list').addEventListener('click', async e => {
     col.doc(l.id).update({ name: name.trim(), url: safe, desc: desc.trim() }).catch(fail);
   }
 });
+
+
+/* ---------- EXTRAS: MINIGAME ---------- */
+const xg$ = id => document.getElementById(id);
+const xgPick = a => a[Math.floor(Math.random() * a.length)];
+const xgPretty = s => s ? String(s).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '-';
+const xgInited = {};
+async function xgOps(){ return (await opReady()) ? opList.filter(o => !o.c.isNotObtainable && o.c.phases && o.c.phases.length && o.c.phases[0].attributesKeyFrames && o.c.phases[0].attributesKeyFrames.length) : []; }
+function xgStat(o, k){
+  const ph = o.c.phases, d0 = ph[0].attributesKeyFrames[0].data;
+  if(k === 'cost') return d0.cost;
+  const last = ph[ph.length - 1].attributesKeyFrames, d = last[last.length - 1].data;
+  return ({ hp: d.maxHp, atk: d.atk, def: d.def, res: d.magicResistance })[k];
+}
+function xgTab(t){
+  document.querySelectorAll('#xg-tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === t));
+  ['wordle', 'map', 'hol'].forEach(k => xg$('xg-p-' + k).classList.toggle('hidden', k !== t));
+  if(!xgInited[t]){ xgInited[t] = true; ({ wordle: xwNew, map: xmReset, hol: xhNew })[t](); }
+}
+function extrasStart(){ xgTab(document.querySelector('#xg-tabs button.on').dataset.t); }
+xg$('xg-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if(b) xgTab(b.dataset.t); });
+
+/* --- Wordle Operator --- */
+const XW_MAX = 8;
+let xwAns = null, xwGuesses = [], xwOver = false, xwOps = [];
+const xwFac = o => o.c.nationId || o.c.groupId || o.c.teamId || '';
+const xwProps = o => ({ rarity: o.rarity, prof: o.prof, sub: o.sub || '-', pos: o.c.position || '', fac: xwFac(o), cost: xgStat(o, 'cost') });
+async function xwNew(){
+  const st = xg$('xw-status'); st.textContent = 'Memuat data operator...';
+  xwOps = await xgOps();
+  if(!xwOps.length){ st.textContent = 'Data operator gagal dimuat. Buka ulang tab ini untuk mencoba lagi.'; xgInited.wordle = false; return; }
+  xwAns = xgPick(xwOps); xwGuesses = []; xwOver = false;
+  const inp = xg$('xw-in'); inp.value = ''; inp.disabled = false; xg$('xw-list').classList.add('hidden');
+  xwRender();
+}
+const xwCell = (html, cls) => `<div class="xw-c ${cls || ''}">${html}</div>`;
+function xwRow(o){
+  const a = xwProps(xwAns), g = xwProps(o);
+  const tx = (k, label) => xwCell(esc(label), g[k] === a[k] ? 'xw-ok' : 'xw-no');
+  const nm = (k, label) => xwCell(esc(label) + (g[k] === a[k] ? '' : (a[k] > g[k] ? ' ↑' : ' ↓')), g[k] === a[k] ? 'xw-ok' : 'xw-no');
+  const partial = (o.c.groupId && o.c.groupId === xwAns.c.groupId) || (o.c.teamId && o.c.teamId === xwAns.c.teamId);
+  const facCls = g.fac === a.fac ? 'xw-ok' : partial ? 'xw-part' : 'xw-no';
+  return '<div class="xw-row">' + xwCell(imgTag(avatarSrcs(o.id, o.name), 'xw-av') + '<span>' + esc(o.name) + '</span>', 'xw-name' + (o === xwAns ? ' xw-ok' : ''))
+    + nm('rarity', g.rarity + '★') + tx('prof', g.prof) + tx('sub', g.sub) + tx('pos', xgPretty(g.pos)) + xwCell(esc(xgPretty(g.fac)), facCls) + nm('cost', String(g.cost)) + '</div>';
+}
+function xwRender(){
+  const win = xwGuesses.includes(xwAns), hd = ['Operator', 'Rarity', 'Class', 'Subclass', 'Posisi', 'Faction', 'DP'].map(t => xwCell(t, 'xw-h')).join('');
+  xg$('xw-board').innerHTML = xwGuesses.length ? '<div class="xw-row">' + hd + '</div>' + xwGuesses.slice().reverse().map(xwRow).join('') : '';
+  xg$('xw-status').innerHTML = win ? `Benar! Operatornya <b>${esc(xwAns.name)}</b>, ditebak dalam ${xwGuesses.length} percobaan.`
+    : xwOver ? `Game selesai. Jawabannya <b>${esc(xwAns.name)}</b>.` : `Sisa tebakan: ${XW_MAX - xwGuesses.length} dari ${XW_MAX}.`;
+}
+function xwGuess(o){
+  if(xwOver || !xwAns || !o || xwGuesses.includes(o)) return;
+  xwGuesses.push(o);
+  if(o === xwAns || xwGuesses.length >= XW_MAX){ xwOver = true; xg$('xw-in').disabled = true; }
+  xg$('xw-in').value = ''; xg$('xw-list').classList.add('hidden'); xwRender();
+}
+function xwShow(){
+  const box = xg$('xw-list'), q = xg$('xw-in').value.trim().toLowerCase();
+  if(xwOver || !xwOps.length){ box.classList.add('hidden'); return; }
+  const list = xwOps.filter(o => !xwGuesses.includes(o) && (!q || o.name.toLowerCase().includes(q))).slice(0, 30);
+  box.innerHTML = list.map(o => `<div class="pick-row" data-id="${esc(o.id)}">${imgTag(avatarSrcs(o.id, o.name))}<div><b>${esc(o.name)}</b> <span class="c">${o.rarity}★ ${esc(o.prof)}</span></div></div>`).join('') || '<div class="hint" style="padding:8px 10px;">Operator tidak ditemukan.</div>';
+  box.classList.remove('hidden');
+}
+xg$('xw-in').addEventListener('input', xwShow);
+xg$('xw-in').addEventListener('focus', xwShow);
+xg$('xw-in').addEventListener('keydown', e => {
+  if(e.key !== 'Enter') return; e.preventDefault();
+  const q = e.target.value.trim().toLowerCase(), exact = xwOps.find(o => o.name.toLowerCase() === q), first = xg$('xw-list').querySelector('.pick-row');
+  xwGuess(exact || (first && xwOps.find(o => o.id === first.dataset.id)));
+});
+xg$('xw-list').addEventListener('click', e => { const r = e.target.closest('.pick-row'); if(r) xwGuess(xwOps.find(o => o.id === r.dataset.id)); });
+document.addEventListener('click', e => { if(!e.target.closest('#xw-wrap')) xg$('xw-list').classList.add('hidden'); });
+xg$('xw-new').addEventListener('click', xwNew);
+xg$('xw-giveup').addEventListener('click', () => { if(xwAns && !xwOver){ xwOver = true; xg$('xw-in').disabled = true; xwRender(); } });
+
+/* --- Guess the Map --- */
+let xmCur = null, xmScore = 0, xmRound = 0, xmStreak = 0, xmBusy = false, xmPool = [];
+function xmBuildPool(){
+  const seen = new Set();
+  return stageList.filter(x => {
+    if(!x.levelId || x.story || !x.name || !['MAIN', 'SUB', 'BRANCHLINE', 'ACTIVITY'].includes(x.type) || x.diff === 'FOUR_STAR' || /#f#/.test(x.id)) return false;
+    const k = x.levelId.toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true;
+  });
+}
+async function xmLoadMap(s){
+  const lvl = (s.levelId.split('/').pop() || '').toLowerCase();
+  for(const n of [s.id, lvl].filter(Boolean)){
+    const url = STAGE_IMG + n + '.png';
+    if(await imgOk(url)){ const im = new Image(); im.className = 'stage-img'; im.alt = ''; im.src = url; return im; }
+  }
+  try{ return await drawStageCanvas(s); }catch(e){ return null; }
+}
+const xmLabel = x => x.code + ' — ' + x.name;
+function xmScoreRender(){ xg$('xm-score').textContent = 'Skor ' + xmScore + ' / ' + xmRound + ' · Streak ' + xmStreak; }
+function xmReset(){ xmScore = 0; xmRound = 0; xmStreak = 0; xmScoreRender(); xmNext(); }
+async function xmNext(){
+  if(xmBusy) return; xmBusy = true;
+  const holder = xg$('xm-img'), opts = xg$('xm-opts');
+  xg$('xm-info').textContent = ''; opts.innerHTML = ''; xg$('xm-next').classList.add('hidden'); xmCur = null;
+  holder.innerHTML = '<div class="hint" style="margin-top:10px;">Memuat map...</div>';
+  if(!await stageReady()){ holder.innerHTML = '<div class="hint" style="margin-top:10px;">Database stage gagal dimuat. Buka ulang tab ini untuk mencoba lagi.</div>'; xgInited.map = false; xmBusy = false; return; }
+  if(!xmPool.length) xmPool = xmBuildPool();
+  let s = null, el = null;
+  for(let i = 0; i < 10 && !el && xmPool.length; i++){ s = xgPick(xmPool); el = await xmLoadMap(s); }
+  if(!el){ holder.innerHTML = '<div class="hint" style="margin-top:10px;">Gagal memuat gambar map.</div>'; xg$('xm-next').classList.remove('hidden'); xmBusy = false; return; }
+  holder.innerHTML = ''; holder.appendChild(el); xmCur = s;
+  const same = xmPool.filter(x => x.type === s.type && xmLabel(x) !== xmLabel(s)), src = same.length >= 3 ? same : xmPool.filter(x => xmLabel(x) !== xmLabel(s)), ds = [];
+  for(let t = 0; t < 80 && ds.length < 3 && src.length; t++){ const d = xgPick(src); if(!ds.some(y => xmLabel(y) === xmLabel(d))) ds.push(d); }
+  const all = [s, ...ds].sort(() => Math.random() - .5);
+  opts.innerHTML = all.map(x => `<button class="ghost" data-id="${esc(x.id)}">${esc(xmLabel(x))}</button>`).join('');
+  xmBusy = false;
+}
+xg$('xm-opts').addEventListener('click', e => {
+  const b = e.target.closest('button[data-id]'); if(!b || !xmCur || b.disabled) return;
+  const ok = b.dataset.id === xmCur.id; xmRound++; if(ok){ xmScore++; xmStreak++; } else xmStreak = 0;
+  xg$('xm-opts').querySelectorAll('button').forEach(x => { x.disabled = true; if(x.dataset.id === xmCur.id) x.classList.add('ok'); else if(x === b) x.classList.add('bad'); });
+  xg$('xm-info').innerHTML = (ok ? 'Benar!' : 'Salah.') + ' Ini <b>' + esc(xmLabel(xmCur)) + '</b>' + (xmCur.evn ? ' <span class="muted">(' + esc(xmCur.evn) + ')</span>' : '') + '.';
+  xg$('xm-next').classList.remove('hidden'); xmScoreRender();
+});
+xg$('xm-next').addEventListener('click', xmNext);
+xg$('xm-reset').addEventListener('click', xmReset);
+
+/* --- Higher or Lower --- */
+let xhPool = [], xhL = null, xhR = null, xhStreak = 0, xhLock = false, xhOver = false, xhTok = 0;
+const xhStatLabel = () => xg$('xh-stat').options[xg$('xh-stat').selectedIndex].text;
+const xhVal = o => xgStat(o, xg$('xh-stat').value);
+const xhFmt = v => Number.isFinite(v) ? Math.round(v).toLocaleString('id-ID') : '-';
+function xhBest(){ try{ return +localStorage.getItem('xg_hol_best_' + xg$('xh-stat').value) || 0; }catch(e){ return 0; } }
+function xhSetBest(v){ try{ localStorage.setItem('xg_hol_best_' + xg$('xh-stat').value, v); }catch(e){} }
+function xhNextOp(prev){ let o, t = 0; do{ o = xgPick(xhPool); t++; }while((o === prev || xhVal(o) === xhVal(prev)) && t < 200); return o; }
+const xhCard = (o, show) => imgTag(avatarSrcs(o.id, o.name)) + '<div><b>' + esc(o.name) + '</b></div><div class="hint">' + o.rarity + '★ ' + esc(o.prof) + '</div><div class="xh-val">' + (show ? xhFmt(xhVal(o)) : '?') + '</div>';
+function xhRender(reveal){
+  xg$('xh-left').innerHTML = xhCard(xhL, true); xg$('xh-right').innerHTML = xhCard(xhR, reveal);
+  xg$('xh-score').textContent = xhStatLabel() + ' · Streak ' + xhStreak + ' · Terbaik ' + xhBest();
+  xg$('xh-hi').classList.toggle('hidden', xhOver); xg$('xh-lo').classList.toggle('hidden', xhOver); xg$('xh-again').classList.toggle('hidden', !xhOver);
+}
+async function xhNew(){
+  const my = ++xhTok; xg$('xh-msg').textContent = 'Memuat data operator...';
+  const pool = await xgOps(); if(my !== xhTok) return;
+  if(!pool.length){ xg$('xh-msg').textContent = 'Data operator gagal dimuat. Buka ulang tab ini untuk mencoba lagi.'; xgInited.hol = false; return; }
+  xhPool = pool; xhStreak = 0; xhOver = false; xhLock = false;
+  xhL = xgPick(xhPool); xhR = xhNextOp(xhL); xg$('xh-msg').textContent = ''; xhRender(false);
+}
+function xhGuess(higher){
+  if(xhLock || xhOver || !xhL || !xhR) return; xhLock = true;
+  const my = xhTok, ok = higher ? xhVal(xhR) > xhVal(xhL) : xhVal(xhR) < xhVal(xhL);
+  if(ok){
+    xhStreak++; if(xhStreak > xhBest()) xhSetBest(xhStreak); xhRender(true); xg$('xh-msg').textContent = 'Benar!';
+    setTimeout(() => { if(my !== xhTok) return; xhL = xhR; xhR = xhNextOp(xhL); xhLock = false; xg$('xh-msg').textContent = ''; xhRender(false); }, 1000);
+  }else{
+    xhOver = true; xhLock = false; xhRender(true); xg$('xh-msg').textContent = 'Salah. Streak akhir: ' + xhStreak + '.';
+  }
+}
+xg$('xh-hi').addEventListener('click', () => xhGuess(true));
+xg$('xh-lo').addEventListener('click', () => xhGuess(false));
+xg$('xh-again').addEventListener('click', xhNew);
+xg$('xh-stat').addEventListener('change', xhNew);
 
 
 /* ---------- INPUT CLEAR: DROPDOWN STAGE ---------- */
