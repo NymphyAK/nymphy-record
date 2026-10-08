@@ -461,80 +461,33 @@
   .xh-btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px;}
   @media(max-width:520px){ .xm-opts{grid-template-columns:1fr;} .xh-card img{width:72px; height:72px;} .xh-val{font-size:22px;} }
 
-  /* Song (Monster Siren) */
-
-  .sg-grid2{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:16px; margin-top:16px; align-items:start;}
-  .sg-embed{padding:12px; min-height:180px; display:flex; align-items:center; justify-content:center;}
-  .sg-embed iframe{width:100%; border:0; border-radius:14px; display:block;}
-  .sg-listcard{padding:14px;}
-  .sg-it{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:12px; cursor:pointer;}
-  .sg-it:hover{background:rgba(255,255,255,.05);} .sg-it.on{background:var(--red-soft);}
-  .sg-it .k{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:99px; background:rgba(255,255,255,.08); color:var(--muted); flex-shrink:0;}
-  .sg-it .t{flex:1; min-width:0; font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .sg-it .x{background:transparent; border:none; box-shadow:none; width:auto; margin:0; padding:2px 8px; color:var(--muted); font-size:16px; cursor:pointer;}
-  .sg-it .x:hover{color:#fff;}
-  @media(max-width:900px){ .sg-grid2{grid-template-columns:1fr;} .sg-new{flex-wrap:wrap;} .sg-new input{max-width:none !important; flex:1 1 100%;} }
-  .sg-grid{display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:16px; align-items:start; margin-top:16px;}
-  .sg-main{min-width:0;}
-  .sg-side{position:sticky; top:84px;}
-  .sg-lyr-card{display:flex; flex-direction:column; height:calc(100vh - 260px); min-height:340px; padding:18px;}
-  .sg-lyr{position:relative; flex:1; overflow-y:auto; margin-top:10px; padding:18px 4px; text-align:center; -webkit-mask-image:linear-gradient(transparent,#000 10%,#000 90%,transparent); mask-image:linear-gradient(transparent,#000 10%,#000 90%,transparent);}
-  .sg-l{font-size:15px; line-height:1.5; color:#777; padding:5px 6px; cursor:pointer; transition:color .2s;}
-  .sg-l:hover{color:#bbb;}
-  .sg-l.on{color:#fff; font-weight:700; font-size:17px;}
-  .sg-l.plain{cursor:default; color:#cfcfcf;} .sg-l.plain:hover{color:#cfcfcf;}
-  .sg-albums{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; margin-top:12px;}
-  .sg-al{background:rgba(255,255,255,.035); border:1px solid var(--border); border-radius:16px; padding:10px; cursor:pointer; transition:border-color .12s,background .12s;}
-  .sg-al:hover{border-color:rgba(254,47,103,.55); background:rgba(255,255,255,.06);}
-  .sg-al img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; background:#000; display:block;}
-  .sg-al .n{font-size:13px; font-weight:600; margin-top:8px; line-height:1.3; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
-  .sg-al .a{font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .sg-row{display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:12px; cursor:pointer;}
-  .sg-row:hover{background:rgba(255,255,255,.05);}
-  .sg-row.on{background:var(--red-soft);} .sg-row.on .t{color:#ff8fb0;}
-  .sg-row img,.sg-row .ph{width:40px; height:40px; border-radius:8px; object-fit:cover; background:#000; flex-shrink:0;}
-  .sg-row .ph{display:flex; align-items:center; justify-content:center; background:var(--panel2); font-size:18px;}
-  .sg-row .i{width:22px; text-align:center; color:var(--muted); font-size:12px; flex-shrink:0;}
-  .sg-row .m{flex:1; min-width:0;}
-  .sg-row .t{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .sg-row .s{font-size:11.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .sg-ahead{display:flex; gap:16px; align-items:flex-end; margin:12px 0 14px; flex-wrap:wrap;}
-  .sg-ahead img{width:150px; height:150px; border-radius:16px; object-fit:cover; background:#000; box-shadow:0 14px 30px -12px #000;}
-  .sg-ahead .n{font-size:22px; font-weight:700; line-height:1.2;}
-  .sg-ahead p{margin:6px 0 0; font-size:12.5px; color:var(--muted); max-width:520px; max-height:84px; overflow-y:auto;}
-  .sg-btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
-  .sg-btns button{width:auto; margin:0; padding:8px 16px; font-size:13px;}
-  .sg-new{display:flex; gap:8px; margin:12px 0;} .sg-new input{flex:1; min-width:0;} .sg-new button{width:auto; margin:0; white-space:nowrap;}
-  .sg-more{width:auto; margin:12px auto 0; display:block;}
-  .sg button.sg-ic,.sg-mini button.sg-ic{margin:0; width:34px; height:34px; min-height:0; padding:0; border-radius:50%; background:transparent; border:none; box-shadow:none; color:var(--muted); font-size:16px; line-height:1; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .sg button.sg-ic:hover,.sg-mini button.sg-ic:hover{background:rgba(255,255,255,.1); color:#fff;}
-  .sg button.sg-ic.on{color:var(--red);}
-  .sg button.sg-play,.sg-mini button.sg-play{width:42px; height:42px; background:#fff; color:#111; font-size:16px;}
-  .sg button.sg-play:hover,.sg-mini button.sg-play:hover{background:#e8e8e8; color:#111;}
-  .sg input[type=range],.sg-mini input[type=range]{width:100%; height:18px; padding:0; margin:0; border:none; background:transparent; box-shadow:none; accent-color:var(--red); cursor:pointer;}
-  .sg input[type=range]:focus{background:transparent; box-shadow:none;}
-  .sg-bar{position:sticky; bottom:12px; z-index:19; margin-top:16px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) minmax(0,.7fr); gap:14px; align-items:center; padding:10px 14px; border-radius:20px; background:rgba(24,24,24,.95); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.1); box-shadow:0 18px 40px -16px #000;}
-  .sg-bar .inf{display:flex; align-items:center; gap:10px; min-width:0;}
-  .sg-bar .inf img{width:46px; height:46px; border-radius:8px; object-fit:cover; background:#000; flex-shrink:0;}
-  .sg-bar .inf .m{min-width:0;} .sg-bar .t{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;} .sg-bar .a{font-size:11.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .sg-bar .ctl{display:flex; align-items:center; justify-content:center; gap:4px;}
-  .sg-bar .sk{display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted);} .sg-bar .sk span{width:36px; text-align:center; flex-shrink:0;}
-  .sg-bar .rt{display:flex; align-items:center; justify-content:flex-end; gap:6px;} .sg-bar .rt input{max-width:100px;}
-  .sg-lyrbtn{display:none;}
-  .sg-mrow{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; cursor:pointer; background:rgba(255,255,255,.04); margin-bottom:6px;} .sg-mrow:hover{background:var(--red-soft);} .sg-mrow b{color:var(--red);}
-  #sg-modal{z-index:60;}
-  .sg-mini{position:fixed; right:16px; bottom:16px; z-index:35; display:flex; align-items:center; gap:8px; width:300px; padding:8px 10px 8px 8px; border-radius:18px; background:rgba(24,24,24,.96); border:1px solid rgba(255,255,255,.12); box-shadow:0 18px 40px -14px #000; cursor:pointer;}
-  .sg-mini img{width:38px; height:38px; border-radius:8px; object-fit:cover; background:#000; flex-shrink:0;}
-  .sg-mini .m{flex:1; min-width:0;} .sg-mini .t{font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;} .sg-mini .a{font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  @media(max-width:900px){ .sg-grid{grid-template-columns:1fr;} .sg-side{position:static;} .sg-lyr-card{height:60vh;} }
-  @media(max-width:720px){
-    .sg-side{display:none;} .sg-side.show{display:block;} .sg-lyrbtn{display:inline-flex !important;}
-    .sg-bar{bottom:calc(78px + env(safe-area-inset-bottom)); grid-template-columns:1fr; gap:6px; padding:10px 12px;}
-    .sg-bar .rt input{display:none;} .sg-bar .rt{justify-content:center;}
-    .sg-albums{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));}
-    .sg-ahead img{width:110px; height:110px;}
-    .sg-mini{left:10px; right:10px; width:auto; bottom:calc(78px + env(safe-area-inset-bottom));}
-  }
+  /* Draft Pick */
+  .dp-top{display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:center; margin:12px 0;}
+  .dp-bans{display:flex; gap:8px; align-items:center;} .dp-bans.r{justify-content:flex-end;}
+  .dp-ban{width:44px; height:44px; border-radius:50%; border:2px solid var(--line2); background:var(--panel2); position:relative; overflow:hidden; flex-shrink:0;}
+  .dp-ban img{width:100%; height:100%; object-fit:cover; filter:grayscale(1); opacity:.6; display:block;}
+  .dp-ban.full::after{content:'⊘'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#ff4d6d; font-size:30px; line-height:1;}
+  .dp-ban.now{border-color:var(--red); box-shadow:0 0 0 3px var(--red-soft);}
+  .dp-title{text-align:center; font-weight:700; font-size:15px;} .dp-title small{display:block; font-weight:500; color:var(--muted); font-size:12px; margin-top:2px;}
+  .dp-main{display:grid; grid-template-columns:170px minmax(0,1fr) 170px; gap:12px; align-items:start;}
+  .dp-side{display:flex; flex-direction:column; gap:8px;}
+  .dp-side h3{margin:0 0 2px; font-size:13px; color:var(--muted); font-weight:600;}
+  .dp-slot{display:flex; align-items:center; gap:8px; min-height:42px; border:1px solid var(--border); border-radius:12px; padding:5px 8px; background:rgba(255,255,255,.03); font-size:12.5px; font-weight:600; min-width:0;}
+  .dp-slot img{width:32px; height:32px; border-radius:50%; object-fit:cover; background:#000; flex-shrink:0;}
+  .dp-slot span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;} .dp-slot .e{color:var(--muted); font-weight:500;}
+  .dp-slot.now{border-color:var(--red); background:var(--red-soft);}
+  .dp-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(66px,1fr)); gap:8px; max-height:400px; overflow-y:auto; padding:4px;}
+  .dp-op{cursor:pointer; text-align:center; border-radius:12px; padding:4px 2px; border:2px solid transparent; min-width:0;}
+  .dp-op img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:50%; background:#000; display:block;}
+  .dp-op span{display:block; font-size:10.5px; margin-top:3px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .dp-op:hover{background:rgba(255,255,255,.06);} .dp-op.sel{border-color:var(--red); background:var(--red-soft);}
+  .dp-op.used{opacity:.22; filter:grayscale(1); pointer-events:none;}
+  .dp-bar{display:flex; gap:10px; align-items:center; justify-content:center; margin-top:12px; flex-wrap:wrap;} .dp-bar button{width:auto; margin:0; min-width:140px;}
+  .dp-stage img,.dp-stage canvas{max-width:100%; border-radius:12px;}
+  .dp-toast{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; flex-direction:column; gap:8px;}
+  .dp-toast>div{background:var(--panel2); border:1px solid var(--red); border-radius:12px; padding:10px 14px; font-size:13px; display:flex; gap:10px; align-items:center; box-shadow:0 10px 30px -10px #000;}
+  .dp-toast button{margin:0; width:auto; padding:5px 12px; font-size:12px;}
+  @media(max-width:900px){ .dp-main{grid-template-columns:1fr;} .dp-side{display:grid; grid-template-columns:repeat(2,minmax(0,1fr));} .dp-side h3{grid-column:1/-1;} .dp-top{grid-template-columns:1fr;} .dp-bans,.dp-bans.r{justify-content:center;} }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -572,6 +525,7 @@
       <div class="nav-item" data-view="lore"><span class="nl">Lore</span></div>
       <div class="nav-item" data-view="calc"><span class="nl">Kalkulator</span></div>
       <div class="nav-item" data-view="squad"><span class="nl">Squad Acak</span></div>
+      <div class="nav-item" data-view="draft"><span class="nl">Draft</span></div>
       <div class="nav-item" data-view="is"><span class="nl">IS</span></div>
       <div class="nav-item" data-view="streak"><span class="nl">Streak</span></div>
       <div class="nav-item" data-view="unused"><span class="nl">Belum Dipakai</span></div>
@@ -584,7 +538,6 @@
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
       <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
       <div class="nav-item" data-view="extras" title="Extras"><span class="ni">🎮</span><span class="nl">Extras</span></div>
-      <div class="nav-item" data-view="song" title="Song"><span class="ni">🎵</span><span class="nl">Song</span></div>
       <div class="nav-item" data-view="links" title="Link"><span class="ni">🔗</span><span class="nl">Link</span></div>
       <div class="nav-item profile-item" data-view="profile" title="Profil">
         <div class="avatar" id="sidebar-avatar"></div>
@@ -894,23 +847,76 @@
                 <div class="card"><h2>Event Live di Arknights Global</h2><div id="home-events"><div class="hint">Memuat daftar event...</div></div></div>
       </div>
 
-      <div id="view-song" class="view sg hidden">
-        <div class="card">
-          <h2>Song</h2>
-          <div class="hint">Putar musik lewat pemutar resmi Spotify / YouTube. Tempel link lagu, album, atau playlist (misalnya OST Arknights dari Monster Siren Records), lalu klik untuk memutar.</div>
-          <div class="sg-new">
-            <input id="sg-url" placeholder="Tempel link Spotify atau YouTube..." autocomplete="off">
-            <input id="sg-title" placeholder="Judul (opsional)" autocomplete="off" style="max-width:200px;">
-            <button id="sg-add" type="button">＋ Tambah</button>
-          </div>
-          <div class="hint" id="sg-msg" style="margin-top:0;"></div>
-          <div class="hint">Cari OST: <a href="https://open.spotify.com/search/Monster%20Siren%20Records" target="_blank" rel="noopener" style="color:var(--red);">Spotify</a> · <a href="https://www.youtube.com/results?search_query=Monster+Siren+Records+Arknights" target="_blank" rel="noopener" style="color:var(--red);">YouTube</a>. Buka lagunya, salin link, lalu tempel di atas.</div>
+      <div id="view-draft" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Draft</h2>
+          <div class="hint">Pilih stage, lalu draft operator seperti MOBA: 6 ban bergiliran (3 per tim), lalu pick 1-2-2-...-2-1 sampai tiap tim punya 12 operator (24 total). Operator yang sudah di-ban/pick tidak bisa dipilih lagi.</div>
+          <div id="dp-msg" class="hint" style="color:#ff6b8b;"></div>
         </div>
-        <div class="sg-grid2">
-          <div class="card sg-embed" id="sg-embed"><div class="hint" style="text-align:center; margin:0;">Belum ada yang diputar. Tambahkan link lalu pilih dari daftar.</div></div>
-          <div class="card sg-listcard"><div class="hint" style="margin:0 0 8px;">DAFTAR PUTAR</div><div id="sg-list"></div></div>
+
+        <div id="dp-lobby" class="card" style="margin-bottom:16px;">
+          <h2>Room</h2>
+          <div class="rf-grid">
+            <select id="dp-banmode"><option value="manual">Ban: bergiliran manual</option><option value="random">Ban: diacak otomatis (6 operator)</option></select>
+            <label class="rf-chk"><input type="checkbox" id="dp-solo" style="width:auto;"> Latihan solo (kamu main dua tim)</label>
+          </div>
+          <button id="dp-create">➕ Buat Room</button>
+          <label style="margin-top:14px;">Gabung dengan kode room</label>
+          <div style="display:flex; gap:8px;"><input id="dp-code" maxlength="5" placeholder="mis. K7QXA" style="text-transform:uppercase;"><button id="dp-join" class="ghost" style="width:auto; margin:0;">Gabung</button></div>
+          <div id="dp-invites" style="margin-top:12px;"></div>
+        </div>
+
+        <div id="dp-room" class="hidden">
+          <div class="card" style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+              <div><h2 style="margin:0;">Room <span id="dp-rcode"></span></h2><div class="hint" id="dp-players" style="margin:4px 0 0;"></div></div>
+              <button class="ghost" id="dp-leave" style="width:auto; margin:0;">Keluar room</button>
+            </div>
+            <div id="dp-hostbox" class="hidden" style="margin-top:14px;">
+              <h2 style="font-size:15px;">Stage</h2>
+              <label>Pilih stage sendiri</label>
+              <div class="pick-wrap"><input id="dp-ssearch" placeholder="cari kode / nama stage, mis. 1-7, CW-8..." autocomplete="off"><div id="dp-slist" class="pick-list hidden"></div></div>
+              <label style="margin-top:12px;">Atau acak dengan kriteria</label>
+              <div class="rf-grid">
+                <label class="rf-chk" id="dp-boss-w"><input type="checkbox" id="dp-boss" style="width:auto;"> Stage boss saja</label>
+                <label class="rf-chk"><input type="checkbox" id="dp-story" style="width:auto;" checked> Lewati stage cerita</label>
+                <select id="dp-type"><option value="">Semua tipe</option></select>
+                <select id="dp-mode"><option value="">Semua mode</option><option value="NORMAL">Normal</option><option value="FOUR_STAR">Challenge Mode</option></select>
+                <input id="dp-ap" type="number" min="0" placeholder="AP maksimal">
+              </div>
+              <div class="hint" id="dp-count"></div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;"><button id="dp-roll" style="width:auto;">🎲 Acak Stage</button></div>
+              <div id="dp-invbox" style="margin-top:14px;">
+                <label>Undang user</label>
+                <div style="display:flex; gap:8px;"><select id="dp-invsel" style="flex:1;"></select><button id="dp-invbtn" class="ghost" style="width:auto; margin:0;">Undang</button></div>
+                <div class="hint" id="dp-invlist"></div>
+              </div>
+              <button id="dp-start" style="margin-top:12px;">▶ Mulai Draft</button>
+            </div>
+            <div id="dp-stageinfo" style="margin-top:14px;"></div>
+          </div>
+
+          <div id="dp-board" class="card hidden">
+            <div class="dp-top">
+              <div><div class="hint" style="margin:0 0 4px;" id="dp-bna"></div><div class="dp-bans" id="dp-bansa"></div></div>
+              <div class="dp-title" id="dp-title"></div>
+              <div><div class="hint" style="margin:0 0 4px; text-align:right;" id="dp-bnb"></div><div class="dp-bans r" id="dp-bansb"></div></div>
+            </div>
+            <div class="dp-main">
+              <div class="dp-side" id="dp-sa"></div>
+              <div>
+                <div class="op-tabs" id="dp-tabs"></div>
+                <input id="dp-search" placeholder="cari operator..." autocomplete="off">
+                <div class="dp-grid" id="dp-grid" style="margin-top:8px;"></div>
+                <div class="dp-bar"><span id="dp-selname" class="hint" style="margin:0;"></span><button id="dp-ok" disabled>Okay</button></div>
+                <div class="dp-bar"><button id="dp-again" class="ghost hidden">🔁 Main lagi (reset room)</button></div>
+              </div>
+              <div class="dp-side" id="dp-sb"></div>
+            </div>
+          </div>
         </div>
       </div>
+      <div class="dp-toast" id="dp-toast"></div>
 
       <div id="view-extras" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
@@ -1059,6 +1065,7 @@ function showApp(user){
   document.getElementById('sidebar-username').textContent = user;
   startListening();
   startProfilesListener();
+  dpStartInvites();
   applyAvatars();
   loadProfile();
 }
@@ -1067,7 +1074,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','medalgame','lore','calc','squad','is','streak','unused','baseskill','basesim','pity','enemy','home','myniche','challenge','ach','profile','bookmark','links','extras','song'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','medalgame','lore','calc','squad','is','streak','unused','baseskill','basesim','pity','enemy','home','myniche','challenge','ach','profile','bookmark','links','extras','draft'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -1080,6 +1087,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'lore') initLore();
     if(item.dataset.view === 'calc') initCalc();
     if(item.dataset.view === 'squad') initSquad();
+    if(item.dataset.view === 'draft') dpNav();
     if(item.dataset.view === 'bookmark') renderBookmarks();
     if(item.dataset.view === 'is') initIS();
     if(item.dataset.view === 'streak') renderStreak();
@@ -1094,13 +1102,12 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'ach'){ achStart(); renderAch(); }
     if(item.dataset.view === 'links'){ linksStart(); renderLinks(); }
     if(item.dataset.view === 'extras') extrasStart();
-    songNav(item.dataset.view);
     if(item.dataset.view === 'profile') achStart();
   });
 });
 
 function showLoginScreen(){
-  if(typeof sgStop === 'function') sgStop();
+  if(typeof dpDetach === 'function'){ dpDetach(); dpInv = []; dpToasted.clear(); }
   if(typeof closeMemberModal === 'function') closeMemberModal();
   document.getElementById('app').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
@@ -1862,7 +1869,7 @@ function fillCrit(p){
 function critRead(p){ const ap = parseInt(rf(p + '-ap').value, 10); return { boss: rf(p + '-boss').checked, type: rf(p + '-type').value, mode: rf(p + '-mode').value, story: rf(p + '-story').checked, ap: isNaN(ap) ? null : ap }; }
 function critWrite(p, c){ rf(p + '-boss').checked = !!c.boss; rf(p + '-story').checked = !!c.story; rf(p + '-type').value = c.type || ''; rf(p + '-mode').value = c.mode || ''; rf(p + '-ap').value = c.ap == null ? '' : c.ap; }
 function critApply(list, c){ return list.filter(x => x.levelId && (!c.boss || x.boss) && (!c.type || x.type === c.type) && (!c.mode || x.diff === c.mode) && (!c.story || !x.story) && (c.ap == null || isNaN(x.ap) || x.ap <= c.ap)); }
-function buildRandFilters(){ fillCrit('rf'); fillCrit('ch'); updateRandCount(); }
+function buildRandFilters(){ fillCrit('rf'); fillCrit('ch'); if(document.getElementById('dp-type')) fillCrit('dp'); updateRandCount(); }
 function randomPool(){ return critApply(stageMatches(), critRead('rf')); }
 function updateRandCount(){ rf('rf-count').textContent = stageState === 'ready' ? randomPool().length + ' stage cocok kriteria' : ''; }
 ['rf-boss', 'rf-story', 'rf-type', 'rf-mode', 'rf-ap', 'stage-search'].forEach(id => rf(id).addEventListener(id === 'rf-ap' || id === 'stage-search' ? 'input' : 'change', updateRandCount));
@@ -3539,75 +3546,232 @@ async function sqbFromHash(){
 }
 window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800);
 
-/* ---------- SONG (embed resmi Spotify / YouTube) ---------- */
-/* Isi SG_DEFAULT dengan lagu bawaan yang tampil untuk semua pengunjung, contoh:
-   { t:'Judul', u:'https://open.spotify.com/album/XXXXXXXX' } */
-const SG_DEFAULT = [];
-const sg$ = id => document.getElementById(id);
-const sgLoad = (k, d) => { try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } };
-const sgSave = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
-let sgItems = sgLoad('sg_embed_v1', []); if(!Array.isArray(sgItems)) sgItems = [];
-let sgCur = null;
-function sgParse(raw){
-  let u; try{ u = new URL((raw || '').trim()); }catch(e){ return null; }
-  const h = u.hostname.replace(/^www\./, '').replace(/^m\./, '');
-  if(h === 'open.spotify.com'){
-    const m = u.pathname.replace(/^\/intl-[a-z-]+/i, '').match(/^\/(track|album|playlist|artist|episode|show)\/([A-Za-z0-9]+)/);
-    if(!m) return null;
-    return { k:'Spotify', src:'https://open.spotify.com/embed/' + m[1] + '/' + m[2], h: (m[1] === 'track' || m[1] === 'episode') ? 152 : 380 };
-  }
-  let id = '', list = '';
-  if(h === 'youtu.be') id = u.pathname.slice(1).split('/')[0];
-  else if(h === 'youtube.com' || h === 'music.youtube.com'){
-    if(u.pathname === '/watch') id = u.searchParams.get('v') || '';
-    else if(/^\/(embed|shorts)\//.test(u.pathname)) id = u.pathname.split('/')[2];
-    list = u.searchParams.get('list') || '';
-  } else return null;
-  if(id && /^[\w-]{6,20}$/.test(id)){
-    return { k:'YouTube', src:'https://www.youtube-nocookie.com/embed/' + id + (list ? '?list=' + encodeURIComponent(list) : ''), h:315 };
-  }
-  if(list) return { k:'YouTube', src:'https://www.youtube-nocookie.com/embed/videoseries?list=' + encodeURIComponent(list), h:315 };
-  return null;
+
+/* ---------- DRAFT PICK (room PvP via Firestore koleksi "drafts") ---------- */
+const DP_PICK = ['F'].concat(...Array.from({length:11}, (_, i) => i % 2 ? ['F','F'] : ['O','O']), ['F']);   // pick 1-2-2-...-2-1: 12 operator per tim, 24 total (F = tim pertama, O = lawan)
+function dpSeq(first){ const o = first === 'A' ? 'B' : 'A', s = []; for(let i = 0; i < 6; i++) s.push({ t:'ban', s: i % 2 ? o : first }); DP_PICK.forEach(x => s.push({ t:'pick', s: x === 'F' ? first : o })); return s; }
+let dpCode = null, dpDoc = null, dpUnsub = null, dpInvUnsub = null, dpInv = [], dpSel = null, dpTab = 'ALL', dpPoolBuilt = false, dpImgFor = null, dpToasted = new Set(), dpTick = 0;
+const dpDb = () => firebase.firestore().collection('drafts');
+const dpName = u => u ? ((profilesMap[u] && profilesMap[u].nickname) || u) : '—';
+const dpMsg = t => { kg('dp-msg').textContent = t || ''; };
+function dpMySide(d){ const me = currentUser(); if(!d) return null; return d.players.A === me ? 'A' : d.players.B === me ? 'B' : null; }
+function dpCritRead(){ const ap = parseInt(kg('dp-ap').value, 10); return { boss: kg('dp-boss').checked, type: kg('dp-type').value, mode: kg('dp-mode').value, story: kg('dp-story').checked, ap: isNaN(ap) ? null : ap }; }
+function dpCount(){ kg('dp-count').textContent = stageState === 'ready' ? critApply(stageList, dpCritRead()).length + ' stage cocok kriteria' : 'Memuat stage...'; }
+['dp-boss','dp-story','dp-type','dp-mode','dp-ap'].forEach(id => kg(id).addEventListener(id === 'dp-ap' ? 'input' : 'change', dpCount));
+
+async function dpNav(){
+  dpMsg('');
+  try{ await stageReady(); await loadChars(); }catch(e){ dpMsg('Gagal memuat data stage/operator: ' + (e.message || e)); return; }
+  fillCrit('dp'); dpCount();
+  if(!dpPoolBuilt){ dpBuildTabs(); dpPoolBuilt = true; dpRenderPool(); }
+  if(!dpCode){ const c = (() => { try{ return localStorage.getItem('dp_room'); }catch(e){ return null; } })(); if(c) dpAttach(c, true); }
+  dpRenderInv();
 }
-const sgAll = () => SG_DEFAULT.map(x => ({ ...x, def:true })).concat(sgItems);
-function sgRenderList(){
-  const all = sgAll(), box = sg$('sg-list');
-  if(!all.length){ box.innerHTML = '<div class="hint">Daftar masih kosong. Tempel link di atas untuk menambah.</div>'; return; }
-  box.innerHTML = all.map((x, i) => { const p = sgParse(x.u); return `<div class="sg-it${sgCur === x.u ? ' on' : ''}" data-i="${i}"><span class="k">${p ? p.k : '?'}</span><span class="t">${esc(x.t || x.u)}</span>${x.def ? '' : '<button class="x" data-del="' + i + '" title="Hapus">×</button>'}</div>`; }).join('');
+function dpBuildTabs(){
+  const profs = [['ALL','Semua'], ...['PIONEER','WARRIOR','TANK','SNIPER','CASTER','MEDIC','SUPPORT','SPECIAL'].map(k => [k, PROF[k]])];
+  kg('dp-tabs').innerHTML = profs.map(([k, l]) => `<button data-t="${k}" class="${k === dpTab ? 'on' : ''}">${l}</button>`).join('');
 }
-function sgPlayItem(i){
-  const x = sgAll()[i]; if(!x) return; const p = sgParse(x.u); if(!p) return;
-  sgCur = x.u;
-  const box = sg$('sg-embed');
-  box.innerHTML = '';
-  const f = document.createElement('iframe');
-  f.src = p.src; f.height = p.h; f.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'; f.loading = 'lazy'; f.referrerPolicy = 'strict-origin-when-cross-origin';
-  if(p.k === 'YouTube') f.style.aspectRatio = '16 / 9', f.removeAttribute('height'), f.style.height = 'auto';
-  box.appendChild(f); sgRenderList();
+kg('dp-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; dpTab = b.dataset.t; dpBuildTabs(); dpRenderPool(); });
+kg('dp-search').addEventListener('input', () => dpRenderPool());
+function dpRenderPool(){
+  const q = kg('dp-search').value.trim().toLowerCase();
+  kg('dp-grid').innerHTML = kcOps.filter(o => (dpTab === 'ALL' || o.c.profession === dpTab) && (!q || o.n.toLowerCase().includes(q)))
+    .sort((a, b) => b.r - a.r || a.n.localeCompare(b.n))
+    .map(o => `<div class="dp-op" data-id="${esc(o.id)}" title="${esc(o.n)}">${imgTag(avatarSrcs(o.id, o.n))}<span>${esc(o.n)}</span></div>`).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
+  dpMarkPool();
 }
-function sgAddItem(){
-  const u = sg$('sg-url').value.trim(), msg = sg$('sg-msg');
-  const p = sgParse(u);
-  if(!p){ msg.style.color = '#ff6b8b'; msg.textContent = 'Link tidak dikenali. Pakai link Spotify (track/album/playlist) atau YouTube (video/playlist).'; return; }
-  if(sgAll().some(x => x.u === u)){ msg.style.color = '#ff6b8b'; msg.textContent = 'Link itu sudah ada di daftar.'; return; }
-  const t = sg$('sg-title').value.trim().slice(0, 80) || (p.k + ' · ' + (sgItems.length + SG_DEFAULT.length + 1));
-  sgItems.push({ t, u }); sgSave('sg_embed_v1', sgItems);
-  sg$('sg-url').value = ''; sg$('sg-title').value = ''; msg.style.color = ''; msg.textContent = 'Ditambahkan.';
-  sgRenderList(); sgPlayItem(sgAll().length - 1);
+function dpMarkPool(){
+  const used = new Set(((dpDoc && dpDoc.actions) || []).map(a => a.id));
+  kg('dp-grid').querySelectorAll('.dp-op').forEach(el => { el.classList.toggle('used', used.has(el.dataset.id)); el.classList.toggle('sel', el.dataset.id === dpSel); });
 }
-sg$('sg-add').addEventListener('click', sgAddItem);
-sg$('sg-url').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); sgAddItem(); } });
-sg$('sg-list').addEventListener('click', e => {
-  const del = e.target.closest('[data-del]');
-  if(del){ e.stopPropagation(); const i = +del.dataset.del - SG_DEFAULT.length; const x = sgItems[i]; if(!x) return;
-    sgItems.splice(i, 1); sgSave('sg_embed_v1', sgItems);
-    if(sgCur === x.u){ sgCur = null; sg$('sg-embed').innerHTML = '<div class="hint" style="text-align:center; margin:0;">Pilih lagu dari daftar.</div>'; }
-    sgRenderList(); return; }
-  const it = e.target.closest('.sg-it'); if(it) sgPlayItem(+it.dataset.i);
+kg('dp-grid').addEventListener('click', e => {
+  const el = e.target.closest('.dp-op'); if(!el || !dpDoc || dpDoc.state !== 'draft') return;
+  dpSel = el.dataset.id; dpMarkPool(); dpRenderBar();
 });
-function sgStop(){ sgCur = null; sg$('sg-embed').innerHTML = '<div class="hint" style="text-align:center; margin:0;">Belum ada yang diputar. Tambahkan link lalu pilih dari daftar.</div>'; sgRenderList(); }
-function songNav(v){ if(v === 'song') sgRenderList(); }
-sgRenderList();
+
+/* --- room: buat / gabung / keluar --- */
+function dpRandCode(){ const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for(let i = 0; i < 5; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
+kg('dp-create').addEventListener('click', async () => {
+  const me = currentUser(); if(!me) return; dpMsg('');
+  try{
+    let code, tries = 0; do{ code = dpRandCode(); tries++; }while((await dpDb().doc(code).get()).exists && tries < 5);
+    await dpDb().doc(code).set({ code, host: me, solo: kg('dp-solo').checked, banMode: kg('dp-banmode').value, players: { A: me, B: null }, invited: [], stageId: null, stageName: '', state: 'lobby', first: null, actions: [], createdAt: Date.now() });
+    dpAttach(code);
+  }catch(e){ console.error(e); dpMsg('Gagal membuat room: ' + (e.message || e) + ' (cek Firestore Rules untuk koleksi drafts).'); }
+});
+async function dpJoin(code){
+  const me = currentUser(); code = (code || '').trim().toUpperCase(); if(!code) return; dpMsg('');
+  try{
+    const ref = dpDb().doc(code);
+    await firebase.firestore().runTransaction(async tx => {
+      const s = await tx.get(ref); if(!s.exists) throw new Error('Room tidak ditemukan.');
+      const d = s.data(); if(d.players.A === me || d.players.B === me) return;
+      if(d.state !== 'lobby' || d.players.B || d.solo) throw new Error('Room sudah penuh atau sedang berjalan.');
+      tx.update(ref, { 'players.B': me, invited: (d.invited || []).filter(u => u !== me) });
+    });
+    dpAttach(code);
+  }catch(e){ console.error(e); dpMsg(e.message || String(e)); }
+}
+kg('dp-join').addEventListener('click', () => dpJoin(kg('dp-code').value));
+function dpAttach(code, silent){
+  if(dpUnsub) dpUnsub(); dpCode = code; dpDoc = null; dpSel = null; dpImgFor = null;
+  try{ localStorage.setItem('dp_room', code); }catch(e){}
+  dpUnsub = dpDb().doc(code).onSnapshot(s => {
+    if(!s.exists){ if(!silent || dpDoc) dpMsg('Room ditutup atau tidak ada.'); dpDetach(true); return; }
+    const prevStep = dpDoc ? dpDoc.actions.length : -1; dpDoc = s.data();
+    if(dpDoc.actions.length !== prevStep) dpSel = null;
+    dpRender();
+  }, e => { console.error(e); dpMsg('Gagal membaca room: ' + (e.message || e)); dpDetach(true); });
+}
+function dpDetach(keepInv){
+  if(dpUnsub){ dpUnsub(); dpUnsub = null; } dpCode = null; dpDoc = null; dpSel = null;
+  try{ localStorage.removeItem('dp_room'); }catch(e){}
+  kg('dp-room').classList.add('hidden'); kg('dp-lobby').classList.remove('hidden');
+  if(!keepInv && dpInvUnsub){ dpInvUnsub(); dpInvUnsub = null; }
+}
+kg('dp-leave').addEventListener('click', async () => {
+  if(!dpDoc) return; const me = currentUser(), code = dpCode, d = dpDoc;
+  if(d.host === me){ if(d.state === 'draft' && !confirm('Draft sedang berjalan. Tutup room?')) return; try{ await dpDb().doc(code).delete(); }catch(e){ console.error(e); } }
+  else if(d.state === 'lobby'){ try{ await dpDb().doc(code).update({ 'players.B': null }); }catch(e){ console.error(e); } }
+  dpDetach(true);
+});
+
+/* --- undangan --- */
+function dpStartInvites(){
+  if(dpInvUnsub) return; const me = currentUser(); if(!me) return;
+  dpInvUnsub = dpDb().where('invited', 'array-contains', me).onSnapshot(q => {
+    dpInv = q.docs.map(d => ({ code: d.id, ...d.data() })).filter(d => d.state === 'lobby' && !d.players.B && d.players.A !== me);
+    dpRenderInv();
+    dpInv.forEach(d => { if(dpToasted.has(d.code) || d.code === dpCode) return; dpToasted.add(d.code); dpToast(d); });
+  }, e => console.warn('draft invites', e));
+}
+function dpToast(d){
+  const el = document.createElement('div');
+  el.innerHTML = `<span><b>${esc(dpName(d.host))}</b> mengundangmu ke Draft (room ${esc(d.code)})</span><button>Gabung</button><button class="ghost">✕</button>`;
+  const [j, x] = el.querySelectorAll('button');
+  j.onclick = () => { el.remove(); document.querySelector('.nav-item[data-view="draft"]').click(); dpJoin(d.code); };
+  x.onclick = () => el.remove();
+  kg('dp-toast').appendChild(el); setTimeout(() => el.remove(), 30000);
+}
+function dpRenderInv(){
+  kg('dp-invites').innerHTML = dpInv.length ? '<div class="hint" style="margin-bottom:6px;">Undangan untukmu:</div>' + dpInv.map(d => `<div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;"><span style="flex:1;">${esc(dpName(d.host))} · room <b>${esc(d.code)}</b></span><button class="ghost" data-jc="${esc(d.code)}" style="width:auto; margin:0;">Gabung</button></div>`).join('') : '';
+}
+kg('dp-invites').addEventListener('click', e => { const b = e.target.closest('[data-jc]'); if(b) dpJoin(b.dataset.jc); });
+kg('dp-invbtn').addEventListener('click', async () => {
+  const u = kg('dp-invsel').value; if(!u || !dpDoc) return;
+  try{ await dpDb().doc(dpCode).update({ invited: firebase.firestore.FieldValue.arrayUnion(u) }); }catch(e){ console.error(e); dpMsg('Gagal mengundang: ' + (e.message || e)); }
+});
+
+/* --- stage & mulai --- */
+async function dpSetStage(s){ try{ await dpDb().doc(dpCode).update({ stageId: s.id, stageName: s.code + ' — ' + s.name }); }catch(e){ console.error(e); dpMsg('Gagal menyimpan stage: ' + (e.message || e)); } }
+kg('dp-ssearch').addEventListener('input', () => {
+  const q = kg('dp-ssearch').value.trim().toLowerCase(), box = kg('dp-slist');
+  if(!q || stageState !== 'ready'){ box.classList.add('hidden'); return; }
+  const m = stageList.filter(x => x.levelId && (x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q) || (x.ev || '').includes(q))).slice(0, 30);
+  box.innerHTML = m.map(x => `<div class="pick-row" data-sid="${esc(x.id)}"><div style="min-width:0;"><div>${esc(x.code)} — ${esc(x.name)}</div><div class="c">${esc(x.evn || STAGE_TYPES[x.type] || x.type || '')}</div></div></div>`).join('') || '<div class="pick-row"><div>Tidak ada hasil.</div></div>';
+  box.classList.remove('hidden');
+});
+kg('dp-slist').addEventListener('click', e => {
+  const r = e.target.closest('[data-sid]'); if(!r || !dpDoc || dpDoc.host !== currentUser() || dpDoc.state !== 'lobby') return;
+  const st = stageList.find(x => x.id === r.dataset.sid); if(!st) return;
+  kg('dp-slist').classList.add('hidden'); kg('dp-ssearch').value = ''; dpSetStage(st);
+});
+kg('dp-roll').addEventListener('click', async () => {
+  if(!dpDoc || dpDoc.host !== currentUser() || dpDoc.state !== 'lobby') return;
+  const pool = critApply(stageList, dpCritRead());
+  if(!pool.length){ kg('dp-count').textContent = 'Tidak ada stage yang cocok dengan kriteria.'; return; }
+  const s = pool[Math.floor(Math.random() * pool.length)];
+  dpSetStage(s);
+});
+kg('dp-start').addEventListener('click', async () => {
+  const d = dpDoc; if(!d || d.host !== currentUser() || d.state !== 'lobby') return;
+  if(!d.stageId){ dpMsg('Tentukan stage dulu (pilih atau acak).'); return; }
+  if(!d.solo && !d.players.B){ dpMsg('Menunggu lawan bergabung.'); return; }
+  const first = Math.random() < 0.5 ? 'A' : 'B', upd = { first, state: 'draft', actions: [] };
+  if(d.banMode === 'random'){
+    const seq = dpSeq(first), ids = kcOps.map(o => o.id);
+    for(let i = ids.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+    upd.actions = ids.slice(0, 6).map((id, i) => ({ t: 'ban', s: seq[i].s, id }));
+  }
+  try{ await dpDb().doc(dpCode).update(upd); dpMsg(''); }catch(e){ console.error(e); dpMsg('Gagal memulai: ' + (e.message || e)); }
+});
+kg('dp-again').addEventListener('click', async () => {
+  if(!dpDoc || dpDoc.host !== currentUser()) return;
+  try{ await dpDb().doc(dpCode).update({ state: 'lobby', first: null, actions: [], stageId: null, stageName: '' }); }catch(e){ console.error(e); }
+});
+
+/* --- aksi ban / pick --- */
+kg('dp-ok').addEventListener('click', async () => {
+  if(!dpSel || !dpDoc) return; const id = dpSel, ref = dpDb().doc(dpCode); kg('dp-ok').disabled = true;
+  try{
+    await firebase.firestore().runTransaction(async tx => {
+      const s = await tx.get(ref); if(!s.exists) throw new Error('Room hilang.');
+      const d = s.data(), me = currentUser(); if(d.state !== 'draft') throw new Error('Draft belum berjalan / sudah selesai.');
+      const seq = dpSeq(d.first), cur = seq[d.actions.length]; if(!cur) throw new Error('Draft selesai.');
+      const ok = d.solo ? d.players.A === me : ((cur.s === 'A' ? d.players.A : d.players.B) === me);
+      if(!ok) throw new Error('Bukan gilirannmu.');
+      if(d.actions.some(a => a.id === id)) throw new Error('Operator itu sudah dipakai.');
+      const actions = d.actions.concat([{ t: cur.t, s: cur.s, id }]);
+      tx.update(ref, { actions, state: actions.length >= seq.length ? 'done' : 'draft' });
+    });
+    dpSel = null; dpMsg('');
+  }catch(e){ console.error(e); dpMsg(e.message || String(e)); dpSel = null; }
+  dpRenderBar();
+});
+
+/* --- render --- */
+function dpOp(id){ return kcOps.find(o => o.id === id); }
+function dpRenderBar(){
+  const d = dpDoc, ok = kg('dp-ok'), nm = kg('dp-selname');
+  if(!d || d.state !== 'draft'){ ok.disabled = true; ok.textContent = 'Okay'; nm.textContent = ''; return; }
+  const cur = dpSeq(d.first)[d.actions.length], me = currentUser();
+  const mine = cur && (d.solo ? d.players.A === me : (cur.s === 'A' ? d.players.A : d.players.B) === me);
+  ok.textContent = cur && cur.t === 'ban' ? '🚫 Ban' : '✔ Pick';
+  ok.disabled = !(mine && dpSel);
+  const o = dpSel && dpOp(dpSel); nm.textContent = o ? o.n : (mine ? 'Pilih operator' : 'Menunggu giliran lawan...');
+}
+function dpRender(){
+  const d = dpDoc; if(!d) return; const me = currentUser(), host = d.host === me;
+  kg('dp-lobby').classList.add('hidden'); kg('dp-room').classList.remove('hidden');
+  kg('dp-rcode').textContent = d.code;
+  kg('dp-players').textContent = 'A: ' + dpName(d.players.A) + ' · B: ' + (d.solo ? '(solo, kamu juga)' : d.players.B ? dpName(d.players.B) : 'menunggu lawan...') + ' · ' + (d.banMode === 'random' ? 'ban acak' : 'ban manual');
+  kg('dp-hostbox').classList.toggle('hidden', !(host && d.state === 'lobby'));
+  kg('dp-invbox').classList.toggle('hidden', !!d.solo);
+  if(host && d.state === 'lobby'){
+    const keep = kg('dp-invsel').value;
+    kg('dp-invsel').innerHTML = Object.keys(profilesMap).filter(u => u !== me && u !== d.players.B).sort().map(u => `<option value="${esc(u)}">${esc(dpName(u))}</option>`).join('');
+    if(keep) kg('dp-invsel').value = keep;
+    kg('dp-invlist').textContent = (d.invited || []).length ? 'Sudah diundang: ' + d.invited.map(dpName).join(', ') : 'Atau bagikan kode room ke lawan.';
+  }
+  // stage
+  const box = kg('dp-stageinfo'), s = d.stageId && stageList.find(x => x.id === d.stageId);
+  if(!s){ box.innerHTML = '<div class="hint">' + (host ? 'Stage belum ditentukan. Pilih sendiri atau klik Acak Stage.' : 'Host belum menentukan stage.') + '</div>'; dpImgFor = null; }
+  else if(dpImgFor !== d.stageId){
+    dpImgFor = d.stageId; const tk = ++dpTick;
+    box.innerHTML = `<h2 style="font-size:15px;">Stage: ${esc(s.code)} — ${esc(s.name)}</h2><div class="dp-stage" id="dp-simg"><div class="hint">Memuat gambar map...</div></div>`;
+    stageImageInto(s, kg('dp-simg'), () => tk === dpTick);
+  }
+  // board
+  const live = d.state === 'draft' || d.state === 'done'; kg('dp-board').classList.toggle('hidden', !live);
+  kg('dp-again').classList.toggle('hidden', !(host && d.state === 'done'));
+  if(live){
+    const seq = dpSeq(d.first), st = d.actions.length, cur = seq[st], act = d.actions;
+    const nameOf = x => dpName(x === 'A' ? d.players.A : d.players.B) + (d.solo && x === 'B' ? ' (B)' : '');
+    kg('dp-title').innerHTML = d.state === 'done' ? 'Draft selesai<small>24 operator terpilih (12 per tim)</small>' : `Giliran ${esc(nameOf(cur.s))}<small>${cur.t === 'ban' ? 'BAN ' + (act.filter(a => a.t === 'ban').length + 1) + '/6' : 'PICK ' + (act.filter(a => a.t === 'pick').length + 1) + '/24'}</small>`;
+    kg('dp-bna').textContent = nameOf('A') + (d.first === 'A' ? ' · jalan pertama' : ''); kg('dp-bnb').textContent = nameOf('B') + (d.first === 'B' ? ' · jalan pertama' : '');
+    ['A','B'].forEach(side => {
+      const bans = act.filter(a => a.t === 'ban' && a.s === side), picks = act.filter(a => a.t === 'pick' && a.s === side);
+      const nowBan = cur && cur.t === 'ban' && cur.s === side, nowPick = cur && cur.t === 'pick' && cur.s === side;
+      let h = ''; for(let i = 0; i < 3; i++){ const o = bans[i] && dpOp(bans[i].id); h += `<div class="dp-ban${o ? ' full' : ''}${!o && nowBan && i === bans.length ? ' now' : ''}">${o ? imgTag(avatarSrcs(o.id, o.n)) : ''}</div>`; }
+      kg('dp-bans' + side.toLowerCase()).innerHTML = h;
+      let p = `<h3>${esc(nameOf(side))}</h3>`;
+      for(let i = 0; i < 12; i++){ const o = picks[i] && dpOp(picks[i].id); const left = cur && cur.t === 'pick' && cur.s === side ? seq.slice(st).filter((q, k) => q.t === 'pick' && q.s === side && k < 2 && seq.slice(st, st + k).every(r => r.s === side)).length : 0;
+        p += `<div class="dp-slot${!o && nowPick && i >= picks.length && i < picks.length + left ? ' now' : ''}">${o ? imgTag(avatarSrcs(o.id, o.n)) + '<span>' + esc(o.n) + '</span>' : '<span class="e">Pick ' + (i + 1) + '</span>'}</div>`; }
+      kg('dp-s' + side.toLowerCase()).innerHTML = p;
+    });
+    dpMarkPool(); dpRenderBar();
+  }
+}
 
 /* ---------- NAV GROUPS (sidebar diringkas, fungsi tab asli tetap dipakai) ---------- */
 (function(){
@@ -3632,6 +3796,7 @@ sgRenderList();
     dice:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/>',
     flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.4 1 2 1.8 2.3C11 8.5 11 5.5 12 3z"/>',
     music:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+    link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
     chev:'<path d="m6 9 6 6 6-6"/>',
     db:'<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/>'
   };
@@ -3642,8 +3807,8 @@ sgRenderList();
     { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target'], ['streak','Streak','flame']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
     { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['enemy','Musuh','target']] },
-    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['baseskill','Base Skill','box'], ['basesim','Simulasi Base','map'], ['pity','Pity','star'], ['bookmark','Bookmark','star']] },
-    { label:'Extras', icon:'dice', views:[['extras','Minigames','dice'], ['song','Song','music']] }
+    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['baseskill','Base Skill','box'], ['basesim','Simulasi Base','map'], ['pity','Pity','star'], ['bookmark','Bookmark','star'], ['draft','Draft','shield']] },
+    { label:'Extras', icon:'dice', views:[['extras','Minigames','dice'], ['links','Link','link']] }
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
   const profile = document.querySelector('.sidebar .profile-item');
@@ -3679,8 +3844,6 @@ sgRenderList();
     profile.parentNode.insertBefore(grp, profile);
     g.el = el; g.grp = grp;
   });
-  // Extras & Link dipindah ke bawah (setelah semua grup menu, tepat di atas profil)
-  ['links'].forEach(v => { const o = orig(v); if(o) profile.parentNode.insertBefore(o, profile); });
   const go = v => { const o = orig(v); if(o) o.click(); };
   document.querySelectorAll('.subtab').forEach(t => {
     t.addEventListener('click', () => go(t.dataset.view));
