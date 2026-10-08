@@ -476,6 +476,7 @@
       <div class="nav-item" data-view="pity"><span class="nl">Pity</span></div>
       <div class="nav-item" data-view="enemy"><span class="nl">Musuh</span></div>
       <div class="nav-item" data-view="bookmark"><span class="nl">Bookmark</span></div>
+      <div class="nav-item" data-view="links" title="Link"><span class="ni">🔗</span><span class="nl">Link</span></div>
       <div class="nav-item" data-view="myniche" title="My Niche"><span class="ni">🎯</span><span class="nl">My Niche</span></div>
       <div class="nav-item" data-view="challenge" title="Challenge"><span class="ni">🏆</span><span class="nl">Challenge</span></div>
       <div class="nav-item" data-view="ach" title="Medal"><span class="ni">🏅</span><span class="nl">Medal</span></div>
@@ -782,6 +783,21 @@
         <div id="ach-list"></div>
       </div>
 
+      <div id="view-links" class="view hidden">
+        <div class="card" style="margin-bottom:16px;">
+          <h2>Link Web Lain</h2>
+          <div class="hint" id="lnk-note">Kumpulan link ke web lain yang berguna.</div>
+        </div>
+        <div class="card hidden" id="lnk-admin" style="margin-bottom:16px;">
+          <h2>Tambah Link (adminbadag)</h2>
+          <label>Nama</label><input id="lnk-name" maxlength="60" placeholder="mis. Arknights Wiki">
+          <label>URL</label><input id="lnk-url" type="url" placeholder="https://...">
+          <label>Deskripsi (opsional)</label><input id="lnk-desc" maxlength="140" placeholder="keterangan singkat">
+          <button id="lnk-add">Tambah Link</button>
+        </div>
+        <div id="lnk-list"></div>
+      </div>
+
       <div id="view-home" class="view hidden">
         <div class="card" id="home-weekly" style="margin-bottom:16px;"><div class="hint">Memuat weekly challenge...</div></div>
                 <div class="card"><h2>Event Live di Arknights Global</h2><div id="home-events"><div class="hint">Memuat daftar event...</div></div></div>
@@ -889,7 +905,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     item.classList.add('active');
-    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','medalgame','lore','calc','squad','is','streak','unused','baseskill','basesim','pity','enemy','home','myniche','challenge','ach','profile','bookmark'].forEach(v=>{
+    ['dashboard','input','riwayat','niche','members','stage','operators','items','skins','medalgame','lore','calc','squad','is','streak','unused','baseskill','basesim','pity','enemy','home','myniche','challenge','ach','profile','bookmark','links'].forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('hidden', v !== item.dataset.view);
     });
     if(item.dataset.view === 'profile') renderProfileView();
@@ -914,6 +930,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     if(item.dataset.view === 'challenge') renderChallenge();
     if(item.dataset.view === 'home') renderHome();
     if(item.dataset.view === 'ach'){ achStart(); renderAch(); }
+    if(item.dataset.view === 'links'){ linksStart(); renderLinks(); }
     if(item.dataset.view === 'profile') achStart();
   });
 });
@@ -2273,6 +2290,53 @@ ach$('ach-list').addEventListener('click', async e => {
   if(del){ if(confirm('Hapus medal ini?')) col.doc(del.dataset.del).delete().catch(fail); }
   else if(gr){ const inp = document.querySelector(`.ach-grant[data-a="${gr.dataset.grant}"]`), u = inp.value.trim().toLowerCase(); if(u) col.doc(gr.dataset.grant).update({ holders: firebase.firestore.FieldValue.arrayUnion(u) }).catch(fail); }
   else if(rv){ col.doc(rv.dataset.a).update({ holders: firebase.firestore.FieldValue.arrayRemove(rv.dataset.u) }).catch(fail); }
+});
+
+
+/* ---------- LINK WEB LAIN ---------- */
+let lnkList = [], lnkStarted = false;
+const lnk$ = id => document.getElementById(id);
+const lnkAdmin = () => currentUser() === SUPER_ADMIN;
+function lnkSafe(u){ try{ const x = new URL(u); return (x.protocol === 'http:' || x.protocol === 'https:') ? x.href : ''; }catch(e){ return ''; } }
+function linksStart(){
+  if(lnkStarted || !clearsRef) return; lnkStarted = true;
+  firebase.firestore().collection('links').orderBy('createdAt').onSnapshot(q => { lnkList = q.docs.map(d => ({ id: d.id, ...d.data() })); if(!lnk$('view-links').classList.contains('hidden')) renderLinks(); },
+    e => { console.error(e); lnk$('lnk-note').textContent = 'Gagal memuat link. Cek Firestore Rules untuk koleksi links.'; });
+}
+function renderLinks(){
+  const admin = lnkAdmin(); lnk$('lnk-admin').classList.toggle('hidden', !admin);
+  lnk$('lnk-list').innerHTML = lnkList.map(l => {
+    const href = lnkSafe(l.url); let host = ''; try{ host = new URL(href).hostname.replace(/^www\./, ''); }catch(e){}
+    return `<div class="ach-card"><div style="flex:1; min-width:0;"><b>${esc(l.name)}</b>
+      ${l.desc ? `<div class="hint">${esc(l.desc)}</div>` : ''}
+      <div class="hint">${href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="color:var(--red);">${esc(host || href)} ↗</a>` : 'URL tidak valid'}</div>
+      ${admin ? `<div style="display:flex; gap:6px; margin-top:6px;"><button class="ghost" data-ledit="${l.id}">Edit</button><button class="ghost" data-ldel="${l.id}">Hapus</button></div>` : ''}</div></div>`;
+  }).join('') || '<div class="card"><div class="empty">Belum ada link.</div></div>';
+}
+lnk$('lnk-add').addEventListener('click', async () => {
+  if(!lnkAdmin()) return;
+  const name = lnk$('lnk-name').value.trim(), url = lnkSafe(lnk$('lnk-url').value.trim());
+  if(!name){ alert('Nama wajib diisi.'); return; }
+  if(!url){ alert('URL harus diawali http:// atau https://'); return; }
+  try{
+    await firebase.firestore().collection('links').add({ name, url, desc: lnk$('lnk-desc').value.trim(), createdAt: Date.now() });
+    ['lnk-name', 'lnk-url', 'lnk-desc'].forEach(id => { lnk$(id).value = ''; });
+  }catch(e){ console.error(e); alert('Gagal menyimpan link: ' + e.message); }
+});
+lnk$('lnk-list').addEventListener('click', async e => {
+  if(!lnkAdmin()) return;
+  const col = firebase.firestore().collection('links'), fail = err => { console.error(err); alert('Gagal memperbarui link: ' + err.message); };
+  const del = e.target.closest('[data-ldel]'), ed = e.target.closest('[data-ledit]');
+  if(del){ if(confirm('Hapus link ini?')) col.doc(del.dataset.ldel).delete().catch(fail); }
+  else if(ed){
+    const l = lnkList.find(x => x.id === ed.dataset.ledit); if(!l) return;
+    const name = prompt('Nama:', l.name); if(name === null) return;
+    const url = prompt('URL:', l.url); if(url === null) return;
+    const desc = prompt('Deskripsi:', l.desc || ''); if(desc === null) return;
+    const safe = lnkSafe(url.trim());
+    if(!name.trim() || !safe){ alert('Nama wajib diisi dan URL harus http(s).'); return; }
+    col.doc(l.id).update({ name: name.trim(), url: safe, desc: desc.trim() }).catch(fail);
+  }
 });
 
 
