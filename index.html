@@ -332,6 +332,14 @@
     .sidebar{background:#0f0f10; -webkit-backdrop-filter:none; backdrop-filter:none;}
   }
 
+  /* sidebar bisa discroll: item tidak boleh menyusut/numpuk */
+  .sidebar > *{flex-shrink:0;}
+  .nav-grp,.nav-item{flex-shrink:0;}
+  @media(min-width:721px){
+    .sidebar{overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.18) transparent;}
+    .sidebar::-webkit-scrollbar{width:6px;} .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18); border-radius:6px;}
+    .sidebar .profile-item{margin-top:auto; position:sticky; bottom:0;}
+  }
   /* sub-menu (Input Clear, Riwayat, dst) -> tab bar bergaris, bukan pil bulat */
   .subtabs{display:flex; flex-wrap:nowrap; gap:2px; width:100%; max-width:100%; margin:0 0 22px; padding:0; background:none; border:none; border-bottom:1px solid var(--border); border-radius:0; overflow-x:auto; scrollbar-width:none;}
   .subtabs::-webkit-scrollbar{display:none;}
@@ -3529,20 +3537,32 @@ document.body.insertAdjacentHTML('beforeend',
   '<div id="sg-mini" class="sg-mini hidden"><img id="sg-mini-img" alt="" referrerpolicy="no-referrer"><div class="m"><div class="t" id="sg-mini-t"></div><div class="a" id="sg-mini-a"></div></div><button class="sg-ic" id="sg-mini-pp" title="Putar / jeda">⏯</button><button class="sg-ic" id="sg-mini-next" title="Berikutnya">⏭</button></div>');
 const sg$ = id => document.getElementById(id);
 const SG_API = 'https://monster-siren.hypergryph.com/api';
-const SG_PROXY = [u => u, u => 'https://corsproxy.io/?' + encodeURIComponent(u), u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)];
+const SG_PROXY = [u => u, u => 'https://corsproxy.io/?url=' + encodeURIComponent(u), u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u), u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u), u => 'https://thingproxy.freeboard.io/fetch/' + u];
 const sgCache = {};
+function sgProxies(){
+  const list = SG_PROXY.slice();
+  try{ const c = (localStorage.getItem('sg_proxy') || '').trim(); if(c) list.unshift(u => c.includes('{url}') ? c.replace('{url}', encodeURIComponent(u)) : c + encodeURIComponent(u)); }catch(e){}
+  return list;
+}
+async function sgTry(url, text, mk){
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+  try{
+    const r = await fetch(mk(url), { signal: ctl.signal }); if(!r.ok) throw new Error('HTTP ' + r.status);
+    const v = text ? await r.text() : await r.json();
+    if(!text && (!v || typeof v !== 'object')) throw new Error('respons tidak valid');
+    if(!text && v.code !== undefined && v.code !== 0) throw new Error(v.msg || 'API error');
+    return v;
+  } finally { clearTimeout(tm); }
+}
 async function sgGet(url, text){
   const k = (text ? 't:' : 'j:') + url; if(sgCache[k] !== undefined) return sgCache[k];
-  let last;
-  for(const p of SG_PROXY){
-    try{
-      const r = await fetch(p(url)); if(!r.ok) throw new Error('HTTP ' + r.status);
-      const v = text ? await r.text() : await r.json();
-      if(!text && v && v.code !== undefined && v.code !== 0) throw new Error(v.msg || 'API error');
-      sgCache[k] = v; return v;
-    }catch(e){ last = e; }
+  const px = sgProxies(); let v;
+  try{ v = await sgTry(url, text, px[0]); }
+  catch(e){
+    try{ v = await Promise.any(px.slice(1).map(mk => sgTry(url, text, mk))); }
+    catch(e2){ throw new Error((e2 && e2.errors && e2.errors[0] && e2.errors[0].message) || (e2 && e2.message) || 'semua jalur gagal'); }
   }
-  throw last;
+  sgCache[k] = v; return v;
 }
 const sgLoad = (k, d) => { try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } };
 const sgSave = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
@@ -3560,9 +3580,17 @@ async function sgInit(){
   if(SG.loaded || SG.loading) return;
   SG.loading = true; SG.err = ''; sgRender();
   try{
-    const [a, s] = await Promise.all([sgGet(SG_API + '/albums'), sgGet(SG_API + '/songs')]);
-    SG.albums = a.data || []; SG.albums.forEach(x => { SG.aMap[x.cid] = x; });
-    SG.songs = (s.data && s.data.list) || []; SG.songs.forEach(x => { SG.sMap[x.cid] = x; });
+    let albums, songs;
+    try{
+      const [a, s] = await Promise.all([sgGet(SG_API + '/albums'), sgGet(SG_API + '/songs')]);
+      albums = a.data || []; songs = (s.data && s.data.list) || [];
+      if(albums.length && songs.length) sgSave('sg_catalog_v1', { albums, songs, t: Date.now() });
+    }catch(e){
+      const c = sgLoad('sg_catalog_v1', null);
+      if(c && c.albums && c.songs){ albums = c.albums; songs = c.songs; } else throw e;
+    }
+    SG.albums = albums; SG.albums.forEach(x => { SG.aMap[x.cid] = x; });
+    SG.songs = songs; SG.songs.forEach(x => { SG.sMap[x.cid] = x; });
     SG.loaded = true;
   }catch(e){ SG.err = 'Gagal memuat data Monster Siren (' + (e.message || e) + '). Cek koneksi internet lalu coba lagi.'; }
   SG.loading = false; sgRender();
@@ -3838,6 +3866,7 @@ sgButtons();
     calc:'<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/>',
     dice:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/>',
     flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.4 1 2 1.8 2.3C11 8.5 11 5.5 12 3z"/>',
+    music:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
     chev:'<path d="m6 9 6 6 6-6"/>',
     db:'<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/>'
   };
@@ -3848,7 +3877,8 @@ sgButtons();
     { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target'], ['streak','Streak','flame']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
     { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['is','IS','hist'], ['enemy','Musuh','target']] },
-    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['baseskill','Base Skill','box'], ['basesim','Simulasi Base','map'], ['pity','Pity','star'], ['bookmark','Bookmark','star']] }
+    { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['baseskill','Base Skill','box'], ['basesim','Simulasi Base','map'], ['pity','Pity','star'], ['bookmark','Bookmark','star']] },
+    { label:'Extras', icon:'dice', views:[['extras','Minigames','dice'], ['song','Song','music']] }
   ];
   const orig = v => document.querySelector('.nav-item[data-view="' + v + '"]');
   const profile = document.querySelector('.sidebar .profile-item');
@@ -3885,7 +3915,7 @@ sgButtons();
     g.el = el; g.grp = grp;
   });
   // Extras & Link dipindah ke bawah (setelah semua grup menu, tepat di atas profil)
-  ['extras', 'song', 'links'].forEach(v => { const o = orig(v); if(o) profile.parentNode.insertBefore(o, profile); });
+  ['links'].forEach(v => { const o = orig(v); if(o) profile.parentNode.insertBefore(o, profile); });
   const go = v => { const o = orig(v); if(o) o.click(); };
   document.querySelectorAll('.subtab').forEach(t => {
     t.addEventListener('click', () => go(t.dataset.view));
