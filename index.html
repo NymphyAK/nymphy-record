@@ -524,6 +524,12 @@
   .sr-dec{background:var(--panel2); border:1px dashed var(--line2); border-radius:6px; padding:10px 14px;} .sr-dec b{display:block; font-size:.78em; color:var(--red); letter-spacing:.07em; text-transform:uppercase; margin-bottom:4px;}
   .sr-dec div{padding:2px 0;} .sr-br{margin:22px 0 -6px; font-size:.8em; font-weight:600; color:var(--red);}
   .sr-in{border-left:2px solid var(--red-dim); padding-left:14px;}
+  .sr-fig{margin:18px 0; text-align:center;}
+  .sr-fig img{display:block; margin:0 auto; max-width:100%; border-radius:6px; border:1px solid var(--border); background:var(--panel2);}
+  .sr-bg img{width:100%; max-height:300px; object-fit:cover;} .sr-cg img{width:auto; max-height:560px;}
+  .sr-who{display:flex; align-items:center; gap:8px;}
+  .sr-av{width:26px; height:26px; flex-shrink:0; border-radius:50%; object-fit:cover; border:1px solid var(--line2); background:var(--panel2);}
+  #sr-imgbtn.off{opacity:.45;}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -754,7 +760,7 @@
             <button class="ghost" data-act="chapters">‹ Chapter</button>
             <button class="ghost" data-act="prev" id="sr-prev">← Sebelumnya</button>
             <button class="ghost" data-act="next" id="sr-next">Berikutnya →</button>
-            <span class="sr-fs"><button class="ghost" data-act="fs-" title="Perkecil">A−</button><button class="ghost" data-act="fs+" title="Perbesar">A+</button></span>
+            <span class="sr-fs"><button class="ghost" data-act="img" id="sr-imgbtn" title="Tampilkan / sembunyikan gambar">🖼 Gambar</button><button class="ghost" data-act="fs-" title="Perkecil">A−</button><button class="ghost" data-act="fs+" title="Perbesar">A+</button></span>
           </div>
           <h2 id="sr-title"></h2><div class="hint" id="sr-sub"></div>
           <div id="sr-body" class="sr-body"></div>
@@ -4039,7 +4045,7 @@ const SR_SRC = {
     'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData@master/zh_CN/gamedata/'
   ]
 };
-const sr = { lang:'en_US', events:[], shown:[], ev:null, idx:0, state:'idle', token:0, rtoken:0, fs:16, bound:false };
+const sr = { lang:'en_US', events:[], shown:[], ev:null, idx:0, state:'idle', token:0, rtoken:0, fs:16, bound:false, img:true, lines:[] };
 const srEl = id => document.getElementById(id);
 const srStore = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
@@ -4060,7 +4066,7 @@ async function srGet(lang, path, asJson){
 /* parser file story .txt -> daftar baris */
 function srParse(txt){
   const out = [], opts = {};
-  let br = null;
+  let br = null, lastBg = '';
   const T = s => (s || '').replace(/<\/?[a-zA-Z][^>]*>/g, '').replace(/\{@?nickname\}/gi, 'Doctor').replace(/\\n/g, '\n').trim();
   const at = (s, k) => { const m = (s || '').match(new RegExp('(?:^|[\\s,(])' + k + '\\s*=\\s*"([^"]*)"', 'i')); return m ? m[1] : ''; };
   String(txt).replace(/^\uFEFF/, '').split(/\r?\n/).forEach(raw => {
@@ -4083,6 +4089,10 @@ function srParse(txt){
         br = refs ? refs.split(';').map(x => 'Pilihan ' + x + (opts[x] ? ': ' + opts[x] : '')).join('  /  ') : null;
       }else if(cmd === 'subtitle'){
         const t = T(at(args, 'text')); if(t) out.push({ t:'sub', text:t, br });
+      }else if(cmd === 'background'){
+        const im = at(args, 'image'); if(im && im !== lastBg){ lastBg = im; out.push({ t:'bg', img:im, br }); }
+      }else if(cmd === 'image'){
+        const im = at(args, 'image'); if(im) out.push({ t:'img', img:im, br });
       }
       return;
     }
@@ -4092,22 +4102,73 @@ function srParse(txt){
   return out;
 }
 const srTxt = s => esc(s).replace(/\n/g, '<br>');
-function srRender(L){
+const srAttr = s => esc(s).replace(/"/g, '&quot;');
+const srNorm = s => String(s).toLowerCase().replace(/[’‘`]/g, "'").replace(/\s+/g, ' ').trim();
+/* gambar story: Aceship/Arknight-Images (avg/backgrounds, avg/images), jsDelivr sebagai cadangan */
+function srImgSrcs(kind, name){
+  const out = [];
+  [name, name.toLowerCase()].forEach(n => [ACE, ACE_CDN].forEach(b => {
+    const u = b + 'avg/' + kind + '/' + encodeURIComponent(n).replace(/'/g, '%27') + '.png';
+    if(out.indexOf(u) < 0) out.push(u);
+  }));
+  return out;
+}
+function srImgFail(el){
+  let l = []; try{ l = JSON.parse(el.dataset.srcs || '[]'); }catch(e){}
+  const i = (+el.dataset.i || 0) + 1;
+  if(i < l.length){ el.dataset.i = i; el.src = l[i]; }
+  else{ const f = el.closest('.sr-fig'); (f || el).remove(); }
+}
+function srFig(cls, kind, name){
+  const l = srImgSrcs(kind, name);
+  return '<figure class="sr-fig ' + cls + '"><img loading="lazy" alt="" src="' + l[0] + '" data-i="0" data-srcs=\'' + JSON.stringify(l).replace(/'/g, '&#39;') + '\' onerror="srImgFail(this)"></figure>';
+}
+function srRender(L, withImg){
   let h = '', last = null;
   L.forEach(x => {
     if(x.br !== last){ if(x.br) h += '<div class="sr-br">↳ ' + esc(x.br) + '</div>'; last = x.br; }
     const c = x.br ? ' sr-in' : '';
-    if(x.t === 'say') h += '<div class="sr-say' + c + '"><div class="sr-who">' + esc(x.who) + '</div><div>' + srTxt(x.text) + '</div></div>';
+    if(x.t === 'say') h += '<div class="sr-say' + c + '"><div class="sr-who"' + (withImg ? ' data-who="' + srAttr(srNorm(x.who)) + '" data-name="' + srAttr(x.who) + '"' : '') + '><span>' + esc(x.who) + '</span></div><div>' + srTxt(x.text) + '</div></div>';
     else if(x.t === 'nar') h += '<div class="sr-nar' + c + '">' + srTxt(x.text) + '</div>';
     else if(x.t === 'sub') h += '<div class="sr-sub' + c + '">' + srTxt(x.text) + '</div>';
     else if(x.t === 'dec') h += '<div class="sr-dec' + c + '"><b>Pilihan</b>' + x.list.map(o => '<div>' + esc(o.v) + '. ' + esc(o.txt) + '</div>').join('') + '</div>';
+    else if(x.t === 'bg' && withImg) h += srFig('sr-bg' + c, 'backgrounds', x.img);
+    else if(x.t === 'img' && withImg) h += srFig('sr-cg' + c, 'images', x.img);
   });
   return h || '<div class="empty">Chapter ini tidak punya teks yang bisa ditampilkan.</div>';
 }
+/* avatar pembicara: nama operator (character_table) -> id -> avatar; dimuat belakangan supaya teks langsung tampil */
+let srNameMap = null, srNameP = null;
+function srNames(){
+  if(srNameMap) return Promise.resolve(srNameMap);
+  return srNameP || (srNameP = (async () => {
+    try{
+      const ch = await opTable('character_table'), m = {}, num = id => +(id.match(/^char_(\d+)_/) || [])[1] || 1e9;
+      Object.keys(ch).forEach(id => {
+        if(id.indexOf('char_') !== 0 || !ch[id] || !ch[id].name) return;
+        const k = srNorm(ch[id].name);
+        if(!(k in m) || num(id) < num(m[k])) m[k] = id;
+      });
+      return (srNameMap = m);
+    }catch(e){ console.warn('nama operator untuk avatar gagal dimuat', e); srNameP = null; return null; }
+  })());
+}
+async function srAvatars(tok){
+  if(!sr.img || sr.lang !== 'en_US') return;
+  const m = await srNames(); if(!m || tok !== sr.rtoken) return;
+  srEl('sr-body').querySelectorAll('.sr-who[data-who]').forEach(w => {
+    const id = m[w.dataset.who]; if(!id || w.querySelector('img')) return;
+    const im = document.createElement('img'), l = avatarSrcs(id, w.dataset.name || '');
+    im.className = 'sr-av'; im.alt = ''; im.loading = 'lazy'; im.dataset.srcs = JSON.stringify(l); im.dataset.i = '0';
+    im.onerror = () => srImgFail(im); im.src = l[0]; w.insertBefore(im, w.firstChild);
+  });
+}
+function srPaint(){ srEl('sr-body').innerHTML = srRender(sr.lines, sr.img); srAvatars(sr.rtoken); }
+function srSyncImgBtn(){ srEl('sr-imgbtn').classList.toggle('off', !sr.img); }
 function srShow(id){ ['sr-browse', 'sr-chapters', 'sr-reader'].forEach(x => srEl(x).classList.toggle('hidden', x !== id)); srEl('view-story').scrollIntoView({ block:'start' }); }
 function srBind(){
   if(sr.bound) return; sr.bound = true;
-  sr.lang = srStore.get('sr_lang', 'en_US'); if(!SR_SRC[sr.lang]) sr.lang = 'en_US'; sr.fs = srStore.get('sr_fs', 16);
+  sr.lang = srStore.get('sr_lang', 'en_US'); if(!SR_SRC[sr.lang]) sr.lang = 'en_US'; sr.fs = srStore.get('sr_fs', 16); sr.img = srStore.get('sr_img', true); srSyncImgBtn();
   srEl('sr-lang').value = sr.lang; srEl('sr-body').style.fontSize = sr.fs + 'px';
   srEl('sr-lang').addEventListener('change', e => { sr.lang = e.target.value; srStore.set('sr_lang', sr.lang); srShow('sr-browse'); srLoad(); });
   srEl('sr-type').addEventListener('change', srRenderEvents);
@@ -4126,6 +4187,7 @@ function srBind(){
     else if(a === 'chapters') srOpenEvent(sr.ev);
     else if(a === 'prev') srOpenChapter(sr.idx - 1);
     else if(a === 'next') srOpenChapter(sr.idx + 1);
+    else if(a === 'img'){ sr.img = !sr.img; srStore.set('sr_img', sr.img); srSyncImgBtn(); srPaint(); }
     else if(a === 'fs+' || a === 'fs-'){ sr.fs = Math.min(26, Math.max(12, sr.fs + (a === 'fs+' ? 1 : -1))); srStore.set('sr_fs', sr.fs); srEl('sr-body').style.fontSize = sr.fs + 'px'; }
   }));
 }
@@ -4194,7 +4256,7 @@ async function srOpenChapter(i){
     const path = c.storyTxt.split('/').map(encodeURIComponent).join('/');
     const txt = await srGet(sr.lang, 'story/' + path + '.txt', false);
     if(tok !== sr.rtoken) return;
-    body.innerHTML = srRender(srParse(txt));
+    sr.lines = srParse(txt); srPaint();
     const rd = srStore.get('sr_read', {}); rd[c.storyTxt] = 1; srStore.set('sr_read', rd);
     srStore.set('sr_last', { lang:sr.lang, evId:e.id, idx:i }); srRenderResume();
     srEl('view-story').scrollIntoView({ block:'start' });
