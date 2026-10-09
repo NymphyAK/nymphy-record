@@ -543,7 +543,8 @@
   .sr-dlg{position:absolute; left:0; right:0; bottom:0; z-index:3; display:flex; gap:2.4cqw; align-items:flex-end; padding:4cqw 5cqw 3cqw; min-height:20%;}
   .sr-port{flex:0 0 11cqw; width:11cqw; height:11cqw; position:relative; overflow:hidden; background:#15171b; border:1px solid #fff7; box-shadow:0 0 0 3px #0008;}
   .sr-port img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
-  .sr-port span{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:5cqw; font-weight:700; color:#7a808a;}
+  .sr-port{background:linear-gradient(180deg,#2b3038,#14161a);}
+  .sr-port span{position:absolute; inset:0; color:#0c0e11; opacity:.85;} .sr-port span svg{width:100%; height:100%; display:block;}
   .sr-dbody{flex:1; min-width:0; align-self:stretch; display:flex; flex-direction:column; justify-content:flex-end;}
   .sr-nm{align-self:flex-start; margin-bottom:.45em; padding:.15em .9em .15em .7em; background:#000b; border-left:3px solid var(--gold); font-weight:700; letter-spacing:.06em; font-size:calc(clamp(11px,1.8cqw,20px)*var(--k));}
   .sr-tx{white-space:pre-wrap; line-height:1.6; min-height:3.2em; font-size:calc(clamp(13px,1.95cqw,25px)*var(--k)); text-shadow:0 1px 3px #000;}
@@ -800,7 +801,7 @@
             <div class="sr-ctl"><button data-vn="log">LOG</button><span class="sp"></span><button data-vn="back" title="Kembali (←)">↩</button><button data-vn="auto" id="sr-autob">AUTO</button><button data-vn="full" title="Layar penuh">⛶</button></div>
             <div class="sr-subc hidden" id="sr-subc"></div>
             <div class="sr-dlg hidden" id="sr-dlg">
-              <div class="sr-port hidden" id="sr-portw"><span id="sr-ini"></span><img id="sr-port" alt="" class="hidden"></div>
+              <div class="sr-port hidden" id="sr-portw"><span id="sr-ini"><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><circle cx="50" cy="38" r="17" fill="currentColor"/><path d="M12 101C12 74 30 62 50 62S88 74 88 101Z" fill="currentColor"/></svg></span><img id="sr-port" alt="" class="hidden"></div>
               <div class="sr-dbody"><div class="sr-nm hidden" id="sr-nm"></div><div class="sr-tx" id="sr-tx"></div></div>
               <div class="sr-arr" id="sr-arr">▼</div>
             </div>
@@ -4112,18 +4113,24 @@ async function srGet(lang, path, asJson){
 /* parser file story .txt -> daftar baris */
 function srParse(txt){
   const out = [], opts = {};
-  let br = null, lastBg = '';
+  let br = null, lastBg = '', curSp = '';
+  const stg = {};
   const T = s => (s || '').replace(/<\/?[a-zA-Z][^>]*>/g, '').replace(/\{@?nickname\}/gi, 'Doctor').replace(/\\n/g, '\n').trim();
   const at = (s, k) => { const m = (s || '').match(new RegExp('(?:^|[\\s,(])' + k + '\\s*=\\s*"([^"]*)"', 'i')); return m ? m[1] : ''; };
   String(txt).replace(/^\uFEFF/, '').split(/\r?\n/).forEach(raw => {
     const line = raw.trim();
     if(!line || line.indexOf('//') === 0) return;
     let m = line.match(/^\[\s*name\s*=\s*"([^"]*)"[^\]]*\]\s*(.*)$/i);
-    if(m){ const t = T(m[2]); if(t) out.push({ t:'say', who:T(m[1]), text:t, br }); return; }
+    if(m){ const t = T(m[2]); if(t) out.push({ t:'say', who:T(m[1]), text:t, br, sp:curSp }); return; }
     m = line.match(/^\[\s*(\w+)\s*(?:\((.*?)\))?\s*\]\s*(.*)$/);
     if(m){
       const cmd = m[1].toLowerCase(), args = m[2] || '', rest = T(m[3]);
-      if(cmd === 'multiline'){
+      if(cmd === 'character' || cmd === 'charslot' || cmd === 'characterslot'){
+        if(cmd === 'character'){ const a = at(args, 'name'), b = at(args, 'name2'); if(a) stg['1'] = a; if(b) stg['2'] = b; }
+        else{ const sl = at(args, 'slot'), nm = at(args, 'name'); if(sl && nm) stg[sl] = nm; }
+        const f = at(args, 'focus');
+        curSp = (f && stg[f]) || stg['1'] || stg.m || stg.l || stg.r || curSp;
+      }else if(cmd === 'multiline'){
         const who = T(at(args, 'name'));
         if(rest) out.push(who ? { t:'say', who, text:rest, br } : { t:'nar', text:rest, br });
       }else if(cmd === 'decision'){
@@ -4347,21 +4354,30 @@ function srSetCg(name){
   srLoadUrl(srImgSrcs('images', name), u => { if(sr.cgCur === name && sr.img) srLayer('sr-cg', u); });
 }
 function srClearT(){ clearInterval(sr.tw); clearTimeout(sr.timer); sr.tw = null; sr.timer = null; }
+function srSpriteSrcs(id){
+  const b = String(id).split('$')[0].replace(/#/g, '_'), out = [];
+  [b, b.toLowerCase()].forEach(n => [ACE, ACE_CDN].forEach(base => { const u = base + 'avg/characters/' + encodeURIComponent(n) + '.png'; if(out.indexOf(u) < 0) out.push(u); }));
+  return out;
+}
 function srSetPort(s){
   const w = srEl('sr-portw'), im = srEl('sr-port'), nm = srEl('sr-nm'), say = s.t === 'say';
   w.classList.toggle('hidden', !say); nm.classList.toggle('hidden', !say);
   if(!say) return;
-  nm.textContent = s.who; srEl('sr-ini').textContent = (s.who || '?').trim().charAt(0).toUpperCase();
+  nm.textContent = s.who;
   im.removeAttribute('src'); im.classList.add('hidden');
-  if(sr.lang !== 'en_US' || !sr.img) return;
+  if(!sr.img) return;
   const set = () => {
-    const id = srNameMap && srNameMap[srNorm(s.who)]; if(!id) return;
-    const l = avatarSrcs(id, s.who); let k = 0;
+    const id = sr.lang === 'en_US' && srNameMap && srNameMap[srNorm(s.who)];
+    let l, pos = '50% 50%';
+    if(id) l = avatarSrcs(id, s.who);
+    else if(s.sp){ l = srSpriteSrcs(s.sp); pos = '50% 6%'; }
+    else return;
+    let k = 0; im.style.objectPosition = pos;
     im.onload = () => im.classList.remove('hidden');
     im.onerror = () => { k++; if(k < l.length) im.src = l[k]; };
     im.src = l[0];
   };
-  if(srNameMap) set(); else srNames().then(() => { if(sr.steps[sr.pos] === s) set(); });
+  if(sr.lang === 'en_US' && !srNameMap) srNames().then(() => { if(sr.steps[sr.pos] === s) set(); }); else set();
 }
 function srDone(){
   clearInterval(sr.tw); sr.tw = null;
