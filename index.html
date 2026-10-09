@@ -4303,8 +4303,8 @@ function srBind(){
     try{ if(url.trim()) await ref.set({ url: url.trim() }); else await ref.delete(); }
     catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi event_images.'); }
   });
-  srEl('sr-events').addEventListener('click', e => { const c = e.target.closest('[data-i]'); if(c && sr.shown[+c.dataset.i]) srOpenEvent(sr.shown[+c.dataset.i]); });
-  srEl('sr-ch-list').addEventListener('click', e => { const c = e.target.closest('[data-i]'); if(c) srOpenChapter(+c.dataset.i); });
+  srEl('sr-events').addEventListener('click', e => { const c = e.target.closest('.sr-ev'); if(c && sr.shown[+c.dataset.i]) srOpenEvent(sr.shown[+c.dataset.i]); });
+  srEl('sr-ch-list').addEventListener('click', e => { const c = e.target.closest('.sr-ch'); if(c) srOpenChapter(+c.dataset.i); });
   srEl('sr-resume').addEventListener('click', e => {
     if(!e.target.closest('button')) return;
     const l = srStore.get('sr_last', null), ev = l && sr.events.find(x => x.id === l.evId);
