@@ -736,7 +736,7 @@
       <div id="view-story" class="view hidden">
         <div class="card" id="sr-browse"><h2>Story Reader</h2>
           <div class="sr-bar">
-            <select id="sr-lang"><option value="en_US">English</option><option value="ja_JP">日本語</option><option value="ko_KR">한국어</option><option value="zh_CN">中文 (CN)</option><option value="zh_TW">中文 (TW)</option></select>
+            <select id="sr-lang"><option value="en_US">English</option><option value="zh_CN">中文 (CN)</option></select>
             <select id="sr-type"><option value="">Semua jenis</option><option value="MAINLINE">Main Theme</option><option value="ACTIVITY">Side Story</option><option value="MINI_ACTIVITY">Mini Story</option><option value="NONE">Lainnya</option></select>
           </div>
           <input id="sr-search" placeholder="cari event / chapter, mis. Lone Trail atau 0-1" autocomplete="off">
@@ -4025,25 +4025,37 @@ kg('dp-result').addEventListener('click', async e => {
 })();
 
 /* ---------- STORY READER ---------- */
-/* sumber: Kengxxiao/ArknightsGameData (excel/story_review_table.json + story/*.txt), CDN jsDelivr sebagai cadangan */
+/* sumber: ArknightsAssets/ArknightsGamedata (EN) dan Kengxxiao/ArknightsGameData (CN): excel/story_review_table.json + story/*.txt */
 const SR_TYPE = { MAINLINE:'Main Theme', ACTIVITY:'Side Story', MINI_ACTIVITY:'Mini Story', NONE:'Lainnya' };
-const srBases = lang => [
-  'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/' + lang + '/gamedata/',
-  'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData@master/' + lang + '/gamedata/'
-];
+const SR_SRC = {
+  en_US:[
+    'https://raw.githubusercontent.com/ArknightsAssets/ArknightsGamedata/main/en/gamedata/',
+    'https://raw.githubusercontent.com/ArknightsAssets/ArknightsGamedata/master/en/gamedata/',
+    'https://cdn.jsdelivr.net/gh/ArknightsAssets/ArknightsGamedata@main/en/gamedata/',
+    'https://cdn.jsdelivr.net/gh/ArknightsAssets/ArknightsGamedata@master/en/gamedata/'
+  ],
+  zh_CN:[
+    'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/',
+    'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData@master/zh_CN/gamedata/'
+  ]
+};
 const sr = { lang:'en_US', events:[], shown:[], ev:null, idx:0, state:'idle', token:0, rtoken:0, fs:16, bound:false };
 const srEl = id => document.getElementById(id);
 const srStore = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
-async function srFetch(urls, asJson){
-  let last;
-  for(const u of urls){
-    try{ const r = await fetch(u); if(!r.ok) throw new Error(u + ' -> HTTP ' + r.status); return asJson ? await r.json() : await r.text(); }
-    catch(e){ console.warn('story gagal:', e); last = e; }
+const srGood = {};   // sumber yang terakhir berhasil per bahasa (dicoba duluan)
+async function srGet(lang, path, asJson){
+  const bases = (SR_SRC[lang] || SR_SRC.en_US).slice(), errs = [];
+  if(srGood[lang]){ const i = bases.indexOf(srGood[lang]); if(i > 0) bases.unshift(bases.splice(i, 1)[0]); }
+  for(const b of bases){
+    try{
+      const r = await fetch(b + path); if(!r.ok) throw new Error('HTTP ' + r.status);
+      const v = asJson ? await r.json() : await r.text(); srGood[lang] = b; return v;
+    }catch(e){ console.warn('story gagal:', b + path, e); errs.push(b.replace(/^https:\/\//, '').split('/').slice(0, 4).join('/') + ' → ' + (e.message || e)); }
   }
-  throw last;
+  throw new Error('semua sumber gagal (' + errs.join('; ') + ')');
 }
 /* parser file story .txt -> daftar baris */
 function srParse(txt){
@@ -4095,7 +4107,7 @@ function srRender(L){
 function srShow(id){ ['sr-browse', 'sr-chapters', 'sr-reader'].forEach(x => srEl(x).classList.toggle('hidden', x !== id)); srEl('view-story').scrollIntoView({ block:'start' }); }
 function srBind(){
   if(sr.bound) return; sr.bound = true;
-  sr.lang = srStore.get('sr_lang', 'en_US'); sr.fs = srStore.get('sr_fs', 16);
+  sr.lang = srStore.get('sr_lang', 'en_US'); if(!SR_SRC[sr.lang]) sr.lang = 'en_US'; sr.fs = srStore.get('sr_fs', 16);
   srEl('sr-lang').value = sr.lang; srEl('sr-body').style.fontSize = sr.fs + 'px';
   srEl('sr-lang').addEventListener('change', e => { sr.lang = e.target.value; srStore.set('sr_lang', sr.lang); srShow('sr-browse'); srLoad(); });
   srEl('sr-type').addEventListener('change', srRenderEvents);
@@ -4126,7 +4138,7 @@ async function srLoad(){
   sr.state = 'loading'; sr.events = []; srEl('sr-events').innerHTML = ''; srEl('sr-resume').classList.add('hidden');
   st.textContent = 'Memuat daftar story...';
   try{
-    let raw = await srFetch(srBases(sr.lang).map(b => b + 'excel/story_review_table.json'), true);
+    let raw = await srGet(sr.lang, 'excel/story_review_table.json', true);
     if(tok !== sr.token) return;
     if(raw && raw.storyReviewTable) raw = raw.storyReviewTable;
     sr.events = Object.values(raw || {}).filter(e => e && Array.isArray(e.infoUnlockDatas) && e.infoUnlockDatas.length).map(e => ({
@@ -4138,7 +4150,7 @@ async function srLoad(){
     sr.state = 'ready'; srRenderEvents(); srRenderResume();
   }catch(e){
     if(tok !== sr.token) return;
-    console.error(e); sr.state = 'idle'; st.textContent = 'Gagal memuat daftar story: ' + (e.message || e) + ' (coba ganti bahasa atau muat ulang tab ini)';
+    console.error(e); sr.state = 'idle'; st.textContent = 'Gagal memuat daftar story: ' + (e.message || e) + ' — cek console (F12) untuk detail';
   }
 }
 function srRenderEvents(){
@@ -4180,7 +4192,7 @@ async function srOpenChapter(i){
   body.innerHTML = '<div class="empty">Memuat chapter...</div>';
   try{
     const path = c.storyTxt.split('/').map(encodeURIComponent).join('/');
-    const txt = await srFetch(srBases(sr.lang).map(b => b + 'story/' + path + '.txt'), false);
+    const txt = await srGet(sr.lang, 'story/' + path + '.txt', false);
     if(tok !== sr.rtoken) return;
     body.innerHTML = srRender(srParse(txt));
     const rd = srStore.get('sr_read', {}); rd[c.storyTxt] = 1; srStore.set('sr_read', rd);
