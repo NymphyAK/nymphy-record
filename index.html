@@ -487,6 +487,15 @@
   .dp-timer{text-align:center; font-weight:800; font-size:22px; margin-top:4px; font-variant-numeric:tabular-nums;} .dp-timer.low{color:#ff4d6d;}
   .dp-solo .dp-main{grid-template-columns:170px minmax(0,1fr);} .dp-solo #dp-sb{display:none;}
   @media(max-width:900px){ .dp-solo .dp-main{grid-template-columns:1fr;} }
+  .dp-res h2{margin:0 0 10px;} .dp-res .dp-rbans{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:18px;}
+  .dp-rb{width:64px; text-align:center; font-size:11px; color:var(--muted); min-width:0;} .dp-rb .dp-ban{width:56px; height:56px; margin:0 auto 4px;} .dp-rb span{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .dp-sqt{font-weight:700; font-size:14px; margin:6px 0 8px;} .dp-sqt small{color:var(--muted); font-weight:500; margin-left:6px;}
+  .dp-sq{display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; margin-bottom:18px;}
+  .sq-c{position:relative; aspect-ratio:.6; border-radius:6px; overflow:hidden; background:#101114; box-shadow:0 6px 16px -8px #000;}
+  .sq-c img{width:100%; height:100%; object-fit:cover; object-position:top center; display:block;}
+  .sq-st{position:absolute; top:0; left:0; right:0; padding:3px 6px; font-size:11px; letter-spacing:1px; color:var(--rc,#fff); background:linear-gradient(#000a,#0000);}
+  .sq-nm{position:absolute; left:0; right:0; bottom:0; padding:16px 6px 5px; background:linear-gradient(#0000,#000e); font-size:12.5px; font-weight:700; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;} .sq-nm small{display:block; font-size:10px; font-weight:500; color:var(--muted);}
+  @media(max-width:700px){ .dp-sq{grid-template-columns:repeat(3,minmax(0,1fr));} }
   .dp-toast{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; flex-direction:column; gap:8px;}
   .dp-toast>div{background:var(--panel2); border:1px solid var(--red); border-radius:12px; padding:10px 14px; font-size:13px; display:flex; gap:10px; align-items:center; box-shadow:0 10px 30px -10px #000;}
   .dp-toast button{margin:0; width:auto; padding:5px 12px; font-size:12px;}
@@ -911,11 +920,11 @@
                 <input id="dp-search" placeholder="cari operator..." autocomplete="off">
                 <div class="dp-grid" id="dp-grid" style="margin-top:8px;"></div>
                 <div class="dp-bar"><span id="dp-selname" class="hint" style="margin:0;"></span><button id="dp-ok" disabled>Okay</button></div>
-                <div class="dp-bar"><button id="dp-again" class="ghost hidden">🔁 Main lagi (reset room)</button></div>
               </div>
               <div class="dp-side" id="dp-sb"></div>
             </div>
           </div>
+          <div id="dp-result" class="card dp-res hidden" style="margin-top:16px;"></div>
         </div>
       </div>
       <div class="dp-toast" id="dp-toast"></div>
@@ -3703,11 +3712,6 @@ kg('dp-start').addEventListener('click', async () => {
   }
   try{ await dpDb().doc(dpCode).update(upd); if(d.banMode !== 'niche') dpMsg(''); }catch(e){ console.error(e); dpMsg('Gagal memulai: ' + (e.message || e)); }
 });
-kg('dp-again').addEventListener('click', async () => {
-  if(!dpDoc || dpDoc.host !== currentUser()) return;
-  try{ await dpDb().doc(dpCode).update({ state: 'lobby', first: null, actions: [], stageId: null, stageName: '' }); }catch(e){ console.error(e); }
-});
-
 /* --- aksi ban / pick --- */
 const DP_TURN_MS = 60000;
 let dpBusy = false;
@@ -3785,9 +3789,8 @@ function dpRender(){
     stageImageInto(s, kg('dp-simg'), () => tk === dpTick);
   }
   // board
-  const live = d.state === 'draft' || d.state === 'done'; kg('dp-board').classList.toggle('hidden', !live);
-  kg('dp-again').classList.toggle('hidden', !(host && d.state === 'done'));
-  if(live){
+  const live = d.state === 'draft' || d.state === 'done'; kg('dp-board').classList.toggle('hidden', d.state !== 'draft'); dpRenderResult(d);
+    if(live){
     const seq = dpSeq(d.first, d.solo), st = d.actions.length, cur = seq[st], act = d.actions;
     const nameOf = x => dpName(x === 'A' ? d.players.A : d.players.B) + (d.solo && x === 'B' ? ' (B)' : '');
     kg('dp-title').innerHTML = d.state === 'done' ? 'Draft selesai<small>' + (d.solo ? '12 operator terpilih' : '24 operator terpilih (12 per tim)') + '</small>' : `Giliran ${esc(nameOf(cur.s))}<small>${cur.t === 'ban' ? 'BAN ' + (act.filter(a => a.t === 'ban').length + 1) + '/6' : 'PICK ' + (act.filter(a => a.t === 'pick').length + 1) + '/' + (d.solo ? 12 : 24)}</small>`;
@@ -3806,6 +3809,30 @@ function dpRender(){
     dpMarkPool(); dpRenderBar();
   }
 }
+
+const DP_RC = { 6:'#ff9a3d', 5:'#f5d35c', 4:'#c9a7ff', 3:'#6ec3ff', 2:'#9fe27a', 1:'#cfcfcf' };
+function dpRenderResult(d){
+  const box = kg('dp-result'); if(d.state !== 'done'){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+  box.classList.remove('hidden');
+  const me = currentUser(), host = d.host === me, mine = dpMySide(d) || 'A';
+  const sides = d.solo ? ['A'] : [mine, mine === 'A' ? 'B' : 'A'];
+  const nameOf = x => dpName(x === 'A' ? d.players.A : d.players.B);
+  const bans = d.actions.filter(a => a.t === 'ban');
+  let h = '<h2>Hasil Draft' + (d.stageName ? ' <small style="color:var(--muted); font-weight:500;">· ' + esc(d.stageName) + '</small>' : '') + '</h2>';
+  h += '<div class="dp-sqt" style="text-align:center;">Banned</div><div class="dp-rbans">' + bans.map(a => { const o = dpOp(a.id); return o ? `<div class="dp-rb"><div class="dp-ban full">${imgTag(avatarSrcs(o.id, o.n))}</div><span>${esc(o.n)}</span></div>` : ''; }).join('') + '</div>';
+  sides.forEach((side, i) => {
+    const picks = d.actions.filter(a => a.t === 'pick' && a.s === side).map(a => dpOp(a.id)).filter(Boolean);
+    const label = d.solo ? 'Squad kamu' : (side === mine ? 'Squad kamu · ' : 'Squad lawan · ') + nameOf(side);
+    h += `<div class="dp-sqt">${esc(label)}<small>${picks.length} operator</small></div><div class="dp-sq">` + picks.map(o => `<div class="sq-c" title="${esc(o.n)}">${imgTag(artSrcs(o.id, o.n, 2))}</div>`).join('') + '</div>';
+  });
+  h += `<div class="dp-bar"><button id="dp-again" class="ghost${host ? '' : ' hidden'}">🔁 Main lagi (reset room)</button></div>`;
+  box.innerHTML = h;
+}
+kg('dp-result').addEventListener('click', async e => {
+  if(!e.target.closest('#dp-again')) return;
+  if(!dpDoc || dpDoc.host !== currentUser()) return;
+  try{ await dpDb().doc(dpCode).update({ state: 'lobby', first: null, actions: [], stageId: null, stageName: '', turnStart: null }); }catch(err){ console.error(err); }
+});
 
 /* ---------- NAV GROUPS (sidebar diringkas, fungsi tab asli tetap dipakai) ---------- */
 (function(){
