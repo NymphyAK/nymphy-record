@@ -530,6 +530,37 @@
   .sr-who{display:flex; align-items:center; gap:8px;}
   .sr-av{width:26px; height:26px; flex-shrink:0; border-radius:50%; object-fit:cover; border:1px solid var(--line2); background:var(--panel2);}
   #sr-imgbtn.off{opacity:.45;}
+  /* story reader — mode visual novel */
+  .sr-stage{position:relative; container-type:inline-size; --k:1; width:100%; max-width:1000px; margin:14px auto 0; aspect-ratio:16/9; background:radial-gradient(ellipse at 50% 35%,#2a2f36,#0b0d10 75%); border-radius:8px; overflow:hidden; user-select:none; -webkit-user-select:none; cursor:pointer; border:1px solid var(--border); color:#fff;}
+  .sr-stage:fullscreen,.sr-stage.sr-fake{max-width:none; width:100vw; height:100vh; aspect-ratio:auto; border-radius:0; border:0; margin:0;}
+  .sr-stage.sr-fake{position:fixed; inset:0; z-index:9999;}
+  .sr-stage::after{content:""; position:absolute; inset:0; z-index:2; pointer-events:none; background:linear-gradient(transparent 48%,#0007 74%,#000c);}
+  .sr-bgl{position:absolute; inset:0; z-index:1; background:center/cover no-repeat; opacity:0; transition:opacity .45s;} .sr-bgl.on{opacity:1;}
+  .sr-stage button{margin:0; width:auto; min-height:0; box-shadow:none; border-radius:4px; font-family:inherit;}
+  .sr-ctl{position:absolute; top:0; left:0; right:0; z-index:3; display:flex; gap:6px; align-items:center; padding:8px 10px;} .sr-ctl .sp{flex:1;}
+  .sr-ctl button{padding:4px 11px; font-size:clamp(10px,1.5cqw,13px); background:#000a; border:1px solid #fff5; color:#fff; font-weight:700; letter-spacing:.08em;}
+  .sr-ctl button:hover{background:#000d; border-color:#fffa;} .sr-ctl button.on{background:var(--red); border-color:var(--red);}
+  .sr-dlg{position:absolute; left:0; right:0; bottom:0; z-index:3; display:flex; gap:2.4cqw; align-items:flex-end; padding:4cqw 5cqw 3cqw; min-height:20%;}
+  .sr-port{flex:0 0 11cqw; width:11cqw; height:11cqw; position:relative; overflow:hidden; background:#15171b; border:1px solid #fff7; box-shadow:0 0 0 3px #0008;}
+  .sr-port img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;}
+  .sr-port span{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:5cqw; font-weight:700; color:#7a808a;}
+  .sr-dbody{flex:1; min-width:0; align-self:stretch; display:flex; flex-direction:column; justify-content:flex-end;}
+  .sr-nm{align-self:flex-start; margin-bottom:.45em; padding:.15em .9em .15em .7em; background:#000b; border-left:3px solid var(--gold); font-weight:700; letter-spacing:.06em; font-size:calc(clamp(11px,1.8cqw,20px)*var(--k));}
+  .sr-tx{white-space:pre-wrap; line-height:1.6; min-height:3.2em; font-size:calc(clamp(13px,1.95cqw,25px)*var(--k)); text-shadow:0 1px 3px #000;}
+  .sr-arr{position:absolute; right:3cqw; bottom:1.4cqw; font-size:clamp(11px,1.8cqw,20px); opacity:0; color:#fff;} .sr-arr.on{opacity:1; animation:srblink 1s ease-in-out infinite;}
+  @keyframes srblink{50%{opacity:.25;}}
+  .sr-subc{position:absolute; inset:0; z-index:3; display:flex; align-items:center; justify-content:center; text-align:center; padding:0 9cqw; background:#0006; white-space:pre-wrap; letter-spacing:.05em; text-shadow:0 2px 8px #000; font-size:calc(clamp(14px,2.6cqw,32px)*var(--k));}
+  .sr-choices{position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.4cqw; background:#0007; padding:0 10cqw; cursor:default;}
+  .sr-choices button{width:min(72cqw,620px); padding:.75em 1em; background:#000c; border:1px solid #fff6; color:#fff; font-weight:500; font-size:calc(clamp(12px,2cqw,22px)*var(--k));} .sr-choices button:hover{background:var(--red); border-color:var(--red);}
+  .sr-log{position:absolute; inset:0; z-index:5; overflow:auto; padding:46px 6cqw 24px; background:#000e; cursor:default; font-size:clamp(12px,1.8cqw,18px); line-height:1.7;}
+  .sr-log .x{position:fixed; top:8px; right:10px; padding:4px 11px; background:#000a; border:1px solid #fff5; color:#fff; font-weight:700;}
+  .sr-log .l{margin:0 0 .9em;} .sr-log .l b{display:block; color:var(--gold); font-size:.8em; letter-spacing:.07em; text-transform:uppercase;} .sr-log .l.n{color:#bbb; font-style:italic;} .sr-log .l.s{text-align:center; color:#999;}
+  .sr-stage:fullscreen .sr-log .x,.sr-stage.sr-fake .sr-log .x{position:absolute;}
+  .sr-endp{position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:#000b; cursor:default;}
+  .sr-endp h3{margin:0 0 6px; font-size:clamp(15px,2.6cqw,28px); letter-spacing:.08em;}
+  .sr-endp button{padding:9px 18px; font-size:clamp(12px,1.7cqw,16px); background:var(--red); border:1px solid var(--red); color:#fff; font-weight:600;} .sr-endp button.ghost{background:#000a; border-color:#fff5;}
+  .sr-hint{text-align:center; font-size:11.5px; color:var(--muted); margin:8px 0 0;}
+  #sr-modebtn.off{opacity:.6;}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -760,10 +791,25 @@
             <button class="ghost" data-act="chapters">‹ Chapter</button>
             <button class="ghost" data-act="prev" id="sr-prev">← Sebelumnya</button>
             <button class="ghost" data-act="next" id="sr-next">Berikutnya →</button>
-            <span class="sr-fs"><button class="ghost" data-act="img" id="sr-imgbtn" title="Tampilkan / sembunyikan gambar">🖼 Gambar</button><button class="ghost" data-act="fs-" title="Perkecil">A−</button><button class="ghost" data-act="fs+" title="Perbesar">A+</button></span>
+            <span class="sr-fs"><button class="ghost" data-act="mode" id="sr-modebtn">📖 Mode teks</button><button class="ghost" data-act="img" id="sr-imgbtn" title="Tampilkan / sembunyikan gambar">🖼 Gambar</button><button class="ghost" data-act="fs-" title="Perkecil">A−</button><button class="ghost" data-act="fs+" title="Perbesar">A+</button></span>
           </div>
           <h2 id="sr-title"></h2><div class="hint" id="sr-sub"></div>
-          <div id="sr-body" class="sr-body"></div>
+                    <div id="sr-stage" class="sr-stage">
+            <div class="sr-bgl on" id="sr-bg1"></div><div class="sr-bgl" id="sr-bg2"></div>
+            <div class="sr-bgl" id="sr-cg1"></div><div class="sr-bgl" id="sr-cg2"></div>
+            <div class="sr-ctl"><button data-vn="log">LOG</button><span class="sp"></span><button data-vn="back" title="Kembali (←)">↩</button><button data-vn="auto" id="sr-autob">AUTO</button><button data-vn="full" title="Layar penuh">⛶</button></div>
+            <div class="sr-subc hidden" id="sr-subc"></div>
+            <div class="sr-dlg hidden" id="sr-dlg">
+              <div class="sr-port hidden" id="sr-portw"><span id="sr-ini"></span><img id="sr-port" alt="" class="hidden"></div>
+              <div class="sr-dbody"><div class="sr-nm hidden" id="sr-nm"></div><div class="sr-tx" id="sr-tx"></div></div>
+              <div class="sr-arr" id="sr-arr">▼</div>
+            </div>
+            <div class="sr-choices hidden" id="sr-choices"></div>
+            <div class="sr-log hidden" id="sr-log"></div>
+            <div class="sr-endp hidden" id="sr-endp"></div>
+          </div>
+          <div class="sr-hint" id="sr-vnhint">Klik / ketuk layar, Spasi, atau → untuk lanjut · ← untuk kembali</div>
+          <div id="sr-body" class="sr-body hidden"></div>
           <div class="sr-tb sr-end"><button class="ghost" data-act="prev" id="sr-prev2">← Sebelumnya</button><button class="ghost" data-act="next" id="sr-next2">Berikutnya →</button></div>
         </div>
       </div>
@@ -4045,7 +4091,7 @@ const SR_SRC = {
     'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData@master/zh_CN/gamedata/'
   ]
 };
-const sr = { lang:'en_US', events:[], shown:[], ev:null, idx:0, state:'idle', token:0, rtoken:0, fs:16, bound:false, img:true, lines:[] };
+const sr = { lang:'en_US', events:[], shown:[], ev:null, idx:0, state:'idle', token:0, rtoken:0, fs:16, bound:false, img:true, lines:[], vn:true, steps:[], pos:-1, hist:[], chosen:null, auto:false, timer:null, tw:null, typing:false, cur:null, bgCur:null, cgCur:null };
 const srEl = id => document.getElementById(id);
 const srStore = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
@@ -4163,12 +4209,12 @@ async function srAvatars(tok){
     im.onerror = () => srImgFail(im); im.src = l[0]; w.insertBefore(im, w.firstChild);
   });
 }
-function srPaint(){ srEl('sr-body').innerHTML = srRender(sr.lines, sr.img); srAvatars(sr.rtoken); }
+function srPaint(){ if(sr.vn) return; srEl('sr-body').innerHTML = srRender(sr.lines, sr.img); srAvatars(sr.rtoken); }
 function srSyncImgBtn(){ srEl('sr-imgbtn').classList.toggle('off', !sr.img); }
 function srShow(id){ ['sr-browse', 'sr-chapters', 'sr-reader'].forEach(x => srEl(x).classList.toggle('hidden', x !== id)); srEl('view-story').scrollIntoView({ block:'start' }); }
 function srBind(){
   if(sr.bound) return; sr.bound = true;
-  sr.lang = srStore.get('sr_lang', 'en_US'); if(!SR_SRC[sr.lang]) sr.lang = 'en_US'; sr.fs = srStore.get('sr_fs', 16); sr.img = srStore.get('sr_img', true); srSyncImgBtn();
+  sr.lang = srStore.get('sr_lang', 'en_US'); if(!SR_SRC[sr.lang]) sr.lang = 'en_US'; sr.fs = srStore.get('sr_fs', 16); sr.img = srStore.get('sr_img', true); sr.vn = srStore.get('sr_vn', true); srSyncImgBtn(); srEl('sr-stage').style.setProperty('--k', sr.fs / 16); srApplyMode();
   srEl('sr-lang').value = sr.lang; srEl('sr-body').style.fontSize = sr.fs + 'px';
   srEl('sr-lang').addEventListener('change', e => { sr.lang = e.target.value; srStore.set('sr_lang', sr.lang); srShow('sr-browse'); srLoad(); });
   srEl('sr-type').addEventListener('change', srRenderEvents);
@@ -4187,8 +4233,9 @@ function srBind(){
     else if(a === 'chapters') srOpenEvent(sr.ev);
     else if(a === 'prev') srOpenChapter(sr.idx - 1);
     else if(a === 'next') srOpenChapter(sr.idx + 1);
-    else if(a === 'img'){ sr.img = !sr.img; srStore.set('sr_img', sr.img); srSyncImgBtn(); srPaint(); }
-    else if(a === 'fs+' || a === 'fs-'){ sr.fs = Math.min(26, Math.max(12, sr.fs + (a === 'fs+' ? 1 : -1))); srStore.set('sr_fs', sr.fs); srEl('sr-body').style.fontSize = sr.fs + 'px'; }
+    else if(a === 'mode'){ sr.vn = !sr.vn; srStore.set('sr_vn', sr.vn); srApplyMode(); if(sr.vn && sr.lines.length) srStartVN(); }
+    else if(a === 'img'){ sr.img = !sr.img; srStore.set('sr_img', sr.img); srSyncImgBtn(); if(sr.vn){ const b = sr.bgCur, c = sr.cgCur; sr.bgCur = sr.cgCur = null; srSetBg(b); srSetCg(c); const s = sr.steps[sr.pos]; if(s && s.t === 'say') srSetPort(s); } else srPaint(); }
+    else if(a === 'fs+' || a === 'fs-'){ sr.fs = Math.min(26, Math.max(12, sr.fs + (a === 'fs+' ? 1 : -1))); srStore.set('sr_fs', sr.fs); srEl('sr-body').style.fontSize = sr.fs + 'px'; srEl('sr-stage').style.setProperty('--k', sr.fs / 16); }
   }));
 }
 async function initStory(){
@@ -4245,7 +4292,7 @@ function srOpenEvent(e){
 }
 async function srOpenChapter(i){
   const e = sr.ev, c = e && e.ch[i]; if(!c) return;
-  sr.idx = i; const tok = ++sr.rtoken, body = srEl('sr-body');
+  sr.idx = i; const tok = ++sr.rtoken, body = srEl('sr-body'); srClearT(); srEl('sr-endp').classList.add('hidden'); srEl('sr-log').classList.add('hidden');
   srShow('sr-reader');
   srEl('sr-title').textContent = (c.storyCode ? c.storyCode + ' · ' : '') + (c.storyName || '');
   srEl('sr-sub').textContent = e.name + (c.avgTag ? ' · ' + c.avgTag : '') + ' · ' + (i + 1) + '/' + e.ch.length;
@@ -4256,7 +4303,7 @@ async function srOpenChapter(i){
     const path = c.storyTxt.split('/').map(encodeURIComponent).join('/');
     const txt = await srGet(sr.lang, 'story/' + path + '.txt', false);
     if(tok !== sr.rtoken) return;
-    sr.lines = srParse(txt); srPaint();
+    sr.lines = srParse(txt); if(sr.vn) srStartVN(); else srPaint();
     const rd = srStore.get('sr_read', {}); rd[c.storyTxt] = 1; srStore.set('sr_read', rd);
     srStore.set('sr_last', { lang:sr.lang, evId:e.id, idx:i }); srRenderResume();
     srEl('view-story').scrollIntoView({ block:'start' });
@@ -4265,6 +4312,164 @@ async function srOpenChapter(i){
     console.error(err); body.innerHTML = '<div class="empty">Gagal memuat chapter: ' + esc(err.message || String(err)) + '</div>';
   }
 }
+
+/* ---------- STORY READER: MODE VN (gaya visual novel) ---------- */
+function srRefs(br){ if(!br) return null; const r = br.split('  /  ').map(s => (s.match(/^Pilihan\s+([^:\s]+)/) || [])[1]).filter(Boolean); return r.length ? r : null; }
+function srBuildVN(L){
+  const S = []; let bg = '', cg = '';
+  L.forEach(x => {
+    if(x.t === 'bg'){ bg = x.img; cg = ''; return; }
+    if(x.t === 'img'){ cg = x.img; return; }
+    S.push(Object.assign({}, x, { bgi:bg, cgi:cg, refs:srRefs(x.br) }));
+  });
+  sr.steps = S;
+}
+const srVis = s => !s.refs || sr.chosen == null || s.refs.indexOf(sr.chosen) >= 0;
+function srLoadUrl(list, cb){
+  let i = 0; const im = new Image();
+  im.onload = () => cb(list[i]);
+  im.onerror = () => { i++; if(i < list.length) im.src = list[i]; else cb(null); };
+  im.src = list[0];
+}
+function srLayer(p, url){
+  const a = srEl(p + '1'), b = srEl(p + '2'), cur = a.classList.contains('on') ? a : b, nxt = cur === a ? b : a;
+  if(url){ nxt.style.backgroundImage = 'url("' + url + '")'; nxt.classList.add('on'); cur.classList.remove('on'); }
+  else{ a.classList.remove('on'); b.classList.remove('on'); }
+}
+function srSetBg(name){
+  if(name === sr.bgCur) return; sr.bgCur = name;
+  if(!name || !sr.img){ srLayer('sr-bg', null); return; }
+  srLoadUrl(srImgSrcs('backgrounds', name), u => { if(sr.bgCur === name && sr.img) srLayer('sr-bg', u); });
+}
+function srSetCg(name){
+  if(name === sr.cgCur) return; sr.cgCur = name;
+  if(!name || !sr.img){ srLayer('sr-cg', null); return; }
+  srLoadUrl(srImgSrcs('images', name), u => { if(sr.cgCur === name && sr.img) srLayer('sr-cg', u); });
+}
+function srClearT(){ clearInterval(sr.tw); clearTimeout(sr.timer); sr.tw = null; sr.timer = null; }
+function srSetPort(s){
+  const w = srEl('sr-portw'), im = srEl('sr-port'), nm = srEl('sr-nm'), say = s.t === 'say';
+  w.classList.toggle('hidden', !say); nm.classList.toggle('hidden', !say);
+  if(!say) return;
+  nm.textContent = s.who; srEl('sr-ini').textContent = (s.who || '?').trim().charAt(0).toUpperCase();
+  im.removeAttribute('src'); im.classList.add('hidden');
+  if(sr.lang !== 'en_US' || !sr.img) return;
+  const set = () => {
+    const id = srNameMap && srNameMap[srNorm(s.who)]; if(!id) return;
+    const l = avatarSrcs(id, s.who); let k = 0;
+    im.onload = () => im.classList.remove('hidden');
+    im.onerror = () => { k++; if(k < l.length) im.src = l[k]; };
+    im.src = l[0];
+  };
+  if(srNameMap) set(); else srNames().then(() => { if(sr.steps[sr.pos] === s) set(); });
+}
+function srDone(){
+  clearInterval(sr.tw); sr.tw = null;
+  if(sr.cur) sr.cur.el.textContent = sr.cur.text;
+  sr.typing = false; srEl('sr-arr').classList.add('on');
+  const s = sr.steps[sr.pos];
+  if(sr.auto && s && s.t !== 'dec') sr.timer = setTimeout(srAdvance, 900 + (sr.cur ? sr.cur.text.length : 0) * 45);
+}
+function srType(el, text){
+  el.textContent = ''; sr.cur = { el, text }; sr.typing = true;
+  const inc = text.length > 160 ? 2 : 1; let n = 0;
+  sr.tw = setInterval(() => { n += inc; el.textContent = text.slice(0, n); if(n >= text.length) srDone(); }, 22);
+}
+function srStep(i){
+  const s = sr.steps[i]; if(!s) return;
+  sr.pos = i; srClearT(); sr.typing = false;
+  srEl('sr-endp').classList.add('hidden'); srEl('sr-arr').classList.remove('on');
+  srSetBg(s.bgi); srSetCg(s.cgi);
+  srEl('sr-dlg').classList.toggle('hidden', !(s.t === 'say' || s.t === 'nar'));
+  srEl('sr-subc').classList.toggle('hidden', s.t !== 'sub');
+  srEl('sr-choices').classList.toggle('hidden', s.t !== 'dec');
+  if(s.t === 'dec'){ srEl('sr-choices').innerHTML = s.list.map(o => '<button data-ch="' + srAttr(o.v) + '">' + esc(o.txt) + '</button>').join(''); return; }
+  if(s.t === 'sub'){ const el = srEl('sr-subc'); el.textContent = s.text; sr.cur = { el, text:s.text }; srDone(); return; }
+  srSetPort(s);
+  const tx = srEl('sr-tx'); tx.style.fontStyle = s.t === 'nar' ? 'italic' : ''; tx.style.color = s.t === 'nar' ? '#d4d4d4' : '';
+  srType(tx, s.text);
+}
+function srGoNext(){
+  let j = sr.pos + 1; while(j < sr.steps.length && !srVis(sr.steps[j])) j++;
+  if(j >= sr.steps.length){ srEnd(); return; }
+  sr.hist.push(sr.pos); srStep(j);
+}
+function srAdvance(){
+  if(!sr.vn || !sr.steps.length) return;
+  if(!srEl('sr-endp').classList.contains('hidden') || !srEl('sr-log').classList.contains('hidden')) return;
+  if(sr.typing){ srDone(); return; }
+  const s = sr.steps[sr.pos]; if(s && s.t === 'dec') return;
+  srGoNext();
+}
+function srBack(){
+  if(!srEl('sr-log').classList.contains('hidden')){ srEl('sr-log').classList.add('hidden'); return; }
+  if(!srEl('sr-endp').classList.contains('hidden')){ srStep(sr.pos); return; }
+  if(sr.hist.length) srStep(sr.hist.pop());
+}
+function srEnd(){
+  srClearT(); sr.auto = false; srEl('sr-autob').classList.remove('on');
+  const has = sr.idx < sr.ev.ch.length - 1;
+  srEl('sr-endp').innerHTML = '<h3>CHAPTER SELESAI</h3>' + (has ? '<button data-act="next">Chapter berikutnya →</button>' : '') +
+    '<button class="ghost" data-act="chapters">‹ Daftar chapter</button><button class="ghost" data-vn="back">↩ Kembali</button>';
+  srEl('sr-endp').classList.remove('hidden');
+}
+function srLog(){
+  const box = srEl('sr-log');
+  if(!box.classList.contains('hidden')){ box.classList.add('hidden'); return; }
+  const idx = sr.hist.concat([sr.pos]).filter((v, i, a) => v >= 0 && a.indexOf(v) === i);
+  box.innerHTML = '<button class="x" data-vn="log">✕ TUTUP</button>' + idx.map(i => sr.steps[i]).filter(s => s && s.t !== 'dec').map(s =>
+    '<div class="l ' + (s.t === 'nar' ? 'n' : s.t === 'sub' ? 's' : '') + '">' + (s.t === 'say' ? '<b>' + esc(s.who) + '</b>' : '') + srTxt(s.text) + '</div>').join('');
+  box.classList.remove('hidden'); box.scrollTop = box.scrollHeight;
+}
+function srFull(){
+  const el = srEl('sr-stage');
+  if(el.classList.contains('sr-fake')){ el.classList.remove('sr-fake'); return; }
+  if(document.fullscreenElement || document.webkitFullscreenElement){ (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  const rq = el.requestFullscreen || el.webkitRequestFullscreen;
+  if(!rq){ el.classList.add('sr-fake'); return; }
+  try{ const p = rq.call(el); if(p && p.catch) p.catch(() => el.classList.add('sr-fake')); }catch(e){ el.classList.add('sr-fake'); }
+}
+function srCtl(a){
+  if(a === 'log') srLog();
+  else if(a === 'back') srBack();
+  else if(a === 'full') srFull();
+  else if(a === 'auto'){
+    sr.auto = !sr.auto; srEl('sr-autob').classList.toggle('on', sr.auto);
+    clearTimeout(sr.timer); sr.timer = null;
+    if(sr.auto && !sr.typing){ const s = sr.steps[sr.pos]; if(s && s.t !== 'dec') sr.timer = setTimeout(srAdvance, 700); }
+  }
+}
+function srApplyMode(){
+  srEl('sr-stage').classList.toggle('hidden', !sr.vn); srEl('sr-vnhint').classList.toggle('hidden', !sr.vn);
+  srEl('sr-body').classList.toggle('hidden', sr.vn);
+  srEl('sr-modebtn').textContent = sr.vn ? '📖 Mode teks' : '🎬 Mode VN';
+  if(!sr.vn){ srClearT(); srPaint(); }
+}
+function srStartVN(){
+  srClearT(); sr.hist = []; sr.chosen = null; sr.pos = -1; sr.auto = false; sr.bgCur = null; sr.cgCur = null;
+  srEl('sr-autob').classList.remove('on'); ['sr-log', 'sr-endp', 'sr-choices', 'sr-subc', 'sr-dlg'].forEach(id => srEl(id).classList.add('hidden'));
+  srLayer('sr-bg', null); srLayer('sr-cg', null);
+  srBuildVN(sr.lines);
+  let j = 0; while(j < sr.steps.length && !srVis(sr.steps[j])) j++;
+  if(j >= sr.steps.length){ srEl('sr-dlg').classList.remove('hidden'); srEl('sr-portw').classList.add('hidden'); srEl('sr-nm').classList.add('hidden'); srEl('sr-tx').textContent = 'Chapter ini tidak punya teks yang bisa ditampilkan.'; return; }
+  srStep(j);
+}
+(function srVnBind(){
+  const st = srEl('sr-stage');
+  st.addEventListener('click', e => {
+    const v = e.target.closest('[data-vn]'); if(v){ srCtl(v.dataset.vn); return; }
+    const c = e.target.closest('[data-ch]'); if(c){ sr.chosen = c.dataset.ch; srGoNext(); return; }
+    if(e.target.closest('[data-act],.sr-log,.sr-endp')) return;
+    srAdvance();
+  });
+  document.addEventListener('keydown', e => {
+    if(!sr.vn || srEl('sr-reader').classList.contains('hidden') || srEl('view-story').classList.contains('hidden')) return;
+    if(/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) return;
+    if(e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight'){ e.preventDefault(); srAdvance(); }
+    else if(e.key === 'ArrowLeft'){ e.preventDefault(); srBack(); }
+    else if(e.key === 'Escape') srEl('sr-log').classList.add('hidden');
+  });
+})();
 
 /* ---------- INIT ---------- */
 (function init(){
