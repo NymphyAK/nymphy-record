@@ -574,6 +574,12 @@
   .sr-endp button{padding:9px 18px; font-size:clamp(12px,1.7cqw,16px); background:var(--red); border:1px solid var(--red); color:#fff; font-weight:600;} .sr-endp button.ghost{background:#000a; border-color:#fff5;}
   .sr-hint{text-align:center; font-size:11.5px; color:var(--muted); margin:8px 0 0;}
   #sr-modebtn.off{opacity:.6;}
+
+  /* profil di dasar sidebar: opak + menutup celah padding, supaya menu yang discroll tidak kelihatan menimpa */
+  @media(min-width:721px){
+    .sidebar .profile-item{position:sticky; bottom:0; z-index:6; flex-shrink:0; background:#18181a !important; box-shadow:0 -14px 14px -4px #0f0f10, 0 18px 0 #0f0f10;}
+    .sidebar .profile-item:hover{background:#202023 !important;}
+  }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -4185,8 +4191,8 @@ const srNorm = s => String(s).toLowerCase().replace(/[’‘`]/g, "'").replace(/
 /* gambar story: Aceship/Arknight-Images (avg/backgrounds, avg/images), jsDelivr sebagai cadangan */
 function srImgSrcs(kind, name){
   const out = [];
-  [name, name.toLowerCase()].forEach(n => [ACE, ACE_CDN].forEach(b => {
-    const u = b + 'avg/' + kind + '/' + encodeURIComponent(n).replace(/'/g, '%27') + '.png';
+  [name, name.toLowerCase()].forEach(n => [[ACE, 'avg/'], [ACE_CDN, 'avg/'], [FEX, 'avg/'], [FEX_CDN, 'avg/'], [HELLA, 'avg/']].forEach(b => {
+    const u = b[0] + b[1] + kind + '/' + encodeURIComponent(n).replace(/'/g, '%27') + '.png';
     if(out.indexOf(u) < 0) out.push(u);
   }));
   return out;
@@ -4420,12 +4426,12 @@ function srLayer(p, url){
 function srSetBg(name){
   if(name === sr.bgCur) return; sr.bgCur = name;
   if(!name || !sr.img){ srLayer('sr-bg', null); return; }
-  srLoadUrl(srImgSrcs('backgrounds', name), u => { if(sr.bgCur === name && sr.img) srLayer('sr-bg', u); });
+  srLoadUrl(srImgSrcs('backgrounds', name), u => { if(sr.bgCur === name && sr.img) srLayer('sr-bg', u); if(!u){ console.warn('[story] background tidak ketemu:', name); sr.bgTry = sr.bgTry || {}; if((sr.bgTry[name] = (sr.bgTry[name] || 0) + 1) < 3 && sr.bgCur === name) sr.bgCur = null; } });
 }
 function srSetCg(name){
   if(name === sr.cgCur) return; sr.cgCur = name;
   if(!name || !sr.img){ srLayer('sr-cg', null); return; }
-  srLoadUrl(srImgSrcs('images', name), u => { if(sr.cgCur === name && sr.img) srLayer('sr-cg', u); });
+  srLoadUrl(srImgSrcs('images', name), u => { if(sr.cgCur === name && sr.img) srLayer('sr-cg', u); if(!u) console.warn('[story] gambar CG tidak ketemu:', name); });
 }
 function srClearT(){ clearInterval(sr.tw); clearTimeout(sr.timer); sr.tw = null; sr.timer = null; }
 function srSpriteSrcs(id){
@@ -4464,13 +4470,13 @@ function srSetSprite(s){
   if(!sr.img || s.t !== 'say' || s.cgi){ hide(); return; }
   if(sr.lang === 'en_US' && !srNameMap){ srNames().then(() => { if(sr.steps[sr.pos] === s) srSetSprite(s); }); return; }
   let id = srCharId(s), list;
-  if(id) list = [ACE + 'characters/' + id + '_1.png', ACE_CDN + 'characters/' + id + '_1.png', HELLA + 'operator/portraits/' + id + '_1.png'];
+  if(id) list = [ACE + 'characters/' + id + '_1.png', ACE_CDN + 'characters/' + id + '_1.png', HELLA + 'operator/portraits/' + id + '_1.png', ACE + 'characters/' + id + '.png', ACE_CDN + 'characters/' + id + '.png', ACE + 'characters/' + id + '_2.png', ACE_CDN + 'characters/' + id + '_2.png', HELLA + 'operator/portraits/' + id + '_2.png'].concat(s.sp ? srSpriteSrcs(s.sp) : []);
   else { list = srNpcSrcs(s); if(!list.length){ hide(); return; } id = s.sp ? String(s.sp) : 'who:' + s.who; }
   if(im.dataset.id === id && im.getAttribute('src')){ im.classList.add('on'); return; }
   hide();
   srLoadUrl(list, u => {
     if(tok !== sr.sprTok) return;
-    if(!u){ im.removeAttribute('src'); im.dataset.id = ''; return; }
+    if(!u){ im.removeAttribute('src'); im.dataset.id = ''; console.warn('[story] sprite tidak ketemu:', id, s.sp || s.who); return; }
     im.dataset.id = id; im.src = u; im.classList.add('on');
   });
 }
