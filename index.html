@@ -485,6 +485,8 @@
   .dp-bar{display:flex; gap:10px; align-items:center; justify-content:center; margin-top:12px; flex-wrap:wrap;} .dp-bar button{width:auto; margin:0; min-width:140px;}
   .dp-stage img,.dp-stage canvas{max-width:100%; border-radius:12px;}
   .dp-timer{text-align:center; font-weight:800; font-size:22px; margin-top:4px; font-variant-numeric:tabular-nums;} .dp-timer.low{color:#ff4d6d;}
+  .dp-solo .dp-main{grid-template-columns:170px minmax(0,1fr);} .dp-solo #dp-sb{display:none;}
+  @media(max-width:900px){ .dp-solo .dp-main{grid-template-columns:1fr;} }
   .dp-toast{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; flex-direction:column; gap:8px;}
   .dp-toast>div{background:var(--panel2); border:1px solid var(--red); border-radius:12px; padding:10px 14px; font-size:13px; display:flex; gap:10px; align-items:center; box-shadow:0 10px 30px -10px #000;}
   .dp-toast button{margin:0; width:auto; padding:5px 12px; font-size:12px;}
@@ -851,7 +853,7 @@
       <div id="view-draft" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
           <h2>Draft</h2>
-          <div class="hint">Pilih stage, lalu draft operator seperti MOBA. Ada 2 mode: <b>Coop</b> (dua pemain, 6 ban bergiliran 3 per tim, timer 60 detik per ban/pick) dan <b>Solo</b> (latihan sendiri, 6 operator di-ban acak dari My Niche kamu). Setelah ban, pick 1-2-2-...-2-1 sampai tiap tim punya 12 operator (24 total). Operator yang sudah di-ban/pick tidak bisa dipilih lagi.</div>
+          <div class="hint">Pilih stage, lalu draft operator seperti MOBA. Ada 2 mode: <b>Coop</b> (dua pemain, 6 ban bergiliran 3 per tim, timer 60 detik per ban/pick) dan <b>Solo</b> (latihan sendiri: 6 operator di-ban acak dari My Niche kamu, lalu kamu pick 12 operator tanpa pick musuh). Di Coop, setelah ban, pick 1-2-2-...-2-1 sampai tiap tim punya 12 operator (24 total). Operator yang sudah di-ban/pick tidak bisa dipilih lagi.</div>
           <div id="dp-msg" class="hint" style="color:#ff6b8b;"></div>
         </div>
 
@@ -3549,7 +3551,7 @@ window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800)
 
 /* ---------- DRAFT PICK (room PvP via Firestore koleksi "drafts") ---------- */
 const DP_PICK = ['F'].concat(...Array.from({length:11}, (_, i) => i % 2 ? ['F','F'] : ['O','O']), ['F']);   // pick 1-2-2-...-2-1: 12 operator per tim, 24 total (F = tim pertama, O = lawan)
-function dpSeq(first){ const o = first === 'A' ? 'B' : 'A', s = []; for(let i = 0; i < 6; i++) s.push({ t:'ban', s: i % 2 ? o : first }); DP_PICK.forEach(x => s.push({ t:'pick', s: x === 'F' ? first : o })); return s; }
+function dpSeq(first, solo){ const o = first === 'A' ? 'B' : 'A', s = []; for(let i = 0; i < 6; i++) s.push({ t:'ban', s: i % 2 ? o : first }); if(solo){ for(let i = 0; i < 12; i++) s.push({ t:'pick', s:'A' }); return s; } DP_PICK.forEach(x => s.push({ t:'pick', s: x === 'F' ? first : o })); return s; }   // solo: 6 ban acak lalu 12 pick milik pemain saja (tanpa pick musuh)
 let dpCode = null, dpDoc = null, dpUnsub = null, dpInvUnsub = null, dpInv = [], dpSel = null, dpTab = 'ALL', dpPoolBuilt = false, dpImgFor = null, dpToasted = new Set(), dpTick = 0;
 const dpDb = () => firebase.firestore().collection('drafts');
 const dpName = u => u ? ((profilesMap[u] && profilesMap[u].nickname) || u) : '—';
@@ -3687,9 +3689,9 @@ kg('dp-start').addEventListener('click', async () => {
   const d = dpDoc; if(!d || d.host !== currentUser() || d.state !== 'lobby') return;
   if(!d.stageId){ dpMsg('Tentukan stage dulu (pilih atau acak).'); return; }
   if(!d.solo && !d.players.B){ dpMsg('Menunggu lawan bergabung.'); return; }
-  const first = Math.random() < 0.5 ? 'A' : 'B', upd = { first, state: 'draft', actions: [], turnStart: Date.now() };
+  const first = d.solo ? 'A' : (Math.random() < 0.5 ? 'A' : 'B'), upd = { first, state: 'draft', actions: [], turnStart: Date.now() };
   if(d.banMode === 'niche'){
-    const seq = dpSeq(first), shuf = a => { for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const seq = dpSeq(first, d.solo), shuf = a => { for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
     const nm = new Set(myNicheOps().map(x => x.toLowerCase()));
     let ids = shuf(kcOps.filter(o => nm.has(o.n.toLowerCase())).map(o => o.id)).slice(0, 6);
     if(ids.length < 6){   // My Niche kurang dari 6 operator: sisanya diacak dari semua operator
@@ -3715,7 +3717,7 @@ async function dpCommit(id, auto, expectTs){
     await firebase.firestore().runTransaction(async tx => {
       const s = await tx.get(ref); if(!s.exists) throw new Error('Room hilang.');
       const d = s.data(), me = currentUser(); if(d.state !== 'draft') throw new Error('Draft belum berjalan / sudah selesai.');
-      const seq = dpSeq(d.first), cur = seq[d.actions.length]; if(!cur) throw new Error('Draft selesai.');
+      const seq = dpSeq(d.first, d.solo), cur = seq[d.actions.length]; if(!cur) throw new Error('Draft selesai.');
       const curPlayer = d.solo ? d.players.A : (cur.s === 'A' ? d.players.A : d.players.B), mine = curPlayer === me;
       const elapsed = Date.now() - (d.turnStart || Date.now());
       if(auto){
@@ -3744,7 +3746,7 @@ setInterval(() => {
   const left = Math.max(0, Math.ceil((DP_TURN_MS - (Date.now() - d.turnStart)) / 1000));
   el.classList.remove('hidden'); el.classList.toggle('low', left <= 10); el.textContent = '⏱ ' + left + ' dtk';
   if(left > 0) return;
-  const cur = dpSeq(d.first)[d.actions.length]; if(!cur) return;
+  const cur = dpSeq(d.first, d.solo)[d.actions.length]; if(!cur) return;
   const me = currentUser(), mine = (cur.s === 'A' ? d.players.A : d.players.B) === me;
   const over = Date.now() - d.turnStart - DP_TURN_MS;
   if(mine || (over > 3000 && (d.players.A === me || d.players.B === me))) dpCommit(mine ? dpSel : null, true, d.turnStart);
@@ -3755,7 +3757,7 @@ function dpOp(id){ return kcOps.find(o => o.id === id); }
 function dpRenderBar(){
   const d = dpDoc, ok = kg('dp-ok'), nm = kg('dp-selname');
   if(!d || d.state !== 'draft'){ ok.disabled = true; ok.textContent = 'Okay'; nm.textContent = ''; return; }
-  const cur = dpSeq(d.first)[d.actions.length], me = currentUser();
+  const cur = dpSeq(d.first, d.solo)[d.actions.length], me = currentUser();
   const mine = cur && (d.solo ? d.players.A === me : (cur.s === 'A' ? d.players.A : d.players.B) === me);
   ok.textContent = cur && cur.t === 'ban' ? '🚫 Ban' : '✔ Pick';
   ok.disabled = !(mine && dpSel);
@@ -3765,7 +3767,7 @@ function dpRender(){
   const d = dpDoc; if(!d) return; const me = currentUser(), host = d.host === me;
   kg('dp-lobby').classList.add('hidden'); kg('dp-room').classList.remove('hidden');
   kg('dp-rcode').textContent = d.code;
-  kg('dp-players').textContent = 'A: ' + dpName(d.players.A) + ' · B: ' + (d.solo ? '(solo, kamu juga)' : d.players.B ? dpName(d.players.B) : 'menunggu lawan...') + ' · ' + (d.solo ? 'mode Solo · ban acak dari niche utama' : 'mode Coop · ban manual · 60 dtk/giliran');
+  kg('dp-players').textContent = (d.solo ? dpName(d.players.A) : 'A: ' + dpName(d.players.A) + ' · B: ' + (d.players.B ? dpName(d.players.B) : 'menunggu lawan...')) + ' · ' + (d.solo ? 'mode Solo · 6 ban acak dari niche utama, 12 pick' : 'mode Coop · ban manual · 60 dtk/giliran');
   kg('dp-hostbox').classList.toggle('hidden', !(host && d.state === 'lobby'));
   kg('dp-invbox').classList.toggle('hidden', !!d.solo);
   if(host && d.state === 'lobby'){
@@ -3786,20 +3788,21 @@ function dpRender(){
   const live = d.state === 'draft' || d.state === 'done'; kg('dp-board').classList.toggle('hidden', !live);
   kg('dp-again').classList.toggle('hidden', !(host && d.state === 'done'));
   if(live){
-    const seq = dpSeq(d.first), st = d.actions.length, cur = seq[st], act = d.actions;
+    const seq = dpSeq(d.first, d.solo), st = d.actions.length, cur = seq[st], act = d.actions;
     const nameOf = x => dpName(x === 'A' ? d.players.A : d.players.B) + (d.solo && x === 'B' ? ' (B)' : '');
-    kg('dp-title').innerHTML = d.state === 'done' ? 'Draft selesai<small>24 operator terpilih (12 per tim)</small>' : `Giliran ${esc(nameOf(cur.s))}<small>${cur.t === 'ban' ? 'BAN ' + (act.filter(a => a.t === 'ban').length + 1) + '/6' : 'PICK ' + (act.filter(a => a.t === 'pick').length + 1) + '/24'}</small>`;
-    kg('dp-bna').textContent = nameOf('A') + (d.first === 'A' ? ' · jalan pertama' : ''); kg('dp-bnb').textContent = nameOf('B') + (d.first === 'B' ? ' · jalan pertama' : '');
+    kg('dp-title').innerHTML = d.state === 'done' ? 'Draft selesai<small>' + (d.solo ? '12 operator terpilih' : '24 operator terpilih (12 per tim)') + '</small>' : `Giliran ${esc(nameOf(cur.s))}<small>${cur.t === 'ban' ? 'BAN ' + (act.filter(a => a.t === 'ban').length + 1) + '/6' : 'PICK ' + (act.filter(a => a.t === 'pick').length + 1) + '/' + (d.solo ? 12 : 24)}</small>`;
+    kg('dp-bna').textContent = d.solo ? 'Ban' : nameOf('A') + (d.first === 'A' ? ' · jalan pertama' : ''); kg('dp-bnb').textContent = d.solo ? 'Ban' : nameOf('B') + (d.first === 'B' ? ' · jalan pertama' : '');
     ['A','B'].forEach(side => {
       const bans = act.filter(a => a.t === 'ban' && a.s === side), picks = act.filter(a => a.t === 'pick' && a.s === side);
       const nowBan = cur && cur.t === 'ban' && cur.s === side, nowPick = cur && cur.t === 'pick' && cur.s === side;
       let h = ''; for(let i = 0; i < 3; i++){ const o = bans[i] && dpOp(bans[i].id); h += `<div class="dp-ban${o ? ' full' : ''}${!o && nowBan && i === bans.length ? ' now' : ''}">${o ? imgTag(avatarSrcs(o.id, o.n)) : ''}</div>`; }
       kg('dp-bans' + side.toLowerCase()).innerHTML = h;
       let p = `<h3>${esc(nameOf(side))}</h3>`;
-      for(let i = 0; i < 12; i++){ const o = picks[i] && dpOp(picks[i].id); const left = cur && cur.t === 'pick' && cur.s === side ? seq.slice(st).filter((q, k) => q.t === 'pick' && q.s === side && k < 2 && seq.slice(st, st + k).every(r => r.s === side)).length : 0;
+      for(let i = 0; i < 12; i++){ const o = picks[i] && dpOp(picks[i].id); const left = d.solo ? (nowPick ? 1 : 0) : cur && cur.t === 'pick' && cur.s === side ? seq.slice(st).filter((q, k) => q.t === 'pick' && q.s === side && k < 2 && seq.slice(st, st + k).every(r => r.s === side)).length : 0;
         p += `<div class="dp-slot${!o && nowPick && i >= picks.length && i < picks.length + left ? ' now' : ''}">${o ? imgTag(avatarSrcs(o.id, o.n)) + '<span>' + esc(o.n) + '</span>' : '<span class="e">Pick ' + (i + 1) + '</span>'}</div>`; }
       kg('dp-s' + side.toLowerCase()).innerHTML = p;
     });
+    kg('dp-board').classList.toggle('dp-solo', !!d.solo);
     dpMarkPool(); dpRenderBar();
   }
 }
