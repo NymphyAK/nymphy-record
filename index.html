@@ -484,6 +484,7 @@
   .dp-op.used{opacity:.22; filter:grayscale(1); pointer-events:none;}
   .dp-bar{display:flex; gap:10px; align-items:center; justify-content:center; margin-top:12px; flex-wrap:wrap;} .dp-bar button{width:auto; margin:0; min-width:140px;}
   .dp-stage img,.dp-stage canvas{max-width:100%; border-radius:12px;}
+  .dp-timer{text-align:center; font-weight:800; font-size:22px; margin-top:4px; font-variant-numeric:tabular-nums;} .dp-timer.low{color:#ff4d6d;}
   .dp-toast{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; flex-direction:column; gap:8px;}
   .dp-toast>div{background:var(--panel2); border:1px solid var(--red); border-radius:12px; padding:10px 14px; font-size:13px; display:flex; gap:10px; align-items:center; box-shadow:0 10px 30px -10px #000;}
   .dp-toast button{margin:0; width:auto; padding:5px 12px; font-size:12px;}
@@ -850,15 +851,14 @@
       <div id="view-draft" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
           <h2>Draft</h2>
-          <div class="hint">Pilih stage, lalu draft operator seperti MOBA: 6 ban bergiliran (3 per tim), lalu pick 1-2-2-...-2-1 sampai tiap tim punya 12 operator (24 total). Operator yang sudah di-ban/pick tidak bisa dipilih lagi.</div>
+          <div class="hint">Pilih stage, lalu draft operator seperti MOBA. Ada 2 mode: <b>Coop</b> (dua pemain, 6 ban bergiliran 3 per tim, timer 60 detik per ban/pick) dan <b>Solo</b> (latihan sendiri, 6 operator di-ban acak dari My Niche kamu). Setelah ban, pick 1-2-2-...-2-1 sampai tiap tim punya 12 operator (24 total). Operator yang sudah di-ban/pick tidak bisa dipilih lagi.</div>
           <div id="dp-msg" class="hint" style="color:#ff6b8b;"></div>
         </div>
 
         <div id="dp-lobby" class="card" style="margin-bottom:16px;">
           <h2>Room</h2>
           <div class="rf-grid">
-            <select id="dp-banmode"><option value="manual">Ban: bergiliran manual</option><option value="random">Ban: diacak otomatis (6 operator)</option></select>
-            <label class="rf-chk"><input type="checkbox" id="dp-solo" style="width:auto;"> Latihan solo (kamu main dua tim)</label>
+            <select id="dp-gmode"><option value="coop">Mode: Coop (2 pemain, ban manual, timer 60 dtk)</option><option value="solo">Mode: Solo (ban acak dari niche utama)</option></select>
           </div>
           <button id="dp-create">➕ Buat Room</button>
           <label style="margin-top:14px;">Gabung dengan kode room</label>
@@ -899,7 +899,7 @@
           <div id="dp-board" class="card hidden">
             <div class="dp-top">
               <div><div class="hint" style="margin:0 0 4px;" id="dp-bna"></div><div class="dp-bans" id="dp-bansa"></div></div>
-              <div class="dp-title" id="dp-title"></div>
+              <div><div class="dp-title" id="dp-title"></div><div class="dp-timer hidden" id="dp-timer"></div></div>
               <div><div class="hint" style="margin:0 0 4px; text-align:right;" id="dp-bnb"></div><div class="dp-bans r" id="dp-bansb"></div></div>
             </div>
             <div class="dp-main">
@@ -3595,7 +3595,7 @@ kg('dp-create').addEventListener('click', async () => {
   const me = currentUser(); if(!me) return; dpMsg('');
   try{
     let code, tries = 0; do{ code = dpRandCode(); tries++; }while((await dpDb().doc(code).get()).exists && tries < 5);
-    await dpDb().doc(code).set({ code, host: me, solo: kg('dp-solo').checked, banMode: kg('dp-banmode').value, players: { A: me, B: null }, invited: [], stageId: null, stageName: '', state: 'lobby', first: null, actions: [], createdAt: Date.now() });
+    await dpDb().doc(code).set({ code, host: me, solo: kg('dp-gmode').value === 'solo', banMode: kg('dp-gmode').value === 'solo' ? 'niche' : 'manual', players: { A: me, B: null }, invited: [], stageId: null, stageName: '', state: 'lobby', first: null, actions: [], createdAt: Date.now() });
     dpAttach(code);
   }catch(e){ console.error(e); dpMsg('Gagal membuat room: ' + (e.message || e) + ' (cek Firestore Rules untuk koleksi drafts).'); }
 });
@@ -3687,13 +3687,19 @@ kg('dp-start').addEventListener('click', async () => {
   const d = dpDoc; if(!d || d.host !== currentUser() || d.state !== 'lobby') return;
   if(!d.stageId){ dpMsg('Tentukan stage dulu (pilih atau acak).'); return; }
   if(!d.solo && !d.players.B){ dpMsg('Menunggu lawan bergabung.'); return; }
-  const first = Math.random() < 0.5 ? 'A' : 'B', upd = { first, state: 'draft', actions: [] };
-  if(d.banMode === 'random'){
-    const seq = dpSeq(first), ids = kcOps.map(o => o.id);
-    for(let i = ids.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
-    upd.actions = ids.slice(0, 6).map((id, i) => ({ t: 'ban', s: seq[i].s, id }));
+  const first = Math.random() < 0.5 ? 'A' : 'B', upd = { first, state: 'draft', actions: [], turnStart: Date.now() };
+  if(d.banMode === 'niche'){
+    const seq = dpSeq(first), shuf = a => { for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const nm = new Set(myNicheOps().map(x => x.toLowerCase()));
+    let ids = shuf(kcOps.filter(o => nm.has(o.n.toLowerCase())).map(o => o.id)).slice(0, 6);
+    if(ids.length < 6){   // My Niche kurang dari 6 operator: sisanya diacak dari semua operator
+      const rest = shuf(kcOps.map(o => o.id).filter(id => !ids.includes(id)));
+      ids = ids.concat(rest.slice(0, 6 - ids.length));
+      dpMsg(!(myProfile && myProfile.mainNiche) ? 'Niche utama belum dipilih (tab Profil), jadi 6 ban diacak dari semua operator.' : 'My Niche kamu baru punya ' + nm.size + ' operator, sisa ban diacak dari semua operator.');
+    }
+    upd.actions = ids.map((id, i) => ({ t: 'ban', s: seq[i].s, id }));
   }
-  try{ await dpDb().doc(dpCode).update(upd); dpMsg(''); }catch(e){ console.error(e); dpMsg('Gagal memulai: ' + (e.message || e)); }
+  try{ await dpDb().doc(dpCode).update(upd); if(d.banMode !== 'niche') dpMsg(''); }catch(e){ console.error(e); dpMsg('Gagal memulai: ' + (e.message || e)); }
 });
 kg('dp-again').addEventListener('click', async () => {
   if(!dpDoc || dpDoc.host !== currentUser()) return;
@@ -3701,23 +3707,48 @@ kg('dp-again').addEventListener('click', async () => {
 });
 
 /* --- aksi ban / pick --- */
-kg('dp-ok').addEventListener('click', async () => {
-  if(!dpSel || !dpDoc) return; const id = dpSel, ref = dpDb().doc(dpCode); kg('dp-ok').disabled = true;
+const DP_TURN_MS = 60000;
+let dpBusy = false;
+async function dpCommit(id, auto, expectTs){
+  if(dpBusy || !dpDoc) return; dpBusy = true; const ref = dpDb().doc(dpCode); kg('dp-ok').disabled = true;
   try{
     await firebase.firestore().runTransaction(async tx => {
       const s = await tx.get(ref); if(!s.exists) throw new Error('Room hilang.');
       const d = s.data(), me = currentUser(); if(d.state !== 'draft') throw new Error('Draft belum berjalan / sudah selesai.');
       const seq = dpSeq(d.first), cur = seq[d.actions.length]; if(!cur) throw new Error('Draft selesai.');
-      const ok = d.solo ? d.players.A === me : ((cur.s === 'A' ? d.players.A : d.players.B) === me);
-      if(!ok) throw new Error('Bukan gilirannmu.');
-      if(d.actions.some(a => a.id === id)) throw new Error('Operator itu sudah dipakai.');
-      const actions = d.actions.concat([{ t: cur.t, s: cur.s, id }]);
-      tx.update(ref, { actions, state: actions.length >= seq.length ? 'done' : 'draft' });
+      const curPlayer = d.solo ? d.players.A : (cur.s === 'A' ? d.players.A : d.players.B), mine = curPlayer === me;
+      const elapsed = Date.now() - (d.turnStart || Date.now());
+      if(auto){
+        if(d.solo || !d.turnStart || d.turnStart !== expectTs) return;                 // giliran sudah lewat / bukan coop: abaikan
+        if(elapsed < DP_TURN_MS - 1500) return;                                        // toleransi selisih jam
+        if(!mine && elapsed < DP_TURN_MS + 3000) return;                               // lawan baru boleh menggantikan kalau pemain offline
+        if(d.actions.some(a => a.id === id)) id = null;
+        if(!id){ const free = kcOps.filter(o => !d.actions.some(a => a.id === o.id)); if(!free.length) return; id = free[Math.floor(Math.random() * free.length)].id; }
+      } else {
+        if(!mine) throw new Error('Bukan gilirannmu.');
+        if(d.actions.some(a => a.id === id)) throw new Error('Operator itu sudah dipakai.');
+      }
+      const actions = d.actions.concat([{ t: cur.t, s: cur.s, id }].map(a => auto ? { ...a, auto: true } : a));
+      tx.update(ref, { actions, state: actions.length >= seq.length ? 'done' : 'draft', turnStart: Date.now() });
     });
     dpSel = null; dpMsg('');
   }catch(e){ console.error(e); dpMsg(e.message || String(e)); dpSel = null; }
-  dpRenderBar();
-});
+  dpBusy = false; dpRenderBar();
+}
+kg('dp-ok').addEventListener('click', () => { if(dpSel) dpCommit(dpSel, false); });
+
+/* --- timer coop: 60 detik per ban/pick, habis = operator yang sedang dipilih (atau acak) --- */
+setInterval(() => {
+  const el = kg('dp-timer'), d = dpDoc;
+  if(!d || d.solo || d.state !== 'draft' || !d.turnStart){ el.classList.add('hidden'); return; }
+  const left = Math.max(0, Math.ceil((DP_TURN_MS - (Date.now() - d.turnStart)) / 1000));
+  el.classList.remove('hidden'); el.classList.toggle('low', left <= 10); el.textContent = '⏱ ' + left + ' dtk';
+  if(left > 0) return;
+  const cur = dpSeq(d.first)[d.actions.length]; if(!cur) return;
+  const me = currentUser(), mine = (cur.s === 'A' ? d.players.A : d.players.B) === me;
+  const over = Date.now() - d.turnStart - DP_TURN_MS;
+  if(mine || (over > 3000 && (d.players.A === me || d.players.B === me))) dpCommit(mine ? dpSel : null, true, d.turnStart);
+}, 500);
 
 /* --- render --- */
 function dpOp(id){ return kcOps.find(o => o.id === id); }
@@ -3734,7 +3765,7 @@ function dpRender(){
   const d = dpDoc; if(!d) return; const me = currentUser(), host = d.host === me;
   kg('dp-lobby').classList.add('hidden'); kg('dp-room').classList.remove('hidden');
   kg('dp-rcode').textContent = d.code;
-  kg('dp-players').textContent = 'A: ' + dpName(d.players.A) + ' · B: ' + (d.solo ? '(solo, kamu juga)' : d.players.B ? dpName(d.players.B) : 'menunggu lawan...') + ' · ' + (d.banMode === 'random' ? 'ban acak' : 'ban manual');
+  kg('dp-players').textContent = 'A: ' + dpName(d.players.A) + ' · B: ' + (d.solo ? '(solo, kamu juga)' : d.players.B ? dpName(d.players.B) : 'menunggu lawan...') + ' · ' + (d.solo ? 'mode Solo · ban acak dari niche utama' : 'mode Coop · ban manual · 60 dtk/giliran');
   kg('dp-hostbox').classList.toggle('hidden', !(host && d.state === 'lobby'));
   kg('dp-invbox').classList.toggle('hidden', !!d.solo);
   if(host && d.state === 'lobby'){
