@@ -338,10 +338,7 @@
   @media(min-width:721px){
     .sidebar{overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.18) transparent;}
     .sidebar::-webkit-scrollbar{width:6px;} .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18); border-radius:6px;}
-    /* kartu profil nempel di dasar sidebar: background HARUS solid, kalau transparan menu yang di-scroll tembus di baliknya */
-    .sidebar .profile-item{margin-top:auto; position:sticky; bottom:0; z-index:5; flex-shrink:0; background:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),#0f0f10; box-shadow:0 16px 0 0 #0f0f10, 0 -10px 12px 2px #0f0f10;}
-    .sidebar .profile-item:hover{background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,.07)),#0f0f10;}
-    .sidebar .profile-item.active{background:linear-gradient(rgba(254,47,103,.14),rgba(254,47,103,.14)),#0f0f10;}
+    .sidebar .profile-item{margin-top:auto; position:sticky; bottom:0;}
   }
   /* sub-menu (Input Clear, Riwayat, dst) -> tab bar bergaris, bukan pil bulat */
   .subtabs{display:flex; flex-wrap:nowrap; gap:2px; width:100%; max-width:100%; margin:0 0 22px; padding:0; background:none; border:none; border-bottom:1px solid var(--border); border-radius:0; overflow-x:auto; scrollbar-width:none;}
@@ -507,8 +504,7 @@
   @media(max-width:900px){ .dp-main{grid-template-columns:1fr;} .dp-side{display:grid; grid-template-columns:repeat(2,minmax(0,1fr));} .dp-side h3{grid-column:1/-1;} .dp-top{grid-template-columns:1fr;} .dp-bans,.dp-bans.r{justify-content:center;} }
   /* story reader */
   .sr-bar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;} .sr-bar select{width:auto; flex:1 1 150px;}
-  .sr-events{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:12px;} @media(max-width:820px){ .sr-events{grid-template-columns:repeat(2,minmax(0,1fr));} } @media(max-width:480px){ .sr-events{grid-template-columns:minmax(0,1fr);} }
-  .sr-evimg{display:block; width:100%; aspect-ratio:2/1; border-radius:4px 10px 4px 10px; overflow:hidden; background:var(--panel); border:1px solid var(--border); margin-bottom:10px;} .sr-evimg img{width:100%; height:100%; object-fit:cover; display:block;}
+  .sr-events{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-top:12px;}
   .sr-ev{background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:12px 14px; cursor:pointer; transition:border-color .15s, transform .15s;}
   .sr-ev:hover{border-color:var(--red); transform:translateY(-1px);}
   .sr-ev .n{font-weight:600; line-height:1.3;} .sr-ev .m{font-size:11.5px; color:var(--muted); margin-top:4px;}
@@ -2917,7 +2913,7 @@ document.getElementById('home-events').addEventListener('click', async e => {
   try{ if(url.trim()) await ref.set({ url: url.trim() }); else await ref.delete(); }
   catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi event_images.'); }
 });
-function homeRefresh(){ if(!document.getElementById('view-home').classList.contains('hidden')) renderHome(); if(typeof srImgRefresh === 'function') srImgRefresh(); }
+function homeRefresh(){ if(!document.getElementById('view-home').classList.contains('hidden')) renderHome(); }
 const leftText = ms => { const h = Math.max(0, Math.floor(ms / 36e5)), d = Math.floor(h / 24); return d >= 1 ? d + ' hari ' + (h % 24) + ' jam' : h + ' jam'; };
 async function loadEvents(){
   if(homeEvents) return homeEvents;
@@ -3713,3 +3709,242 @@ function renderBookmarks(){
   const q = kg('bm-search').value.trim().toLowerCase(), l = bmList.filter(b => !q || b.n.toLowerCase().includes(q));
   kg('bm-status').textContent = l.length + ' bookmark';
   kg('bm-grid').innerHTML = Object.keys(BM_LAB).map(t => { const it = l.filter(b => b.t === t);
+    return it.length ? `<div class="sub-h" style="grid-column:1/-1;">${BM_LAB[t]} (${it.length})</div>` + it.map(b => `<div class="mini-card">${bmBtn(b.t, b.id, b.n, b.sub, b.s)}<div class="mat">${b.s && b.s.length ? imgTag(b.s) : ''}<div><div class="n">${esc(b.n)}</div><div class="c">${esc(b.sub)}</div></div></div></div>`).join('') : ''; }).join('') || '<div class="empty">Belum ada bookmark. Tekan ☆ di kartu operator, musuh, relic, medal, banner, atau CC.</div>';
+}
+kg('bm-search').addEventListener('input', renderBookmarks);
+
+function enStat(id){
+  const arr = enemyDbMap && enemyDbMap[id]; if(!arr || !arr[0]) return '';
+  const a = ((arr.find(v => v.level === 0) || arr[0]).enemyData || {}).attributes || {}, g = k => a[k] && a[k].m_defined !== false && a[k].m_value != null ? Math.round(a[k].m_value * 10) / 10 : '–';
+  return `<div class="c" style="margin-top:8px;">HP ${g('maxHp')} · ATK ${g('atk')} · DEF ${g('def')} · RES ${g('magicResistance')} · Move ${g('moveSpeed')}</div>`;
+}
+
+let sqb = [];
+const sqbOp = id => kcOps.find(o => o.id === id);
+function renderSqb(){
+  const ops = sqb.map(sqbOp).filter(Boolean), cnt = {}; ops.forEach(o => { const p = PROF[o.c.profession] || o.c.profession; cnt[p] = (cnt[p] || 0) + 1; });
+  kg('sqb-status').textContent = ops.length ? ops.length + ' / 24 operator · ' + Object.keys(cnt).map(k => k + ' ' + cnt[k]).join(', ') : 'Squad kosong.';
+  kg('sqb-grid').innerHTML = ops.map(o => `<div class="mini-card lore-it">${imgTag(avatarSrcs(o.id, o.n))}<div><div class="n">${esc(o.n)}</div><div class="c">${o.r}★ · ${esc(PROF[o.c.profession] || o.c.profession)}</div><button class="ghost" data-rm="${esc(o.id)}" style="margin-top:6px; width:auto; padding:3px 10px; font-size:12px;">Hapus</button></div></div>`).join('');
+  const link = sqb.length ? location.href.split('#')[0] + '#squad=' + sqb.map(i => i.replace(/^char_/, '')).join(',') : '';
+  kg('sqb-link').value = link;
+}
+kg('sqb-search').addEventListener('input', async () => {
+  await loadChars(); const q = kg('sqb-search').value.trim().toLowerCase(), box = kg('sqb-list');
+  const l = q ? kcOps.filter(o => o.c.profession !== 'TOKEN' && o.c.profession !== 'TRAP' && o.n.toLowerCase().includes(q) && !sqb.includes(o.id)).slice(0, 8) : [];
+  box.classList.toggle('hidden', !l.length);
+  box.innerHTML = l.map(o => `<div class="pick-row" data-id="${esc(o.id)}">${imgTag(avatarSrcs(o.id, o.n))}<div style="min-width:0;"><div>${esc(o.n)}</div><div class="c">${o.r}★ · ${esc(PROF[o.c.profession] || o.c.profession)}</div></div></div>`).join('');
+});
+kg('sqb-list').addEventListener('click', e => { const r = e.target.closest('.pick-row'); if(!r || sqb.length >= 24) return; sqb.push(r.dataset.id); kg('sqb-search').value = ''; kg('sqb-list').classList.add('hidden'); renderSqb(); });
+kg('sqb-grid').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if(b){ sqb = sqb.filter(i => i !== b.dataset.rm); renderSqb(); } });
+kg('sqb-clear').addEventListener('click', () => { sqb = []; renderSqb(); });
+kg('sqb-from').addEventListener('click', () => { sqb = sqRes.map(x => x.id).slice(0, 24); renderSqb(); });
+kg('sqb-use').addEventListener('click', () => { sqb.map(sqbOp).filter(Boolean).forEach(o => { if(!selectedOps.includes(o.n)) selectedOps.push(o.n); }); renderOpChips(); document.querySelector('.nav-item[data-view="input"]').click(); });
+kg('sqb-copy').addEventListener('click', async () => {
+  const el = kg('sqb-link'); if(!el.value) return;
+  try{ await navigator.clipboard.writeText(el.value); kg('sqb-copy').textContent = '✓ Link disalin'; }catch(e){ el.select(); try{ document.execCommand('copy'); kg('sqb-copy').textContent = '✓ Link disalin'; }catch(x){ kg('sqb-copy').textContent = 'Salin manual dari kotak'; } }
+  setTimeout(() => { kg('sqb-copy').textContent = '🔗 Salin link squad'; }, 2000);
+});
+async function sqbFromHash(){
+  const m = location.hash.match(/^#squad=([\w,\-]*)/); if(!m) return;
+  try{ await loadChars(); }catch(e){ return; }
+  sqb = m[1].split(',').filter(Boolean).map(s => 'char_' + s).filter(id => sqbOp(id)).slice(0, 24); renderSqb();
+  document.querySelector('.nav-item[data-view="squad"]').click();
+}
+window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800);
+
+
+/* ---------- DRAFT PICK (room PvP via Firestore koleksi "drafts") ---------- */
+const DP_PICK = ['F'].concat(...Array.from({length:11}, (_, i) => i % 2 ? ['F','F'] : ['O','O']), ['F']);   // pick 1-2-2-...-2-1: 12 operator per tim, 24 total (F = tim pertama, O = lawan)
+function dpSeq(first, solo){ const o = first === 'A' ? 'B' : 'A', s = []; for(let i = 0; i < 6; i++) s.push({ t:'ban', s: i % 2 ? o : first }); if(solo){ for(let i = 0; i < 12; i++) s.push({ t:'pick', s:'A' }); return s; } DP_PICK.forEach(x => s.push({ t:'pick', s: x === 'F' ? first : o })); return s; }   // solo: 6 ban acak lalu 12 pick milik pemain saja (tanpa pick musuh)
+let dpCode = null, dpDoc = null, dpUnsub = null, dpSel = null, dpTab = 'ALL', dpPoolBuilt = false, dpImgFor = null, dpTick = 0;
+const dpDb = () => firebase.firestore().collection('drafts');
+const dpName = u => u ? ((profilesMap[u] && profilesMap[u].nickname) || u) : '—';
+const dpMsg = t => { kg('dp-msg').textContent = t || ''; };
+function dpMySide(d){ const me = currentUser(); if(!d) return null; return d.players.A === me ? 'A' : d.players.B === me ? 'B' : null; }
+function dpCritRead(){ const ap = parseInt(kg('dp-ap').value, 10); return { boss: kg('dp-boss').checked, type: kg('dp-type').value, mode: kg('dp-mode').value, story: kg('dp-story').checked, ap: isNaN(ap) ? null : ap }; }
+function dpCount(){ kg('dp-count').textContent = stageState === 'ready' ? critApply(stageList, dpCritRead()).length + ' stage cocok kriteria' : 'Memuat stage...'; }
+['dp-boss','dp-story','dp-type','dp-mode','dp-ap'].forEach(id => kg(id).addEventListener(id === 'dp-ap' ? 'input' : 'change', dpCount));
+
+async function dpNav(){
+  dpMsg('');
+  try{ await stageReady(); await loadChars(); }catch(e){ dpMsg('Gagal memuat data stage/operator: ' + (e.message || e)); return; }
+  fillCrit('dp'); dpCount();
+  if(!dpPoolBuilt){ dpBuildTabs(); dpPoolBuilt = true; dpRenderPool(); }
+  if(!dpCode){ const c = (() => { try{ return localStorage.getItem('dp_room'); }catch(e){ return null; } })(); if(c) dpAttach(c, true); }
+}
+function dpBuildTabs(){
+  const profs = [['ALL','Semua'], ...['PIONEER','WARRIOR','TANK','SNIPER','CASTER','MEDIC','SUPPORT','SPECIAL'].map(k => [k, PROF[k]])];
+  kg('dp-tabs').innerHTML = profs.map(([k, l]) => `<button data-t="${k}" class="${k === dpTab ? 'on' : ''}">${l}</button>`).join('');
+}
+kg('dp-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; dpTab = b.dataset.t; dpBuildTabs(); dpRenderPool(); });
+kg('dp-search').addEventListener('input', () => dpRenderPool());
+function dpRenderPool(){
+  const q = kg('dp-search').value.trim().toLowerCase();
+  kg('dp-grid').innerHTML = kcOps.filter(o => (dpTab === 'ALL' || o.c.profession === dpTab) && (!q || o.n.toLowerCase().includes(q)))
+    .sort((a, b) => b.r - a.r || a.n.localeCompare(b.n))
+    .map(o => `<div class="dp-op" data-id="${esc(o.id)}" title="${esc(o.n)}">${imgTag(avatarSrcs(o.id, o.n))}<span>${esc(o.n)}</span></div>`).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
+  dpMarkPool();
+}
+function dpMarkPool(){
+  const used = new Set(((dpDoc && dpDoc.actions) || []).map(a => a.id));
+  kg('dp-grid').querySelectorAll('.dp-op').forEach(el => { el.classList.toggle('used', used.has(el.dataset.id)); el.classList.toggle('sel', el.dataset.id === dpSel); });
+}
+kg('dp-grid').addEventListener('click', e => {
+  const el = e.target.closest('.dp-op'); if(!el || !dpDoc || dpDoc.state !== 'draft') return;
+  dpSel = el.dataset.id; dpMarkPool(); dpRenderBar();
+});
+
+/* --- room: buat / gabung / keluar --- */
+function dpRandCode(){ const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for(let i = 0; i < 5; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
+kg('dp-create').addEventListener('click', async () => {
+  const me = currentUser(); if(!me) return; dpMsg('');
+  try{
+    let code, tries = 0; do{ code = dpRandCode(); tries++; }while((await dpDb().doc(code).get()).exists && tries < 5);
+    await dpDb().doc(code).set({ code, host: me, solo: kg('dp-gmode').value === 'solo', banMode: kg('dp-gmode').value === 'solo' ? 'niche' : 'manual', players: { A: me, B: null }, stageId: null, stageName: '', state: 'lobby', first: null, actions: [], createdAt: Date.now() });
+    dpAttach(code);
+  }catch(e){ console.error(e); dpMsg('Gagal membuat room: ' + (e.message || e) + ' (cek Firestore Rules untuk koleksi drafts).'); }
+});
+async function dpJoin(code){
+  const me = currentUser(); code = (code || '').trim().toUpperCase(); if(!code) return; dpMsg('');
+  try{
+    const ref = dpDb().doc(code);
+    await firebase.firestore().runTransaction(async tx => {
+      const s = await tx.get(ref); if(!s.exists) throw new Error('Room tidak ditemukan.');
+      const d = s.data(); if(d.players.A === me || d.players.B === me) return;
+      if(d.state !== 'lobby' || d.players.B || d.solo) throw new Error('Room sudah penuh atau sedang berjalan.');
+      tx.update(ref, { 'players.B': me });
+    });
+    dpAttach(code);
+  }catch(e){ console.error(e); dpMsg(e.message || String(e)); }
+}
+kg('dp-join').addEventListener('click', () => dpJoin(kg('dp-code').value));
+function dpAttach(code, silent){
+  if(dpUnsub) dpUnsub(); dpCode = code; dpDoc = null; dpSel = null; dpImgFor = null;
+  try{ localStorage.setItem('dp_room', code); }catch(e){}
+  dpUnsub = dpDb().doc(code).onSnapshot(s => {
+    if(!s.exists){ if(!silent || dpDoc) dpMsg('Room ditutup atau tidak ada.'); dpDetach(true); return; }
+    const prevStep = dpDoc ? dpDoc.actions.length : -1; dpDoc = s.data();
+    if(dpDoc.actions.length !== prevStep) dpSel = null;
+    dpRender();
+  }, e => { console.error(e); dpMsg('Gagal membaca room: ' + (e.message || e)); dpDetach(true); });
+}
+function dpDetach(){
+  if(dpUnsub){ dpUnsub(); dpUnsub = null; } dpCode = null; dpDoc = null; dpSel = null;
+  try{ localStorage.removeItem('dp_room'); }catch(e){}
+  kg('dp-room').classList.add('hidden'); kg('dp-lobby').classList.remove('hidden');
+}
+kg('dp-leave').addEventListener('click', async () => {
+  if(!dpDoc) return; const me = currentUser(), code = dpCode, d = dpDoc;
+  if(d.host === me){ if(d.state === 'draft' && !confirm('Draft sedang berjalan. Tutup room?')) return; try{ await dpDb().doc(code).delete(); }catch(e){ console.error(e); } }
+  else if(d.state === 'lobby'){ try{ await dpDb().doc(code).update({ 'players.B': null }); }catch(e){ console.error(e); } }
+  dpDetach(true);
+});
+
+/* --- stage & mulai --- */
+async function dpSetStage(s){ try{ await dpDb().doc(dpCode).update({ stageId: s.id, stageName: s.code + ' — ' + s.name }); }catch(e){ console.error(e); dpMsg('Gagal menyimpan stage: ' + (e.message || e)); } }
+kg('dp-ssearch').addEventListener('input', () => {
+  const q = kg('dp-ssearch').value.trim().toLowerCase(), box = kg('dp-slist');
+  if(!q || stageState !== 'ready'){ box.classList.add('hidden'); return; }
+  const m = stageList.filter(x => x.levelId && (x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q) || (x.ev || '').includes(q))).slice(0, 30);
+  box.innerHTML = m.map(x => `<div class="pick-row" data-sid="${esc(x.id)}"><div style="min-width:0;"><div>${esc(x.code)} — ${esc(x.name)}</div><div class="c">${esc(x.evn || STAGE_TYPES[x.type] || x.type || '')}</div></div></div>`).join('') || '<div class="pick-row"><div>Tidak ada hasil.</div></div>';
+  box.classList.remove('hidden');
+});
+kg('dp-slist').addEventListener('click', e => {
+  const r = e.target.closest('[data-sid]'); if(!r || !dpDoc || dpDoc.host !== currentUser() || dpDoc.state !== 'lobby') return;
+  const st = stageList.find(x => x.id === r.dataset.sid); if(!st) return;
+  kg('dp-slist').classList.add('hidden'); kg('dp-ssearch').value = ''; dpSetStage(st);
+});
+kg('dp-roll').addEventListener('click', async () => {
+  if(!dpDoc || dpDoc.host !== currentUser() || dpDoc.state !== 'lobby') return;
+  const pool = critApply(stageList, dpCritRead());
+  if(!pool.length){ kg('dp-count').textContent = 'Tidak ada stage yang cocok dengan kriteria.'; return; }
+  const s = pool[Math.floor(Math.random() * pool.length)];
+  dpSetStage(s);
+});
+kg('dp-start').addEventListener('click', async () => {
+  const d = dpDoc; if(!d || d.host !== currentUser() || d.state !== 'lobby') return;
+  if(!d.stageId){ dpMsg('Tentukan stage dulu (pilih atau acak).'); return; }
+  if(!d.solo && !d.players.B){ dpMsg('Menunggu lawan bergabung.'); return; }
+  const first = d.solo ? 'A' : (Math.random() < 0.5 ? 'A' : 'B'), upd = { first, state: 'draft', actions: [], turnStart: Date.now() };
+  if(d.banMode === 'niche'){
+    const seq = dpSeq(first, d.solo), shuf = a => { for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const nm = new Set(myNicheOps().map(x => x.toLowerCase()));
+    let ids = shuf(kcOps.filter(o => nm.has(o.n.toLowerCase())).map(o => o.id)).slice(0, 6);
+    if(ids.length < 6){   // My Niche kurang dari 6 operator: sisanya diacak dari semua operator
+      const rest = shuf(kcOps.map(o => o.id).filter(id => !ids.includes(id)));
+      ids = ids.concat(rest.slice(0, 6 - ids.length));
+      dpMsg(!(myProfile && myProfile.mainNiche) ? 'Niche utama belum dipilih (tab Profil), jadi 6 ban diacak dari semua operator.' : 'My Niche kamu baru punya ' + nm.size + ' operator, sisa ban diacak dari semua operator.');
+    }
+    upd.actions = ids.map((id, i) => ({ t: 'ban', s: seq[i].s, id }));
+  }
+  try{ await dpDb().doc(dpCode).update(upd); if(d.banMode !== 'niche') dpMsg(''); }catch(e){ console.error(e); dpMsg('Gagal memulai: ' + (e.message || e)); }
+});
+/* --- aksi ban / pick --- */
+const DP_TURN_MS = 60000;
+let dpBusy = false;
+async function dpCommit(id, auto, expectTs){
+  if(dpBusy || !dpDoc) return; dpBusy = true; const ref = dpDb().doc(dpCode); kg('dp-ok').disabled = true;
+  try{
+    await firebase.firestore().runTransaction(async tx => {
+      const s = await tx.get(ref); if(!s.exists) throw new Error('Room hilang.');
+      const d = s.data(), me = currentUser(); if(d.state !== 'draft') throw new Error('Draft belum berjalan / sudah selesai.');
+      const seq = dpSeq(d.first, d.solo), cur = seq[d.actions.length]; if(!cur) throw new Error('Draft selesai.');
+      const curPlayer = d.solo ? d.players.A : (cur.s === 'A' ? d.players.A : d.players.B), mine = curPlayer === me;
+      const elapsed = Date.now() - (d.turnStart || Date.now());
+      if(auto){
+        if(d.solo || !d.turnStart || d.turnStart !== expectTs) return;                 // giliran sudah lewat / bukan coop: abaikan
+        if(elapsed < DP_TURN_MS - 1500) return;                                        // toleransi selisih jam
+        if(!mine && elapsed < DP_TURN_MS + 3000) return;                               // lawan baru boleh menggantikan kalau pemain offline
+        if(d.actions.some(a => a.id === id)) id = null;
+        if(!id){ const free = kcOps.filter(o => !d.actions.some(a => a.id === o.id)); if(!free.length) return; id = free[Math.floor(Math.random() * free.length)].id; }
+      } else {
+        if(!mine) throw new Error('Bukan gilirannmu.');
+        if(d.actions.some(a => a.id === id)) throw new Error('Operator itu sudah dipakai.');
+      }
+      const actions = d.actions.concat([{ t: cur.t, s: cur.s, id }].map(a => auto ? { ...a, auto: true } : a));
+      tx.update(ref, { actions, state: actions.length >= seq.length ? 'done' : 'draft', turnStart: Date.now() });
+    });
+    dpSel = null; dpMsg('');
+  }catch(e){ console.error(e); dpMsg(e.message || String(e)); dpSel = null; }
+  dpBusy = false; dpRenderBar();
+}
+kg('dp-ok').addEventListener('click', () => { if(dpSel) dpCommit(dpSel, false); });
+
+/* --- timer coop: 60 detik per ban/pick, habis = operator yang sedang dipilih (atau acak) --- */
+setInterval(() => {
+  const el = kg('dp-timer'), d = dpDoc;
+  if(!d || d.solo || d.state !== 'draft' || !d.turnStart){ el.classList.add('hidden'); return; }
+  const left = Math.max(0, Math.ceil((DP_TURN_MS - (Date.now() - d.turnStart)) / 1000));
+  el.classList.remove('hidden'); el.classList.toggle('low', left <= 10); el.textContent = '⏱ ' + left + ' dtk';
+  if(left > 0) return;
+  const cur = dpSeq(d.first, d.solo)[d.actions.length]; if(!cur) return;
+  const me = currentUser(), mine = (cur.s === 'A' ? d.players.A : d.players.B) === me;
+  const over = Date.now() - d.turnStart - DP_TURN_MS;
+  if(mine || (over > 3000 && (d.players.A === me || d.players.B === me))) dpCommit(mine ? dpSel : null, true, d.turnStart);
+}, 500);
+
+/* --- render --- */
+function dpOp(id){ return kcOps.find(o => o.id === id); }
+function dpRenderBar(){
+  const d = dpDoc, ok = kg('dp-ok'), nm = kg('dp-selname');
+  if(!d || d.state !== 'draft'){ ok.disabled = true; ok.textContent = 'Okay'; nm.textContent = ''; return; }
+  const cur = dpSeq(d.first, d.solo)[d.actions.length], me = currentUser();
+  const mine = cur && (d.solo ? d.players.A === me : (cur.s === 'A' ? d.players.A : d.players.B) === me);
+  ok.textContent = cur && cur.t === 'ban' ? '🚫 Ban' : '✔ Pick';
+  ok.disabled = !(mine && dpSel);
+  const o = dpSel && dpOp(dpSel); nm.textContent = o ? o.n : (mine ? 'Pilih operator' : 'Menunggu giliran lawan...');
+}
+function dpRender(){
+  const d = dpDoc; if(!d) return; const me = currentUser(), host = d.host === me;
+  kg('dp-lobby').classList.add('hidden'); kg('dp-room').classList.remove('hidden');
+  kg('dp-rcode').textContent = d.code;
+  kg('dp-players').textContent = (d.solo ? dpName(d.players.A) : 'A: ' + dpName(d.players.A) + ' · B: ' + (d.players.B ? dpName(d.players.B) : 'menunggu lawan...')) + ' · ' + (d.solo ? 'mode Solo · 6 ban acak dari niche utama, 12 pick' : 'mode Coop · ban manual · 60 dtk/giliran');
+  kg('dp-hostbox').classList.toggle('hidden', !(host && d.state === 'lobby'));
+  kg('dp-sharehint').classList.toggle('hidden', !!d.solo);
+  // stage
+  const box = kg('dp-stageinfo'), s = d.stageId && stageList.find(x => x.id === d.stageId);
+  if(!s){ box.innerHTML = '<div class="hint">' + (host ? 'Stage belum ditentukan. Pilih sendiri atau klik Acak Stage.' : 'Host belum menentukan stage.') + '</div>'; dpImgFor = null; }
+  else if(dpImgFor !== d.stageId){
+    dpImgFor = d.stageId; const tk = ++dpTick;
+    box.innerHTML = `<h2 style="font-size:15px;">Stage: ${esc(s.code)} — ${esc(s.name)}</h2><div class="dp-stage" id="dp-simg"><div class="hint">Memuat gambar map...</div></div>`;
+    stageImageInto(s, kg('dp-simg'), () => tk === dpTick);
