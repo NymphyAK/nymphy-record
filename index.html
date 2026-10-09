@@ -4189,9 +4189,15 @@ const srTxt = s => esc(s).replace(/\n/g, '<br>');
 const srAttr = s => esc(s).replace(/"/g, '&quot;');
 const srNorm = s => String(s).toLowerCase().replace(/[’‘`]/g, "'").replace(/\s+/g, ' ').trim();
 /* gambar story: Aceship/Arknight-Images (avg/backgrounds, avg/images), jsDelivr sebagai cadangan */
+const SR_AVG = [
+  [ACE, 'avg/'], [ACE_CDN, 'avg/'], [FEX, 'avg/'], [FEX_CDN, 'avg/'], [HELLA, 'avg/'],
+  ['https://raw.githubusercontent.com/ArknightsAssets/ArknightsAssets/cn/assets/torappu/dynamicassets/', 'avg/'],
+  ['https://raw.githubusercontent.com/ArknightsAssets/ArknightsAssets/en/assets/torappu/dynamicassets/', 'avg/'],
+  ['https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/main/', 'avg/']
+];
 function srImgSrcs(kind, name){
   const out = [];
-  [name, name.toLowerCase()].forEach(n => [[ACE, 'avg/'], [ACE_CDN, 'avg/'], [FEX, 'avg/'], [FEX_CDN, 'avg/'], [HELLA, 'avg/']].forEach(b => {
+  [name, name.toLowerCase()].forEach(n => SR_AVG.forEach(b => {
     const u = b[0] + b[1] + kind + '/' + encodeURIComponent(n).replace(/'/g, '%27') + '.png';
     if(out.indexOf(u) < 0) out.push(u);
   }));
@@ -4241,7 +4247,7 @@ async function srAvatars(tok){
   if(!sr.img || sr.lang !== 'en_US') return;
   const m = await srNames(); if(!m || tok !== sr.rtoken) return;
   srEl('sr-body').querySelectorAll('.sr-who[data-who]').forEach(w => {
-    const id = m[w.dataset.who]; if(!id || w.querySelector('img')) return;
+    const id = m[w.dataset.who] || (SR_ALIAS[w.dataset.who] && m[SR_ALIAS[w.dataset.who]]); if(!id || w.querySelector('img')) return;
     const im = document.createElement('img'), l = avatarSrcs(id, w.dataset.name || '');
     im.className = 'sr-av'; im.alt = ''; im.loading = 'lazy'; im.dataset.srcs = JSON.stringify(l); im.dataset.i = '0';
     im.onerror = () => srImgFail(im); im.src = l[0]; w.insertBefore(im, w.firstChild);
@@ -4303,8 +4309,8 @@ function srBind(){
     try{ if(url.trim()) await ref.set({ url: url.trim() }); else await ref.delete(); }
     catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi event_images.'); }
   });
-  srEl('sr-events').addEventListener('click', e => { const c = e.target.closest('[data-i]'); if(c && sr.shown[+c.dataset.i]) srOpenEvent(sr.shown[+c.dataset.i]); });
-  srEl('sr-ch-list').addEventListener('click', e => { const c = e.target.closest('[data-i]'); if(c) srOpenChapter(+c.dataset.i); });
+  srEl('sr-events').addEventListener('click', e => { const c = e.target.closest('.sr-ev'); if(c && sr.shown[+c.dataset.i]) srOpenEvent(sr.shown[+c.dataset.i]); });
+  srEl('sr-ch-list').addEventListener('click', e => { const c = e.target.closest('.sr-ch'); if(c) srOpenChapter(+c.dataset.i); });
   srEl('sr-resume').addEventListener('click', e => {
     if(!e.target.closest('button')) return;
     const l = srStore.get('sr_last', null), ev = l && sr.events.find(x => x.id === l.evId);
@@ -4442,7 +4448,7 @@ function srSpriteSrcs(id){
     if(n && names.indexOf(n) < 0) names.push(n);
     const l = n.toLowerCase(); if(l && names.indexOf(l) < 0) names.push(l);
   });
-  const bases = [[ACE, 'avg/characters/'], [ACE_CDN, 'avg/characters/'], [FEX, 'avg/characters/'], [FEX_CDN, 'avg/characters/'], [HELLA, 'avg/characters/']];
+  const bases = SR_AVG.map(b => [b[0], b[1] + 'characters/']);
   names.forEach(n => bases.forEach(b => { const u = b[0] + b[1] + encodeURIComponent(n) + '.png'; if(out.indexOf(u) < 0) out.push(u); }));
   return out;
 }
@@ -4452,9 +4458,23 @@ function srNpcSrcs(s){
   if(sr.lang === 'en_US' && w && !/^[?？]+$/.test(w)) out.push(WIKI + wikiName(w + ' tooltip') + '.png');
   return out;
 }
+/* nama pembicara di story kadang beda dengan nama operator di character_table (mis. "Patrizion" = operator "Sankta Miksaparato").
+   Tambah pasangan baru di sini: 'nama di story (huruf kecil)': 'nama operator (huruf kecil)' */
+const SR_ALIAS = {
+  'patrizion': 'sankta miksaparato',
+  'patrizion pozzo': 'sankta miksaparato'
+};
+const srWarned = {};
+function srLookupId(who){
+  if(!srNameMap) return '';
+  const k = srNorm(who);
+  const id = srNameMap[k] || (SR_ALIAS[k] && srNameMap[SR_ALIAS[k]]) || '';
+  if(!id && who && !srWarned[k] && !/^[?？]+$/.test(who)){ srWarned[k] = 1; console.info('[story] pembicara belum terpetakan ke operator:', who, '(kalau dia operator, tambahkan ke SR_ALIAS)'); }
+  return id;
+}
 function srCharId(s){
   if(s.t !== 'say') return '';
-  const m = sr.lang === 'en_US' && srNameMap && srNameMap[srNorm(s.who)];
+  const m = sr.lang === 'en_US' && srLookupId(s.who);
   if(m) return m;
   const sp = s.sp ? String(s.sp).split('$')[0].split('#')[0] : '';
   return /^char_/i.test(sp) ? sp : '';
