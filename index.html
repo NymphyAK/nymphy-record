@@ -490,12 +490,11 @@
   .dp-res h2{margin:0 0 10px;} .dp-res .dp-rbans{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:18px;}
   .dp-rb{width:64px; text-align:center; font-size:11px; color:var(--muted); min-width:0;} .dp-rb .dp-ban{width:56px; height:56px; margin:0 auto 4px;} .dp-rb span{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .dp-sqt{font-weight:700; font-size:14px; margin:6px 0 8px;} .dp-sqt small{color:var(--muted); font-weight:500; margin-left:6px;}
-  .dp-sq{display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; margin-bottom:18px;}
-  .sq-c{position:relative; aspect-ratio:.6; border-radius:6px; overflow:hidden; background:#101114; box-shadow:0 6px 16px -8px #000;}
-  .sq-c img{width:100%; height:100%; object-fit:cover; object-position:top center; display:block;}
+  .dp-sq{display:grid; grid-template-columns:repeat(auto-fill,96px); gap:10px; margin-bottom:18px;}
+  .sq-c{position:relative; width:96px; height:96px; border-radius:6px; overflow:hidden; background:#000;}
+  .sq-c img{width:100%; height:100%; object-fit:cover; display:block;}
   .sq-st{position:absolute; top:0; left:0; right:0; padding:3px 6px; font-size:11px; letter-spacing:1px; color:var(--rc,#fff); background:linear-gradient(#000a,#0000);}
   .sq-nm{position:absolute; left:0; right:0; bottom:0; padding:16px 6px 5px; background:linear-gradient(#0000,#000e); font-size:12.5px; font-weight:700; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;} .sq-nm small{display:block; font-size:10px; font-weight:500; color:var(--muted);}
-  @media(max-width:700px){ .dp-sq{grid-template-columns:repeat(3,minmax(0,1fr));} }
   .dp-toast{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; flex-direction:column; gap:8px;}
   .dp-toast>div{background:var(--panel2); border:1px solid var(--red); border-radius:12px; padding:10px 14px; font-size:13px; display:flex; gap:10px; align-items:center; box-shadow:0 10px 30px -10px #000;}
   .dp-toast button{margin:0; width:auto; padding:5px 12px; font-size:12px;}
@@ -3823,7 +3822,7 @@ function dpRenderResult(d){
   sides.forEach((side, i) => {
     const picks = d.actions.filter(a => a.t === 'pick' && a.s === side).map(a => dpOp(a.id)).filter(Boolean);
     const label = d.solo ? 'Squad kamu' : (side === mine ? 'Squad kamu · ' : 'Squad lawan · ') + nameOf(side);
-    h += `<div class="dp-sqt">${esc(label)}<small>${picks.length} operator</small></div><div class="dp-sq">` + picks.map(o => `<div class="sq-c" title="${esc(o.n)}">${imgTag(artSrcs(o.id, o.n, 2))}</div>`).join('') + '</div>';
+    h += `<div class="dp-sqt">${esc(label)}<small>${picks.length} operator</small></div><div class="dp-sq">` + picks.map(o => `<div class="sq-c" title="${esc(o.n)}">${imgTag(avatarSrcs(o.id, o.n))}</div>`).join('') + '</div>';
   });
   h += `<div class="dp-bar"><button id="dp-again" class="ghost${host ? '' : ' hidden'}">🔁 Main lagi (reset room)</button></div>`;
   box.innerHTML = h;
