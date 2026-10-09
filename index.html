@@ -490,14 +490,11 @@
   .dp-res h2{margin:0 0 10px;} .dp-res .dp-rbans{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:18px;}
   .dp-rb{width:64px; text-align:center; font-size:11px; color:var(--muted); min-width:0;} .dp-rb .dp-ban{width:56px; height:56px; margin:0 auto 4px;} .dp-rb span{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .dp-sqt{font-weight:700; font-size:14px; margin:6px 0 8px;} .dp-sqt small{color:var(--muted); font-weight:500; margin-left:6px;}
-  .dp-sq{display:grid; grid-template-columns:repeat(auto-fill,96px); gap:10px; margin-bottom:18px;}
-  .sq-c{position:relative; width:96px; height:96px; border-radius:6px; overflow:hidden; background:#000;}
+  .dp-sq{display:grid; grid-template-columns:repeat(6,minmax(0,96px)); gap:10px; margin-bottom:18px;}
+  .sq-c{position:relative; width:100%; aspect-ratio:1; border-radius:6px; overflow:hidden; background:#000;}
   .sq-c img{width:100%; height:100%; object-fit:cover; display:block;}
   .sq-st{position:absolute; top:0; left:0; right:0; padding:3px 6px; font-size:11px; letter-spacing:1px; color:var(--rc,#fff); background:linear-gradient(#000a,#0000);}
   .sq-nm{position:absolute; left:0; right:0; bottom:0; padding:16px 6px 5px; background:linear-gradient(#0000,#000e); font-size:12.5px; font-weight:700; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;} .sq-nm small{display:block; font-size:10px; font-weight:500; color:var(--muted);}
-  .dp-toast{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; flex-direction:column; gap:8px;}
-  .dp-toast>div{background:var(--panel2); border:1px solid var(--red); border-radius:12px; padding:10px 14px; font-size:13px; display:flex; gap:10px; align-items:center; box-shadow:0 10px 30px -10px #000;}
-  .dp-toast button{margin:0; width:auto; padding:5px 12px; font-size:12px;}
   @media(max-width:900px){ .dp-main{grid-template-columns:1fr;} .dp-side{display:grid; grid-template-columns:repeat(2,minmax(0,1fr));} .dp-side h3{grid-column:1/-1;} .dp-top{grid-template-columns:1fr;} .dp-bans,.dp-bans.r{justify-content:center;} }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
@@ -873,7 +870,6 @@
           <button id="dp-create">➕ Buat Room</button>
           <label style="margin-top:14px;">Gabung dengan kode room</label>
           <div style="display:flex; gap:8px;"><input id="dp-code" maxlength="5" placeholder="mis. K7QXA" style="text-transform:uppercase;"><button id="dp-join" class="ghost" style="width:auto; margin:0;">Gabung</button></div>
-          <div id="dp-invites" style="margin-top:12px;"></div>
         </div>
 
         <div id="dp-room" class="hidden">
@@ -896,11 +892,7 @@
               </div>
               <div class="hint" id="dp-count"></div>
               <div style="display:flex; gap:8px; flex-wrap:wrap;"><button id="dp-roll" style="width:auto;">🎲 Acak Stage</button></div>
-              <div id="dp-invbox" style="margin-top:14px;">
-                <label>Undang user</label>
-                <div style="display:flex; gap:8px;"><select id="dp-invsel" style="flex:1;"></select><button id="dp-invbtn" class="ghost" style="width:auto; margin:0;">Undang</button></div>
-                <div class="hint" id="dp-invlist"></div>
-              </div>
+              <div class="hint" id="dp-sharehint" style="margin-top:12px;">Bagikan kode room ke lawan agar bisa bergabung.</div>
               <button id="dp-start" style="margin-top:12px;">▶ Mulai Draft</button>
             </div>
             <div id="dp-stageinfo" style="margin-top:14px;"></div>
@@ -926,7 +918,6 @@
           <div id="dp-result" class="card dp-res hidden" style="margin-top:16px;"></div>
         </div>
       </div>
-      <div class="dp-toast" id="dp-toast"></div>
 
       <div id="view-extras" class="view hidden">
         <div class="card" style="margin-bottom:16px;">
@@ -1075,7 +1066,6 @@ function showApp(user){
   document.getElementById('sidebar-username').textContent = user;
   startListening();
   startProfilesListener();
-  dpStartInvites();
   applyAvatars();
   loadProfile();
 }
@@ -1117,7 +1107,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
 });
 
 function showLoginScreen(){
-  if(typeof dpDetach === 'function'){ dpDetach(); dpInv = []; dpToasted.clear(); }
+  if(typeof dpDetach === 'function'){ dpDetach(); }
   if(typeof closeMemberModal === 'function') closeMemberModal();
   document.getElementById('app').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
@@ -3560,7 +3550,7 @@ window.addEventListener('hashchange', sqbFromHash); setTimeout(sqbFromHash, 800)
 /* ---------- DRAFT PICK (room PvP via Firestore koleksi "drafts") ---------- */
 const DP_PICK = ['F'].concat(...Array.from({length:11}, (_, i) => i % 2 ? ['F','F'] : ['O','O']), ['F']);   // pick 1-2-2-...-2-1: 12 operator per tim, 24 total (F = tim pertama, O = lawan)
 function dpSeq(first, solo){ const o = first === 'A' ? 'B' : 'A', s = []; for(let i = 0; i < 6; i++) s.push({ t:'ban', s: i % 2 ? o : first }); if(solo){ for(let i = 0; i < 12; i++) s.push({ t:'pick', s:'A' }); return s; } DP_PICK.forEach(x => s.push({ t:'pick', s: x === 'F' ? first : o })); return s; }   // solo: 6 ban acak lalu 12 pick milik pemain saja (tanpa pick musuh)
-let dpCode = null, dpDoc = null, dpUnsub = null, dpInvUnsub = null, dpInv = [], dpSel = null, dpTab = 'ALL', dpPoolBuilt = false, dpImgFor = null, dpToasted = new Set(), dpTick = 0;
+let dpCode = null, dpDoc = null, dpUnsub = null, dpSel = null, dpTab = 'ALL', dpPoolBuilt = false, dpImgFor = null, dpTick = 0;
 const dpDb = () => firebase.firestore().collection('drafts');
 const dpName = u => u ? ((profilesMap[u] && profilesMap[u].nickname) || u) : '—';
 const dpMsg = t => { kg('dp-msg').textContent = t || ''; };
@@ -3575,7 +3565,6 @@ async function dpNav(){
   fillCrit('dp'); dpCount();
   if(!dpPoolBuilt){ dpBuildTabs(); dpPoolBuilt = true; dpRenderPool(); }
   if(!dpCode){ const c = (() => { try{ return localStorage.getItem('dp_room'); }catch(e){ return null; } })(); if(c) dpAttach(c, true); }
-  dpRenderInv();
 }
 function dpBuildTabs(){
   const profs = [['ALL','Semua'], ...['PIONEER','WARRIOR','TANK','SNIPER','CASTER','MEDIC','SUPPORT','SPECIAL'].map(k => [k, PROF[k]])];
@@ -3605,7 +3594,7 @@ kg('dp-create').addEventListener('click', async () => {
   const me = currentUser(); if(!me) return; dpMsg('');
   try{
     let code, tries = 0; do{ code = dpRandCode(); tries++; }while((await dpDb().doc(code).get()).exists && tries < 5);
-    await dpDb().doc(code).set({ code, host: me, solo: kg('dp-gmode').value === 'solo', banMode: kg('dp-gmode').value === 'solo' ? 'niche' : 'manual', players: { A: me, B: null }, invited: [], stageId: null, stageName: '', state: 'lobby', first: null, actions: [], createdAt: Date.now() });
+    await dpDb().doc(code).set({ code, host: me, solo: kg('dp-gmode').value === 'solo', banMode: kg('dp-gmode').value === 'solo' ? 'niche' : 'manual', players: { A: me, B: null }, stageId: null, stageName: '', state: 'lobby', first: null, actions: [], createdAt: Date.now() });
     dpAttach(code);
   }catch(e){ console.error(e); dpMsg('Gagal membuat room: ' + (e.message || e) + ' (cek Firestore Rules untuk koleksi drafts).'); }
 });
@@ -3617,7 +3606,7 @@ async function dpJoin(code){
       const s = await tx.get(ref); if(!s.exists) throw new Error('Room tidak ditemukan.');
       const d = s.data(); if(d.players.A === me || d.players.B === me) return;
       if(d.state !== 'lobby' || d.players.B || d.solo) throw new Error('Room sudah penuh atau sedang berjalan.');
-      tx.update(ref, { 'players.B': me, invited: (d.invited || []).filter(u => u !== me) });
+      tx.update(ref, { 'players.B': me });
     });
     dpAttach(code);
   }catch(e){ console.error(e); dpMsg(e.message || String(e)); }
@@ -3633,43 +3622,16 @@ function dpAttach(code, silent){
     dpRender();
   }, e => { console.error(e); dpMsg('Gagal membaca room: ' + (e.message || e)); dpDetach(true); });
 }
-function dpDetach(keepInv){
+function dpDetach(){
   if(dpUnsub){ dpUnsub(); dpUnsub = null; } dpCode = null; dpDoc = null; dpSel = null;
   try{ localStorage.removeItem('dp_room'); }catch(e){}
   kg('dp-room').classList.add('hidden'); kg('dp-lobby').classList.remove('hidden');
-  if(!keepInv && dpInvUnsub){ dpInvUnsub(); dpInvUnsub = null; }
 }
 kg('dp-leave').addEventListener('click', async () => {
   if(!dpDoc) return; const me = currentUser(), code = dpCode, d = dpDoc;
   if(d.host === me){ if(d.state === 'draft' && !confirm('Draft sedang berjalan. Tutup room?')) return; try{ await dpDb().doc(code).delete(); }catch(e){ console.error(e); } }
   else if(d.state === 'lobby'){ try{ await dpDb().doc(code).update({ 'players.B': null }); }catch(e){ console.error(e); } }
   dpDetach(true);
-});
-
-/* --- undangan --- */
-function dpStartInvites(){
-  if(dpInvUnsub) return; const me = currentUser(); if(!me) return;
-  dpInvUnsub = dpDb().where('invited', 'array-contains', me).onSnapshot(q => {
-    dpInv = q.docs.map(d => ({ code: d.id, ...d.data() })).filter(d => d.state === 'lobby' && !d.players.B && d.players.A !== me);
-    dpRenderInv();
-    dpInv.forEach(d => { if(dpToasted.has(d.code) || d.code === dpCode) return; dpToasted.add(d.code); dpToast(d); });
-  }, e => console.warn('draft invites', e));
-}
-function dpToast(d){
-  const el = document.createElement('div');
-  el.innerHTML = `<span><b>${esc(dpName(d.host))}</b> mengundangmu ke Draft (room ${esc(d.code)})</span><button>Gabung</button><button class="ghost">✕</button>`;
-  const [j, x] = el.querySelectorAll('button');
-  j.onclick = () => { el.remove(); document.querySelector('.nav-item[data-view="draft"]').click(); dpJoin(d.code); };
-  x.onclick = () => el.remove();
-  kg('dp-toast').appendChild(el); setTimeout(() => el.remove(), 30000);
-}
-function dpRenderInv(){
-  kg('dp-invites').innerHTML = dpInv.length ? '<div class="hint" style="margin-bottom:6px;">Undangan untukmu:</div>' + dpInv.map(d => `<div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;"><span style="flex:1;">${esc(dpName(d.host))} · room <b>${esc(d.code)}</b></span><button class="ghost" data-jc="${esc(d.code)}" style="width:auto; margin:0;">Gabung</button></div>`).join('') : '';
-}
-kg('dp-invites').addEventListener('click', e => { const b = e.target.closest('[data-jc]'); if(b) dpJoin(b.dataset.jc); });
-kg('dp-invbtn').addEventListener('click', async () => {
-  const u = kg('dp-invsel').value; if(!u || !dpDoc) return;
-  try{ await dpDb().doc(dpCode).update({ invited: firebase.firestore.FieldValue.arrayUnion(u) }); }catch(e){ console.error(e); dpMsg('Gagal mengundang: ' + (e.message || e)); }
 });
 
 /* --- stage & mulai --- */
@@ -3772,13 +3734,7 @@ function dpRender(){
   kg('dp-rcode').textContent = d.code;
   kg('dp-players').textContent = (d.solo ? dpName(d.players.A) : 'A: ' + dpName(d.players.A) + ' · B: ' + (d.players.B ? dpName(d.players.B) : 'menunggu lawan...')) + ' · ' + (d.solo ? 'mode Solo · 6 ban acak dari niche utama, 12 pick' : 'mode Coop · ban manual · 60 dtk/giliran');
   kg('dp-hostbox').classList.toggle('hidden', !(host && d.state === 'lobby'));
-  kg('dp-invbox').classList.toggle('hidden', !!d.solo);
-  if(host && d.state === 'lobby'){
-    const keep = kg('dp-invsel').value;
-    kg('dp-invsel').innerHTML = Object.keys(profilesMap).filter(u => u !== me && u !== d.players.B).sort().map(u => `<option value="${esc(u)}">${esc(dpName(u))}</option>`).join('');
-    if(keep) kg('dp-invsel').value = keep;
-    kg('dp-invlist').textContent = (d.invited || []).length ? 'Sudah diundang: ' + d.invited.map(dpName).join(', ') : 'Atau bagikan kode room ke lawan.';
-  }
+  kg('dp-sharehint').classList.toggle('hidden', !!d.solo);
   // stage
   const box = kg('dp-stageinfo'), s = d.stageId && stageList.find(x => x.id === d.stageId);
   if(!s){ box.innerHTML = '<div class="hint">' + (host ? 'Stage belum ditentukan. Pilih sendiri atau klik Acak Stage.' : 'Host belum menentukan stage.') + '</div>'; dpImgFor = null; }
