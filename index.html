@@ -2592,7 +2592,7 @@ document.addEventListener('click', e => { if(!e.target.closest('#xw-wrap')) xg$(
 xg$('xw-new').addEventListener('click', xwNew);
 xg$('xw-giveup').addEventListener('click', () => { if(xwAns && !xwOver){ xwOver = true; xg$('xw-in').disabled = true; xwRender(); } });
 
-/* --- Guess the Skill, Operator Silhouette, Opera-doku --- */
+/* --- Guess the Skill, Operator Silhouette, Sudokuknights --- */
 function xgPicker(inId, listId, getOps, onPick){
   const inp = xg$(inId), box = xg$(listId);
   const show = () => { const q = inp.value.trim().toLowerCase(); box.innerHTML = getOps().filter(o => !q || o.name.toLowerCase().includes(q)).slice(0, 30).map(o => `<div class="pick-row" data-id="${esc(o.id)}">${imgTag(avatarSrcs(o.id, o.name))}<div><b>${esc(o.name)}</b> <span class="c">${o.rarity}★ ${esc(o.prof)}</span></div></div>`).join('') || '<div class="hint" style="padding:8px 10px;">Operator tidak ditemukan.</div>'; box.classList.remove('hidden'); };
@@ -2602,7 +2602,7 @@ function xgPicker(inId, listId, getOps, onPick){
   box.addEventListener('click', e => { const r = e.target.closest('.pick-row'); if(r) pick(getOps().find(o => o.id === r.dataset.id)); });
   document.addEventListener('click', e => { if(!e.target.closest('#' + inId) && !e.target.closest('#' + listId)) box.classList.add('hidden'); });
 }
-const xgPanel = (k, title, hint, extra) => `<div id="xg-p-${k}" class="card hidden"><h2>${title}</h2><div class="hint">${hint}</div>${extra}<div class="pick-wrap" style="margin-top:10px;"><input id="${k}-in" placeholder="ketik nama operator..." autocomplete="off"><div id="${k}-list" class="pick-list hidden"></div></div><div style="display:flex; gap:8px; margin-top:8px;"><button class="ghost" id="${k}-giveup">Menyerah</button><button class="ghost" id="${k}-new">Game baru</button></div><div id="${k}-status" style="margin-top:10px; font-size:13.5px;"></div><div class="hint" id="${k}-hint"></div><div id="${k}-guesses" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;"></div></div>`;
+const xgPanel = (k, tab, title, hint, extra) => `<div id="xg-p-${tab}" class="card hidden"><h2>${title}</h2><div class="hint">${hint}</div>${extra}<div class="pick-wrap" style="margin-top:10px;"><input id="${k}-in" placeholder="ketik nama operator..." autocomplete="off"><div id="${k}-list" class="pick-list hidden"></div></div><div style="display:flex; gap:8px; margin-top:8px;"><button class="ghost" id="${k}-giveup">Menyerah</button><button class="ghost" id="${k}-new">Game baru</button></div><div id="${k}-status" style="margin-top:10px; font-size:13.5px;"></div><div class="hint" id="${k}-hint"></div><div id="${k}-guesses" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;"></div></div>`;
 function xgGuessGame(k, tab, max, pickAns, draw, extraTxt){
   const S = { ans: null, g: [], over: false, ops: [], streak: 0, data: null, shown: null }, inp = xg$(k + '-in');
   S.render = () => {
@@ -2625,17 +2625,16 @@ function xgGuessGame(k, tab, max, pickAns, draw, extraTxt){
   xg$(k + '-giveup').addEventListener('click', () => { if(S.ans && !S.over){ S.over = true; S.streak = 0; inp.disabled = true; S.render(); } });
   return S;
 }
-xg$('xg-tabs').insertAdjacentHTML('beforeend', '<button data-t="skill">Guess the Skill</button><button data-t="sil">Operator Silhouette</button><button data-t="doku">Opera-doku</button>');
+xg$('xg-tabs').insertAdjacentHTML('beforeend', '<button data-t="skill">Guess the Skill</button><button data-t="sil">Operator Silhouette</button><button data-t="doku">Sudokuknights</button>');
 xg$('xg-p-hol').insertAdjacentHTML('afterend',
-  xgPanel('gs', 'Guess the Skill', 'Tebak operator pemilik skill dari ikonnya. 6 kali tebak, petunjuk class muncul setelah 2 salah dan rarity setelah 4 salah.', '<div id="gs-img" style="margin-top:10px;"></div>')
-  + xgPanel('sl', 'Operator Silhouette', 'Tebak operator dari siluetnya. Tiap tebakan salah membuat gambar sedikit lebih terang. 6 kali tebak.', '<div class="sl-box" id="sl-img"></div>')
-  + `<div id="xg-p-doku" class="card hidden"><h2>Opera-doku</h2><div class="hint">Isi 9 kotak dengan operator yang cocok dengan kriteria baris dan kolomnya. Satu operator hanya boleh dipakai sekali. Klik kotak, lalu ketik nama operator. Kamu punya 9 kali tebakan.</div><div id="xd-status" style="margin-top:8px; font-size:13.5px;"></div><div class="xd-grid" id="xd-grid"></div><div class="pick-wrap" style="max-width:520px; margin-top:10px;"><input id="xd-in" placeholder="klik kotak dulu, lalu ketik nama operator..." autocomplete="off"><div id="xd-list" class="pick-list hidden"></div></div><div style="display:flex; gap:8px; margin-top:8px;"><button class="ghost" id="xd-giveup">Menyerah</button><button class="ghost" id="xd-new">Puzzle baru</button></div></div>`);
+  xgPanel('gs', 'skill', 'Guess the Skill', 'Tebak operator pemilik skill dari ikonnya. 6 kali tebak, petunjuk class muncul setelah 2 salah dan rarity setelah 4 salah.', '<div id="gs-img" style="margin-top:10px;"></div>')
+  + xgPanel('sl', 'sil', 'Operator Silhouette', 'Tebak operator dari siluetnya. Tiap tebakan salah membuat gambar sedikit lebih terang. 6 kali tebak.', '<div class="sl-box" id="sl-img"></div>')
+  + `<div id="xg-p-doku" class="card hidden"><h2>Sudokuknights</h2><div class="hint">Isi 9 kotak dengan operator yang cocok dengan kriteria baris dan kolomnya. Satu operator hanya boleh dipakai sekali. Klik kotak, lalu ketik nama operator. Kamu punya 9 kali tebakan.</div><div id="xd-status" style="margin-top:8px; font-size:13.5px;"></div><div class="xd-grid" id="xd-grid"></div><div class="pick-wrap" style="max-width:520px; margin-top:10px;"><input id="xd-in" placeholder="klik kotak dulu, lalu ketik nama operator..." autocomplete="off"><div id="xd-list" class="pick-list hidden"></div></div><div style="display:flex; gap:8px; margin-top:8px;"><button class="ghost" id="xd-giveup">Menyerah</button><button class="ghost" id="xd-new">Puzzle baru</button></div></div>`);
 const gsG = xgGuessGame('gs', 'skill', 6, async ops => {
   const sk = await opTableSafe('skill_table'); if(!ops.length || !sk) return null;
   const ok = o => (o.c.skills || []).filter(x => x.skillId && sk[x.skillId]), ans = xgPick(ops.filter(o => ok(o).length)), x = xgPick(ok(ans)), d = sk[x.skillId];
   return { ans, icon: d.iconId || x.skillId, name: (d.levels && d.levels[0] && d.levels[0].name) || '' };
 }, S => imgTag(skillSrcs(S.data.icon), 'gs-img'), S => S.over && S.data.name ? ' · skill: ' + esc(S.data.name) : '');
-// sebelum #gs-img perlu elemen pembungkus yang punya --f; dipakai juga oleh sl
 const slG = xgGuessGame('sl', 'sil', 6, async ops => ops.length ? { ans: xgPick(ops) } : null, S => imgTag(artSrcs(S.ans.id, S.ans.name, 2)), () => '');
 
 let dkOps = [], dkRows = [], dkCols = [], dkCells = [], dkSel = -1, dkLeft = 9, dkOver = false, dkMsg = '';
