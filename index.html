@@ -540,6 +540,7 @@
   .sr-bgl{position:absolute; inset:0; z-index:1; background:center/cover no-repeat; opacity:0; transition:opacity .45s;} .sr-bgl.on{opacity:1;}
   .sr-spr{position:absolute; z-index:1; left:50%; bottom:0; width:58%; height:86%; object-fit:contain; object-position:50% 100%; transform:translateX(-50%); opacity:0; transition:opacity .25s; pointer-events:none;} .sr-spr.on{opacity:1;}
   .sr-port img.face{object-position:50% 0; transform:scale(2.8); transform-origin:50% 12%;}
+  .sr-port img.fit{inset:auto; max-width:none; object-fit:fill; object-position:0 0; transform:none;}
   .bm{display:flex; gap:10px; align-items:center; padding:9px 12px; margin:6px 0; border:1px solid var(--border); border-radius:8px; cursor:pointer; background:var(--panel2);} .bm:hover{border-color:var(--gold);}
   .bm .t{flex:1; min-width:0;} .bm .t b{display:block; font-size:.9em;} .bm .t small{display:block; opacity:.7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .bm button{width:auto; min-height:0; padding:2px 9px;}
@@ -4473,6 +4474,44 @@ function srSetSprite(s){
     im.dataset.id = id; im.src = u; im.classList.add('on');
   });
 }
+/* auto-crop avatar NPC: cari bounding box piksel non-transparan, lalu crop kotak ke area kepala (sprite badan penuh) atau ke seluruh gambar (ikon/tooltip) */
+function srFitPort(im, npc){
+  im.classList.remove('fit'); ['width','height','left','top','right','bottom'].forEach(k => im.style[k] = '');
+  if(!npc) return Promise.resolve();
+  return new Promise(res => {
+    const p = new Image(); p.crossOrigin = 'anonymous';
+    p.onerror = () => res();
+    p.onload = () => {
+      try{
+        const M = 256, k = Math.min(1, M / Math.max(p.naturalWidth, p.naturalHeight));
+        const cw = Math.max(1, Math.round(p.naturalWidth * k)), ch = Math.max(1, Math.round(p.naturalHeight * k));
+        const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+        const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(p, 0, 0, cw, ch);
+        const d = g.getImageData(0, 0, cw, ch).data;
+        let x0 = cw, y0 = ch, x1 = -1, y1 = -1;
+        for(let y = 0; y < ch; y++) for(let x = 0; x < cw; x++) if(d[(y * cw + x) * 4 + 3] > 24){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
+        if(x1 < 0) return res();
+        const bw = x1 - x0 + 1, bh = y1 - y0 + 1; let side, cx0, cy0;
+        if(bh > bw * 1.25){            /* sprite badan penuh -> crop kepala + bahu */
+          side = Math.max(Math.min(bw, bh * 0.36), bh * 0.2);
+          let sx = 0, n = 0; const yEnd = Math.min(ch, Math.round(y0 + side * 0.8));
+          for(let y = y0; y < yEnd; y++) for(let x = x0; x <= x1; x++) if(d[(y * cw + x) * 4 + 3] > 24){ sx += x; n++; }
+          const cx = n ? sx / n : (x0 + x1) / 2;
+          cx0 = cx - side / 2; cy0 = y0 - side * 0.04;
+        }else{                          /* ikon/tooltip -> pas-kan seluruh isi gambar */
+          side = Math.max(bw, bh) * 1.04;
+          cx0 = (x0 + x1) / 2 - side / 2; cy0 = (y0 + y1) / 2 - side / 2;
+        }
+        im.style.width = (cw / side * 100) + '%'; im.style.height = (ch / side * 100) + '%';
+        im.style.left = (-cx0 / side * 100) + '%'; im.style.top = (-cy0 / side * 100) + '%';
+        im.style.right = 'auto'; im.style.bottom = 'auto';
+        im.classList.add('fit');
+      }catch(e){ /* canvas tainted (CORS) -> pakai fallback .face */ }
+      res();
+    };
+    p.src = im.currentSrc || im.src;
+  });
+}
 function srSetPort(s){
   const w = srEl('sr-portw'), im = srEl('sr-port'), nm = srEl('sr-nm'), say = s.t === 'say';
   w.classList.toggle('hidden', !say); nm.classList.toggle('hidden', !say);
@@ -4486,7 +4525,8 @@ function srSetPort(s){
     if(id) l = [ACE + 'avatars/' + id + '.png', ACE_CDN + 'avatars/' + id + '.png', HELLA + 'operator/avatars/' + id + '.png'];
     else { l = srNpcSrcs(s); if(!l.length) return; }
     let k = 0; im.style.objectPosition = ''; im.classList.toggle('face', !id);
-    im.onload = () => im.classList.remove('hidden');
+    const tk = im._tk = (im._tk || 0) + 1;
+    im.onload = () => { srFitPort(im, !id).then(() => { if(im._tk === tk) im.classList.remove('hidden'); }); };
     im.onerror = () => { k++; if(k < l.length) im.src = l[k]; };
     im.src = l[0];
   };
