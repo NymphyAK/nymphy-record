@@ -450,6 +450,12 @@
   .xw-ok{background:rgba(34,160,90,.35) !important; border-color:rgba(34,160,90,.7) !important;}
   .xw-part{background:rgba(229,185,69,.28) !important; border-color:rgba(229,185,69,.7) !important;}
   .xw-no{background:rgba(254,47,103,.14); border-color:rgba(254,47,103,.4);}
+  .xd-grid{display:grid; grid-template-columns:84px repeat(3,minmax(0,1fr)); gap:6px; max-width:520px; margin-top:10px;}
+  .xd-h{display:flex; align-items:center; justify-content:center; text-align:center; font-size:12px; font-weight:700; color:var(--muted); min-height:34px;}
+  .xd-c{aspect-ratio:1; border:1px solid var(--border); border-radius:8px; background:var(--panel2); display:flex; align-items:center; justify-content:center; font-size:22px; color:var(--muted); cursor:pointer; overflow:hidden;}
+  .xd-c.sel{border-color:var(--red); box-shadow:0 0 0 3px var(--red-soft);} .xd-c.ok{cursor:default; border-color:rgba(34,160,90,.7);} .xd-c img{width:100%; height:100%; object-fit:cover;}
+  .gs-img{width:104px; height:104px; border-radius:12px; background:#000; object-fit:cover;}
+  .sl-box{background:#c9ccd4; border-radius:12px; height:300px; display:flex; justify-content:center; margin-top:10px;} .sl-box img{height:100%; max-width:100%; object-fit:contain; filter:var(--f,brightness(0)); transition:filter .4s;}
   .xm-opts{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;}
   .xm-opts button{width:100%; margin:0; text-align:left; padding:10px 12px; font-size:13px;}
   .xm-opts button.ok{border-color:#22a05a; background:rgba(34,160,90,.3);}
@@ -2526,8 +2532,8 @@ function xgStat(o, k){
 }
 function xgTab(t){
   document.querySelectorAll('#xg-tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === t));
-  ['wordle', 'map', 'hol'].forEach(k => xg$('xg-p-' + k).classList.toggle('hidden', k !== t));
-  if(!xgInited[t]){ xgInited[t] = true; ({ wordle: xwNew, map: xmReset, hol: xhNew })[t](); }
+  ['wordle', 'map', 'hol', 'skill', 'sil', 'doku'].forEach(k => xg$('xg-p-' + k).classList.toggle('hidden', k !== t));
+  if(!xgInited[t]){ xgInited[t] = true; ({ wordle: xwNew, map: xmReset, hol: xhNew, skill: () => gsG.new(), sil: () => slG.new(), doku: dkNew })[t](); }
 }
 function extrasStart(){ xgTab(document.querySelector('#xg-tabs button.on').dataset.t); }
 xg$('xg-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if(b) xgTab(b.dataset.t); });
@@ -2585,6 +2591,90 @@ xg$('xw-list').addEventListener('click', e => { const r = e.target.closest('.pic
 document.addEventListener('click', e => { if(!e.target.closest('#xw-wrap')) xg$('xw-list').classList.add('hidden'); });
 xg$('xw-new').addEventListener('click', xwNew);
 xg$('xw-giveup').addEventListener('click', () => { if(xwAns && !xwOver){ xwOver = true; xg$('xw-in').disabled = true; xwRender(); } });
+
+/* --- Guess the Skill, Operator Silhouette, Opera-doku --- */
+function xgPicker(inId, listId, getOps, onPick){
+  const inp = xg$(inId), box = xg$(listId);
+  const show = () => { const q = inp.value.trim().toLowerCase(); box.innerHTML = getOps().filter(o => !q || o.name.toLowerCase().includes(q)).slice(0, 30).map(o => `<div class="pick-row" data-id="${esc(o.id)}">${imgTag(avatarSrcs(o.id, o.name))}<div><b>${esc(o.name)}</b> <span class="c">${o.rarity}★ ${esc(o.prof)}</span></div></div>`).join('') || '<div class="hint" style="padding:8px 10px;">Operator tidak ditemukan.</div>'; box.classList.remove('hidden'); };
+  const pick = o => { if(!o) return; inp.value = ''; box.classList.add('hidden'); onPick(o); };
+  inp.addEventListener('input', show); inp.addEventListener('focus', show);
+  inp.addEventListener('keydown', e => { if(e.key !== 'Enter') return; e.preventDefault(); const q = inp.value.trim().toLowerCase(), l = getOps(); pick(l.find(o => o.name.toLowerCase() === q) || l.find(o => o.name.toLowerCase().includes(q))); });
+  box.addEventListener('click', e => { const r = e.target.closest('.pick-row'); if(r) pick(getOps().find(o => o.id === r.dataset.id)); });
+  document.addEventListener('click', e => { if(!e.target.closest('#' + inId) && !e.target.closest('#' + listId)) box.classList.add('hidden'); });
+}
+const xgPanel = (k, title, hint, extra) => `<div id="xg-p-${k}" class="card hidden"><h2>${title}</h2><div class="hint">${hint}</div>${extra}<div class="pick-wrap" style="margin-top:10px;"><input id="${k}-in" placeholder="ketik nama operator..." autocomplete="off"><div id="${k}-list" class="pick-list hidden"></div></div><div style="display:flex; gap:8px; margin-top:8px;"><button class="ghost" id="${k}-giveup">Menyerah</button><button class="ghost" id="${k}-new">Game baru</button></div><div id="${k}-status" style="margin-top:10px; font-size:13.5px;"></div><div class="hint" id="${k}-hint"></div><div id="${k}-guesses" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;"></div></div>`;
+function xgGuessGame(k, tab, max, pickAns, draw, extraTxt){
+  const S = { ans: null, g: [], over: false, ops: [], streak: 0, data: null, shown: null }, inp = xg$(k + '-in');
+  S.render = () => {
+    const box = xg$(k + '-img'), win = S.g.includes(S.ans);
+    if(S.shown !== S.ans){ box.innerHTML = draw(S); S.shown = S.ans; }
+    box.style.setProperty('--f', S.over ? 'none' : 'brightness(' + Math.min(1, S.g.length * 0.17) + ')');
+    const h = []; if(S.g.length >= 2 || S.over) h.push('Class: ' + S.ans.prof); if(S.g.length >= 4 || S.over) h.push(S.ans.rarity + '★');
+    xg$(k + '-hint').textContent = h.length ? 'Petunjuk: ' + h.join(' · ') : '';
+    xg$(k + '-guesses').innerHTML = S.g.map(o => `<span class="chip">${o === S.ans ? '✓' : '✕'} ${esc(o.name)}</span>`).join('');
+    xg$(k + '-status').innerHTML = win ? `Benar! <b>${esc(S.ans.name)}</b>${extraTxt(S)} · Streak: ${S.streak}` : S.over ? `Game selesai. Jawabannya <b>${esc(S.ans.name)}</b>${extraTxt(S)}.` : `Sisa tebakan: ${max - S.g.length} dari ${max} · Streak: ${S.streak}`;
+  };
+  S.new = async () => {
+    xg$(k + '-status').textContent = 'Memuat data operator...'; S.ops = await xgOps();
+    const r = await pickAns(S.ops); if(!r){ xg$(k + '-status').textContent = 'Data gagal dimuat. Buka ulang tab ini untuk mencoba lagi.'; xgInited[tab] = false; return; }
+    S.data = r; S.ans = r.ans; S.g = []; S.over = false; S.shown = null; inp.disabled = false; inp.value = ''; S.render();
+  };
+  S.guess = o => { if(S.over || !S.ans || S.g.includes(o)) return; S.g.push(o); if(o === S.ans || S.g.length >= max){ S.over = true; S.streak = o === S.ans ? S.streak + 1 : 0; inp.disabled = true; } S.render(); };
+  xgPicker(k + '-in', k + '-list', () => S.ops.filter(o => !S.g.includes(o)), S.guess);
+  xg$(k + '-new').addEventListener('click', S.new);
+  xg$(k + '-giveup').addEventListener('click', () => { if(S.ans && !S.over){ S.over = true; S.streak = 0; inp.disabled = true; S.render(); } });
+  return S;
+}
+xg$('xg-tabs').insertAdjacentHTML('beforeend', '<button data-t="skill">Guess the Skill</button><button data-t="sil">Operator Silhouette</button><button data-t="doku">Opera-doku</button>');
+xg$('xg-p-hol').insertAdjacentHTML('afterend',
+  xgPanel('gs', 'Guess the Skill', 'Tebak operator pemilik skill dari ikonnya. 6 kali tebak, petunjuk class muncul setelah 2 salah dan rarity setelah 4 salah.', '<div id="gs-img" style="margin-top:10px;"></div>')
+  + xgPanel('sl', 'Operator Silhouette', 'Tebak operator dari siluetnya. Tiap tebakan salah membuat gambar sedikit lebih terang. 6 kali tebak.', '<div class="sl-box" id="sl-img"></div>')
+  + `<div id="xg-p-doku" class="card hidden"><h2>Opera-doku</h2><div class="hint">Isi 9 kotak dengan operator yang cocok dengan kriteria baris dan kolomnya. Satu operator hanya boleh dipakai sekali. Klik kotak, lalu ketik nama operator. Kamu punya 9 kali tebakan.</div><div id="xd-status" style="margin-top:8px; font-size:13.5px;"></div><div class="xd-grid" id="xd-grid"></div><div class="pick-wrap" style="max-width:520px; margin-top:10px;"><input id="xd-in" placeholder="klik kotak dulu, lalu ketik nama operator..." autocomplete="off"><div id="xd-list" class="pick-list hidden"></div></div><div style="display:flex; gap:8px; margin-top:8px;"><button class="ghost" id="xd-giveup">Menyerah</button><button class="ghost" id="xd-new">Puzzle baru</button></div></div>`);
+const gsG = xgGuessGame('gs', 'skill', 6, async ops => {
+  const sk = await opTableSafe('skill_table'); if(!ops.length || !sk) return null;
+  const ok = o => (o.c.skills || []).filter(x => x.skillId && sk[x.skillId]), ans = xgPick(ops.filter(o => ok(o).length)), x = xgPick(ok(ans)), d = sk[x.skillId];
+  return { ans, icon: d.iconId || x.skillId, name: (d.levels && d.levels[0] && d.levels[0].name) || '' };
+}, S => imgTag(skillSrcs(S.data.icon), 'gs-img'), S => S.over && S.data.name ? ' · skill: ' + esc(S.data.name) : '');
+// sebelum #gs-img perlu elemen pembungkus yang punya --f; dipakai juga oleh sl
+const slG = xgGuessGame('sl', 'sil', 6, async ops => ops.length ? { ans: xgPick(ops) } : null, S => imgTag(artSrcs(S.ans.id, S.ans.name, 2)), () => '');
+
+let dkOps = [], dkRows = [], dkCols = [], dkCells = [], dkSel = -1, dkLeft = 9, dkOver = false, dkMsg = '';
+function dkCriteria(){
+  const fc = {}; dkOps.forEach(o => { const f = xwFac(o); if(f) fc[f] = (fc[f] || 0) + 1; });
+  const L = ['Guard', 'Sniper', 'Defender', 'Medic', 'Supporter', 'Caster', 'Specialist', 'Vanguard'].map(p => ({ l: p, t: o => o.prof === p }));
+  [3, 4, 5, 6].forEach(r => L.push({ l: r + '★', t: o => o.rarity === r }));
+  L.push({ l: 'Melee', t: o => o.c.position === 'MELEE' }, { l: 'Ranged', t: o => o.c.position === 'RANGED' }, { l: 'DP ≤ 10', t: o => xgStat(o, 'cost') <= 10 }, { l: 'DP ≥ 20', t: o => xgStat(o, 'cost') >= 20 });
+  Object.keys(fc).filter(f => fc[f] >= 10).forEach(f => L.push({ l: xgPretty(f), t: o => xwFac(o) === f }));
+  return L;
+}
+async function dkNew(){
+  xg$('xd-status').textContent = 'Menyiapkan puzzle...';
+  dkOps = (await xgOps()).filter(o => o.prof !== 'Token' && o.prof !== 'Trap');
+  if(!dkOps.length){ xg$('xd-status').textContent = 'Data gagal dimuat. Buka ulang tab ini untuk mencoba lagi.'; xgInited.doku = false; return; }
+  const all = dkCriteria(); let ok = false;
+  for(let n = 0; n < 500 && !ok; n++){
+    const c = all.slice().sort(() => Math.random() - 0.5).slice(0, 6); dkRows = c.slice(0, 3); dkCols = c.slice(3);
+    ok = dkRows.every(r => dkCols.every(k => dkOps.filter(o => r.t(o) && k.t(o)).length >= 4));
+  }
+  dkCells = Array(9).fill(null); dkSel = -1; dkLeft = 9; dkOver = false; dkMsg = ''; xg$('xd-in').value = ''; xg$('xd-in').disabled = false; dkRender();
+}
+function dkRender(){
+  let h = '<div></div>' + dkCols.map(c => `<div class="xd-h">${esc(c.l)}</div>`).join('');
+  dkRows.forEach((r, ri) => { h += `<div class="xd-h">${esc(r.l)}</div>`; for(let ci = 0; ci < 3; ci++){ const i = ri * 3 + ci, o = dkCells[i]; h += o ? `<div class="xd-c ok" title="${esc(o.name)}">${imgTag(avatarSrcs(o.id, o.name))}</div>` : `<div class="xd-c${i === dkSel ? ' sel' : ''}" data-i="${i}">?</div>`; } });
+  xg$('xd-grid').innerHTML = h;
+  const k = dkCells.filter(Boolean).length;
+  xg$('xd-status').innerHTML = k === 9 ? 'Selesai! Semua kotak terisi 🎉' : dkOver ? `Game selesai. Terisi ${k}/9.` : `Sisa tebakan: ${dkLeft} · Terisi ${k}/9` + (dkMsg ? ' · ' + esc(dkMsg) : '');
+}
+xg$('xd-grid').addEventListener('click', e => { const c = e.target.closest('.xd-c[data-i]'); if(!c || dkOver) return; dkSel = +c.dataset.i; dkMsg = ''; dkRender(); xg$('xd-in').focus(); });
+xgPicker('xd-in', 'xd-list', () => dkOps.filter(o => !dkCells.includes(o)), o => {
+  if(dkOver || dkCells.filter(Boolean).length === 9) return;
+  if(dkSel < 0){ dkMsg = 'klik sebuah kotak dulu'; dkRender(); return; }
+  if(dkRows[Math.floor(dkSel / 3)].t(o) && dkCols[dkSel % 3].t(o)){ dkCells[dkSel] = o; dkSel = -1; dkMsg = ''; }
+  else { dkLeft--; dkMsg = o.name + ' tidak cocok'; if(dkLeft <= 0){ dkOver = true; xg$('xd-in').disabled = true; } }
+  dkRender();
+});
+xg$('xd-new').addEventListener('click', dkNew);
+xg$('xd-giveup').addEventListener('click', () => { if(!dkOver){ dkOver = true; xg$('xd-in').disabled = true; dkRender(); } });
 
 /* --- Guess the Map --- */
 let xmCur = null, xmScore = 0, xmRound = 0, xmStreak = 0, xmBusy = false, xmPool = [];
