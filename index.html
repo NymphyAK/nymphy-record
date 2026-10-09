@@ -962,8 +962,8 @@
           <h2>Link Web Lain</h2>
           <div class="hint" id="lnk-note">Kumpulan link ke web lain yang berguna.</div>
         </div>
-        <div class="card hidden" id="lnk-admin" style="margin-bottom:16px;">
-          <h2>Tambah Link (adminbadag)</h2>
+        <div class="card" id="lnk-admin" style="margin-bottom:16px;">
+          <h2>Tambah Link</h2>
           <label>Nama</label><input id="lnk-name" maxlength="60" placeholder="mis. Arknights Wiki">
           <label>URL</label><input id="lnk-url" type="url" placeholder="https://...">
           <label>Deskripsi (opsional)</label><input id="lnk-desc" maxlength="140" placeholder="keterangan singkat">
@@ -2469,6 +2469,8 @@ ach$('ach-list').addEventListener('click', async e => {
 let lnkList = [], lnkStarted = false;
 const lnk$ = id => document.getElementById(id);
 const lnkAdmin = () => currentUser() === SUPER_ADMIN;
+const lnkOwner = l => l.owner || SUPER_ADMIN;   // link lama tanpa field owner dianggap milik adminbadag
+const lnkCanManage = l => { const me = currentUser(); return !!me && (me === SUPER_ADMIN || lnkOwner(l) === me); };
 function lnkSafe(u){ try{ const x = new URL(u); return (x.protocol === 'http:' || x.protocol === 'https:') ? x.href : ''; }catch(e){ return ''; } }
 function linksStart(){
   if(lnkStarted || !clearsRef) return; lnkStarted = true;
@@ -2476,32 +2478,34 @@ function linksStart(){
     e => { console.error(e); lnk$('lnk-note').textContent = 'Gagal memuat link. Cek Firestore Rules untuk koleksi links.'; });
 }
 function renderLinks(){
-  const admin = lnkAdmin(); lnk$('lnk-admin').classList.toggle('hidden', !admin);
+  lnk$('lnk-admin').classList.toggle('hidden', !currentUser());
   lnk$('lnk-list').innerHTML = lnkList.map(l => {
     const href = lnkSafe(l.url); let host = ''; try{ host = new URL(href).hostname.replace(/^www\./, ''); }catch(e){}
     return `<div class="ach-card"><div style="flex:1; min-width:0;"><b>${esc(l.name)}</b>
       ${l.desc ? `<div class="hint">${esc(l.desc)}</div>` : ''}
       <div class="hint">${href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="color:var(--red);">${esc(host || href)} ↗</a>` : 'URL tidak valid'}</div>
-      ${admin ? `<div style="display:flex; gap:6px; margin-top:6px;"><button class="ghost" data-ledit="${l.id}">Edit</button><button class="ghost" data-ldel="${l.id}">Hapus</button></div>` : ''}</div></div>`;
+      <div class="hint">oleh ${esc(lnkOwner(l))}</div>
+      ${lnkCanManage(l) ? `<div style="display:flex; gap:6px; margin-top:6px;"><button class="ghost" data-ledit="${l.id}">Edit</button><button class="ghost" data-ldel="${l.id}">Hapus</button></div>` : ''}</div></div>`;
   }).join('') || '<div class="card"><div class="empty">Belum ada link.</div></div>';
 }
 lnk$('lnk-add').addEventListener('click', async () => {
-  if(!lnkAdmin()) return;
+  if(!currentUser()) return;
   const name = lnk$('lnk-name').value.trim(), url = lnkSafe(lnk$('lnk-url').value.trim());
   if(!name){ alert('Nama wajib diisi.'); return; }
   if(!url){ alert('URL harus diawali http:// atau https://'); return; }
   try{
-    await firebase.firestore().collection('links').add({ name, url, desc: lnk$('lnk-desc').value.trim(), createdAt: Date.now() });
+    await firebase.firestore().collection('links').add({ name, url, desc: lnk$('lnk-desc').value.trim(), owner: currentUser(), createdAt: Date.now() });
     ['lnk-name', 'lnk-url', 'lnk-desc'].forEach(id => { lnk$(id).value = ''; });
   }catch(e){ console.error(e); alert('Gagal menyimpan link: ' + e.message); }
 });
 lnk$('lnk-list').addEventListener('click', async e => {
-  if(!lnkAdmin()) return;
+  if(!currentUser()) return;
   const col = firebase.firestore().collection('links'), fail = err => { console.error(err); alert('Gagal memperbarui link: ' + err.message); };
   const del = e.target.closest('[data-ldel]'), ed = e.target.closest('[data-ledit]');
-  if(del){ if(confirm('Hapus link ini?')) col.doc(del.dataset.ldel).delete().catch(fail); }
+  if(del){ const dl = lnkList.find(x => x.id === del.dataset.ldel); if(!dl || !lnkCanManage(dl)){ alert('Link ini hanya bisa dihapus oleh ' + (dl ? lnkOwner(dl) : SUPER_ADMIN) + '.'); return; } if(confirm('Hapus link ini?')) col.doc(dl.id).delete().catch(fail); }
   else if(ed){
     const l = lnkList.find(x => x.id === ed.dataset.ledit); if(!l) return;
+    if(!lnkCanManage(l)){ alert('Link ini hanya bisa diedit oleh ' + lnkOwner(l) + '.'); return; }
     const name = prompt('Nama:', l.name); if(name === null) return;
     const url = prompt('URL:', l.url); if(url === null) return;
     const desc = prompt('Deskripsi:', l.desc || ''); if(desc === null) return;
