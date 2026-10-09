@@ -504,7 +504,8 @@
   @media(max-width:900px){ .dp-main{grid-template-columns:1fr;} .dp-side{display:grid; grid-template-columns:repeat(2,minmax(0,1fr));} .dp-side h3{grid-column:1/-1;} .dp-top{grid-template-columns:1fr;} .dp-bans,.dp-bans.r{justify-content:center;} }
   /* story reader */
   .sr-bar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;} .sr-bar select{width:auto; flex:1 1 150px;}
-  .sr-events{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-top:12px;}
+  .sr-events{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:12px;} @media(max-width:820px){ .sr-events{grid-template-columns:repeat(2,minmax(0,1fr));} } @media(max-width:480px){ .sr-events{grid-template-columns:minmax(0,1fr);} }
+  .sr-evimg{display:block; width:100%; aspect-ratio:2/1; border-radius:4px 10px 4px 10px; overflow:hidden; background:var(--panel); border:1px solid var(--border); margin-bottom:10px;} .sr-evimg img{width:100%; height:100%; object-fit:cover; display:block;}
   .sr-ev{background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:12px 14px; cursor:pointer; transition:border-color .15s, transform .15s;}
   .sr-ev:hover{border-color:var(--red); transform:translateY(-1px);}
   .sr-ev .n{font-weight:600; line-height:1.3;} .sr-ev .m{font-size:11.5px; color:var(--muted); margin-top:4px;}
@@ -2913,7 +2914,7 @@ document.getElementById('home-events').addEventListener('click', async e => {
   try{ if(url.trim()) await ref.set({ url: url.trim() }); else await ref.delete(); }
   catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi event_images.'); }
 });
-function homeRefresh(){ if(!document.getElementById('view-home').classList.contains('hidden')) renderHome(); }
+function homeRefresh(){ if(!document.getElementById('view-home').classList.contains('hidden')) renderHome(); if(typeof srImgRefresh === 'function') srImgRefresh(); }
 const leftText = ms => { const h = Math.max(0, Math.floor(ms / 36e5)), d = Math.floor(h / 24); return d >= 1 ? d + ' hari ' + (h % 24) + ' jam' : h + ' jam'; };
 async function loadEvents(){
   if(homeEvents) return homeEvents;
@@ -4268,7 +4269,7 @@ function srBind(){
   }));
 }
 async function initStory(){
-  srBind();
+  srBind(); homeImgStart();
   if(sr.state === 'idle') srLoad();
 }
 async function srLoad(){
@@ -4285,11 +4286,42 @@ async function srLoad(){
       key:((e.name || '') + ' ' + e.infoUnlockDatas.map(c => (c.storyCode || '') + ' ' + (c.storyName || '')).join(' ')).toLowerCase()
     })).filter(e => e.ch.length);
     if(!sr.events.length) throw new Error('daftar story kosong');
-    sr.state = 'ready'; srRenderEvents(); srRenderResume();
+    sr.state = 'ready'; srRenderEvents(); srRenderResume(); if(sr.lang !== 'en_US') srLoadEn(tok);
   }catch(e){
     if(tok !== sr.token) return;
     console.error(e); sr.state = 'idle'; st.textContent = 'Gagal memuat daftar story: ' + (e.message || e) + ' — cek console (F12) untuk detail';
   }
+}
+function srEvSrcs(e){
+  const out = [], c = homeImgs[evKey(e)];
+  if(c) out.push(c);
+  const n = String(e.en || (sr.lang === 'en_US' ? e.name : '') || '').trim();
+  if(n && e.type !== 'MAINLINE') ['EN', 'CN'].forEach(p => out.push(WIKI + wikiName(p + ' ' + n + ' banner') + '.png'));
+  return out;
+}
+function srEvImg(e){
+  const l = srEvSrcs(e); if(!l.length) return '';
+  return '<span class="sr-evimg"><img src="' + srAttr(l[0]) + '" data-srcs=\'' + JSON.stringify(l).replace(/'/g, '%27') + '\' data-i="0" loading="lazy" referrerpolicy="no-referrer" onerror="srEvImgFail(this)" alt=""></span>';
+}
+function srEvImgFail(el){
+  let l = []; try{ l = JSON.parse(el.dataset.srcs || '[]'); }catch(e){}
+  const i = (+el.dataset.i || 0) + 1;
+  if(i < l.length){ el.dataset.i = i; el.src = l[i]; }
+  else{ const w = el.closest('.sr-evimg'); (w || el).remove(); }
+}
+function srImgRefresh(){
+  if(sr.state !== 'ready' || srEl('view-story').classList.contains('hidden')) return;
+  if(!srEl('sr-browse').classList.contains('hidden')) srRenderEvents();
+}
+async function srLoadEn(tok){   // nama EN untuk mencocokkan banner wiki saat membaca versi CN
+  try{
+    let raw = await srGet('en_US', 'excel/story_review_table.json', true);
+    if(raw && raw.storyReviewTable) raw = raw.storyReviewTable;
+    const m = {}; Object.values(raw || {}).forEach(x => { if(x && x.id && x.name) m[x.id] = x.name; });
+    if(tok !== sr.token) return;
+    sr.events.forEach(e => { if(m[e.id]) e.en = m[e.id]; });
+    srImgRefresh();
+  }catch(err){ console.warn('nama EN event gagal dimuat', err); }
 }
 function srRenderEvents(){
   const q = srEl('sr-search').value.trim().toLowerCase(), t = srEl('sr-type').value;
@@ -4299,7 +4331,7 @@ function srRenderEvents(){
   srEl('sr-status').textContent = l.length + ' event' + (q || t ? ' ditemukan' : ' tersedia');
   srEl('sr-events').innerHTML = l.map((e, i) => {
     const yr = e.start ? ' · ' + new Date(e.start * 1000).getUTCFullYear() : '';
-    return '<div class="sr-ev" data-i="' + i + '"><div class="n">' + esc(e.name) + '</div><div class="m">' + (SR_TYPE[e.type] || 'Lainnya') + ' · ' + e.ch.length + ' chapter' + yr + '</div></div>';
+    return '<div class="sr-ev" data-i="' + i + '">' + srEvImg(e) + '<div class="n">' + esc(e.name) + '</div><div class="m">' + (SR_TYPE[e.type] || 'Lainnya') + ' · ' + e.ch.length + ' chapter' + yr + '</div></div>';
   }).join('') || '<div class="empty">Tidak ada hasil.</div>';
 }
 function srRenderResume(){
@@ -4436,7 +4468,10 @@ function srSprBox(url){
         let x0 = cw, y0 = ch, x1 = -1, y1 = -1;
         for(let y = 0; y < ch; y++) for(let x = 0; x < cw; x++) if(d[(y * cw + x) * 4 + 3] > 24){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
         if(x1 < 0) return res(srBBox[url] = null);
-        res(srBBox[url] = { w:p.naturalWidth, h:p.naturalHeight, x0:x0 / cw, x1:(x1 + 1) / cw, y0:y0 / ch, y1:(y1 + 1) / ch });
+        const bwp = x1 - x0 + 1, bhp = y1 - y0 + 1, side = Math.max(Math.min(bwp, bhp * 0.36), bhp * 0.2), yEnd = Math.min(ch, Math.round(y0 + side * 0.8));
+        let sx = 0, n = 0;
+        for(let y = y0; y < yEnd; y++) for(let x = x0; x <= x1; x++) if(d[(y * cw + x) * 4 + 3] > 24){ sx += x + .5; n++; }
+        res(srBBox[url] = { w:p.naturalWidth, h:p.naturalHeight, x0:x0 / cw, x1:(x1 + 1) / cw, y0:y0 / ch, y1:(y1 + 1) / ch, hx:(n ? sx / n : (x0 + x1 + 1) / 2) / cw });
       }catch(e){ res(srBBox[url] = null); }   /* canvas tainted -> pakai CSS bawaan */
     };
     p.src = url;
@@ -4444,7 +4479,7 @@ function srSprBox(url){
 }
 function srSprLayout(im){
   const b = im._bb, st = srEl('sr-stage');
-  if(!b){ ['width','height','left','bottom','transform','maxWidth','objectFit'].forEach(k => im.style[k] = ''); return; }
+  if(!b){ ['width','height','left','bottom','transform','maxWidth','objectFit','maskImage','webkitMaskImage'].forEach(k => im.style[k] = ''); return; }
   const sw = st.clientWidth || 1, sh = st.clientHeight || 1;
   const bw = b.x1 - b.x0, bh = b.y1 - b.y0, ar = (b.w * bw) / (b.h * bh);   /* rasio lebar/tinggi karakter */
   let th = SPR_H;                                                          /* tinggi karakter, % tinggi stage */
@@ -4454,8 +4489,36 @@ function srSprLayout(im){
   im.style.height = imgH + '%'; im.style.width = 'auto'; im.style.maxWidth = 'none'; im.style.objectFit = 'fill';
   im.style.left = '50%'; im.style.bottom = (-(1 - b.y1) * imgH) + '%';      /* kaki karakter menempel di dasar stage */
   im.style.transform = 'translateX(' + (-(b.x0 + b.x1) / 2 * 100) + '%)';   /* tengah karakter di tengah stage */
+  /* sisi kiri/kanan yang menyentuh tepi kanvas berarti gambarnya terpotong di sumber -> dipudarkan supaya tidak ada garis potong */
+  const fl = b.x0 <= .012, fr = b.x1 >= .988;
+  const mk = (fl || fr) ? 'linear-gradient(to right,' + (fl ? 'transparent 0,#000 12%' : '#000 0') + ',' + (fr ? '#000 88%,transparent 100%' : '#000 100%') + ')' : '';
+  im.style.webkitMaskImage = mk; im.style.maskImage = mk;
 }
 (function(){ const st = document.getElementById('sr-stage'); if(st && window.ResizeObserver) new ResizeObserver(() => { const i = document.getElementById('sr-spr'); if(i && i._bb) srSprLayout(i); }).observe(st); })();
+let srPortTok = 0;
+/* avatar NPC: crop ke kepala + bahu (seperti ikon operator). Sprite badan penuh -> crop kepala; gambar kecil/ikon -> dipas utuh.
+   Kalau pikselnya tidak bisa dibaca (CORS) atau gambar tidak ada, avatar NPC itu tidak ditampilkan. */
+function srPortApply(im, b){
+  const bw = b.w * (b.x1 - b.x0), bh = b.h * (b.y1 - b.y0);
+  let side, cx0, cy0;
+  if(bh > bw * 1.25){                                   /* sprite badan penuh -> kepala + bahu */
+    side = Math.max(Math.min(bw, bh * 0.36), bh * 0.2);
+    cx0 = b.hx * b.w - side / 2; cy0 = b.y0 * b.h - side * 0.04;
+  }else{                                                 /* ikon / potret -> seluruh isi gambar */
+    side = Math.max(bw, bh) * 1.04;
+    cx0 = (b.x0 + b.x1) / 2 * b.w - side / 2; cy0 = (b.y0 + b.y1) / 2 * b.h - side / 2;
+  }
+  Object.assign(im.style, { objectFit:'fill', maxWidth:'none', right:'auto', bottom:'auto', width:(b.w / side * 100) + '%', height:(b.h / side * 100) + '%',
+    left:(-cx0 / side * 100) + '%', top:(-cy0 / side * 100) + '%' });
+}
+async function srPortNpc(im, list, tk){
+  for(const u of list){
+    const b = await srSprBox(u);
+    if(tk !== srPortTok) return;
+    if(!b) continue;
+    srPortApply(im, b); im.src = u; im.classList.remove('hidden'); return;
+  }
+}
 function srSetPort(s){
   const w = srEl('sr-portw'), im = srEl('sr-port'), nm = srEl('sr-nm'), say = s.t === 'say';
   w.classList.toggle('hidden', !say); nm.classList.toggle('hidden', !say);
@@ -4464,15 +4527,16 @@ function srSetPort(s){
   im.removeAttribute('src'); im.classList.add('hidden');
   if(!sr.img) return;
   const set = () => {
-    const id = srCharId(s);
-    let l, pos = '50% 50%';
-    if(id) l = [ACE + 'avatars/' + id + '.png', ACE_CDN + 'avatars/' + id + '.png', HELLA + 'operator/avatars/' + id + '.png'];
-    else if(s.sp){ l = srSpriteSrcs(s.sp); }
-    else return;
-    let k = 0; im.style.objectPosition = ''; im.classList.toggle('face', !id);
-    im.onload = () => im.classList.remove('hidden');
-    im.onerror = () => { k++; if(k < l.length) im.src = l[k]; };
-    im.src = l[0];
+    const id = srCharId(s), tk = ++srPortTok;
+    ['left', 'top', 'right', 'bottom', 'width', 'height', 'maxWidth', 'objectFit', 'objectPosition', 'transform'].forEach(k => im.style[k] = '');
+    im.classList.remove('face'); im.onload = im.onerror = null;
+    if(id){
+      const l = [ACE + 'avatars/' + id + '.png', ACE_CDN + 'avatars/' + id + '.png', HELLA + 'operator/avatars/' + id + '.png'];
+      let k = 0;
+      im.onload = () => { if(tk === srPortTok) im.classList.remove('hidden'); };
+      im.onerror = () => { if(tk === srPortTok && ++k < l.length) im.src = l[k]; };
+      im.src = l[0];
+    }else if(s.sp) srPortNpc(im, srSpriteSrcs(s.sp), tk);
   };
   if(sr.lang === 'en_US' && !srNameMap) srNames().then(() => { if(sr.steps[sr.pos] === s) set(); }); else set();
 }
