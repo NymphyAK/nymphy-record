@@ -3713,3 +3713,12 @@ function renderBookmarks(){
   const q = kg('bm-search').value.trim().toLowerCase(), l = bmList.filter(b => !q || b.n.toLowerCase().includes(q));
   kg('bm-status').textContent = l.length + ' bookmark';
   kg('bm-grid').innerHTML = Object.keys(BM_LAB).map(t => { const it = l.filter(b => b.t === t);
+    if(!it.length) return '';
+    return `<div class="sub-h" style="grid-column:1/-1; margin-top:6px;">${esc(BM_LAB[t])} (${it.length})</div>` + it.map(b =>
+      `<div class="mini-card">${bmBtn(b.t, b.id, b.n, b.sub, b.s)}<div class="mat" style="margin-bottom:0;">${(b.s && b.s.length) ? imgTag(b.s) : ''}<div><div class="n">${esc(b.n)}</div><div class="c">${esc(b.sub || '')}</div></div></div></div>`
+    ).join('');
+  }).join('') || '<div class="empty">Belum ada bookmark. Klik ☆ di kartu operator, musuh, relic, atau medal.</div>';
+}
+</script>
+</body>
+</html>
