@@ -686,6 +686,37 @@
   .mp-row:hover{border-color:var(--red);}
   .mp-row i{width:10px; height:10px; border-radius:50%; border:1px solid #fff; flex-shrink:0;}
   @media(max-width:720px){ .mp-vp{height:60vh;} }
+
+  /* ---------- IS ENCOUNTER ---------- */
+  .enc-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-top:12px; max-height:680px; overflow-y:auto;}
+  .enc-card{background:var(--panel2); border:1px solid var(--border); border-radius:18px; overflow:hidden; cursor:pointer; transition:border-color .12s, transform .12s; min-width:0;}
+  .enc-card:hover{border-color:rgba(254,47,103,.5); transform:translateY(-2px);}
+  .enc-card:focus-visible{outline:2px solid var(--red); outline-offset:2px;}
+  .enc-art{position:relative; aspect-ratio:16/9; background:linear-gradient(135deg,#2b0a14,#1b1b1b 60%,#101010); display:flex; align-items:center; justify-content:center; overflow:hidden;}
+  .enc-art .ph{font-size:34px; font-weight:800; color:rgba(254,47,103,.35); letter-spacing:.04em; user-select:none;}
+  .enc-art img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; margin:0; border:0; border-radius:0; background:transparent; max-height:none;}
+  .enc-info{padding:10px 12px 12px;}
+  .enc-info .n{font-weight:600; font-size:14px; line-height:1.3;}
+  .enc-info .c{font-size:12px; color:var(--muted); margin-top:2px;}
+  .enc-badge{display:inline-block; margin-top:6px; padding:1px 8px; border:1px solid var(--line2); border-radius:999px; font-size:11px; color:var(--muted);}
+  .enc-modal-box{max-width:700px; padding:0; overflow-x:hidden;}
+  .enc-hero{position:relative; aspect-ratio:16/9; background:linear-gradient(135deg,#2b0a14,#1b1b1b 60%,#101010); display:flex; align-items:center; justify-content:center;}
+  .enc-hero .ph{font-size:64px; font-weight:800; color:rgba(254,47,103,.3);}
+  .enc-hero img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; margin:0; border:0; border-radius:0; max-height:none; background:transparent;}
+  .enc-body{padding:18px 22px 22px;}
+  .enc-title{font-size:20px; font-weight:700; margin:0 0 2px;}
+  .enc-meta{font-size:12px; color:var(--muted); margin-bottom:10px;}
+  .enc-desc{font-size:13.5px; line-height:1.6; color:#d8d8d8; margin-bottom:6px;}
+  .enc-sec{font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:18px 0 8px; display:flex; align-items:center; gap:8px;}
+  .enc-sec::before{content:""; width:3px; height:12px; background:var(--red);}
+  .enc-choice{background:var(--panel2); border:1px solid var(--border); border-left:3px solid var(--red); border-radius:4px 14px 4px 14px; padding:10px 14px; margin-bottom:8px;}
+  .enc-choice .t{font-weight:600; font-size:14px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;}
+  .enc-choice .t .no{color:var(--red); font-weight:800;}
+  .enc-choice .d{font-size:12.5px; color:#bdbdbd; margin-top:4px; line-height:1.55;}
+  .enc-choice .tp{font-size:10.5px; color:var(--muted); border:1px solid var(--line2); border-radius:999px; padding:0 7px;}
+  .enc-next{display:inline-block; margin-top:8px; font-size:12px; color:var(--red); font-weight:600; cursor:pointer; background:none; border:0; padding:0; width:auto; min-height:0;}
+  .enc-next:hover{text-decoration:underline;}
+  .enc-back{margin:0 0 10px; font-size:12px;}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></head>
 <body>
@@ -975,8 +1006,18 @@
   <div class="hint" id="sqb-status">Squad kosong.</div><div id="sqb-grid" class="mini-grid" style="max-height:none;"></div>
   <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"><button id="sqb-copy">🔗 Salin link squad</button><button id="sqb-from" class="ghost">Ambil dari hasil acak</button><button id="sqb-use" class="ghost">Pakai di Input Clear</button><button id="sqb-clear" class="ghost">Kosongkan</button></div>
   <input id="sqb-link" readonly placeholder="link squad muncul di sini" style="margin-top:8px;"></div></div>
-      <div id="view-is" class="view hidden"><div class="card"><h2>Integrated Strategies — Relic</h2>
-  <input id="is-search" placeholder="cari relic..."><div class="rf-grid"><select id="is-topic"><option value="">Semua tema</option></select></div><div class="hint" id="is-status">Memuat data...</div><div id="is-pager" class="pager"></div><div id="is-grid" class="mini-grid"></div></div></div>
+      <div id="view-is" class="view hidden"><div class="card"><h2>Integrated Strategies</h2>
+  <div class="op-tabs" id="is-tabs"><button class="on" data-ist="relic">Relic</button><button data-ist="enc">Encounter</button></div>
+  <div id="is-pane-relic">
+  <input id="is-search" placeholder="cari relic..."><div class="rf-grid"><select id="is-topic"><option value="">Semua tema</option></select></div><div class="hint" id="is-status">Memuat data...</div><div id="is-pager" class="pager"></div><div id="is-grid" class="mini-grid"></div>
+  </div>
+  <div id="is-pane-enc" class="hidden">
+  <input id="enc-search" placeholder="cari encounter atau pilihan...">
+  <div class="rf-grid"><select id="enc-topic"><option value="">Semua tema</option></select></div>
+  <div class="hint" id="enc-status">Memuat data...</div><div id="enc-pager" class="pager"></div><div id="enc-grid" class="enc-grid"></div>
+  </div></div></div>
+
+      <div id="enc-modal" class="modal-back hidden"><div class="modal-box enc-modal-box" role="dialog" aria-modal="true"><button class="modal-close" id="enc-close" aria-label="Tutup">×</button><div id="enc-detail"></div></div></div>
       <div id="view-streak" class="view hidden"><div class="card"><h2>Streak Member</h2><div class="hint" style="margin-bottom:10px;">Hari berturut-turut yang ada clear. Streak aktif dihitung sampai hari ini atau kemarin.</div><div id="st-out"></div></div></div>
       <div id="view-unused" class="view hidden"><div class="card"><h2>Operator Belum Pernah Dipakai</h2>
   <input id="un-search" placeholder="cari operator..."><div class="rf-grid"><select id="un-r"><option value="0">Semua rarity</option></select></div><div class="hint" id="un-status">Memuat operator...</div><div id="un-grid" class="mini-grid"></div></div></div>
@@ -3482,6 +3523,91 @@ pagerBind(kg('is-pager'), n => { isPage = n; renderIS(); });
 kg('is-search').addEventListener('input', () => { isPage = 0; if(isS === 'ready') renderIS(); });
 kg('is-topic').addEventListener('change', () => { isPage = 0; if(isS === 'ready') renderIS(); });
 
+/* ---------- IS ENCOUNTER ---------- */
+/* Kalau gambar encounter belum muncul, tambahkan/ubah base URL di ENC_IMG_BASES (folder tempat file gambar background scene disimpan). */
+const ENC_IMG_BASES = [
+  HELLA + 'rogue/scenes/', HELLA + 'rogue/choice/', HELLA + 'rogue/events/',
+  HELLA_CDN + 'rogue/scenes/', HELLA_CDN + 'rogue/choice/', HELLA_CDN + 'rogue/events/',
+  FEX + 'rogue/scene/', FEX_CDN + 'rogue/scene/', FEX + 'roguescene/', FEX_CDN + 'roguescene/'
+];
+const encSrcs = x => { const ks = [...new Set([x.bg, x.icon, x.sid].filter(Boolean).map(encodeURIComponent))];
+  return [...new Set(ks.flatMap(k => ENC_IMG_BASES.map(b => b + k + '.png')))]; };
+let encS = 'idle', encL = [], encMap = {}, encPage = 0;
+const encNorm = s => String(s || '').replace(/<[^>]+>/g, '').trim();
+async function initEnc(){
+  if(encS !== 'idle') return; encS = 'loading';
+  try{
+    const t = await opTable('roguelike_topic_table'), tp = t.topics || {}, det = t.details || {}, names = {};
+    Object.keys(det).forEach(tid => {
+      const d = det[tid] || {}, scenes = d.choiceScenes || {}, choices = d.choices || {}, tn = (tp[tid] && tp[tid].name) || tid;
+      const byBase = {};
+      Object.values(choices).forEach(c => { if(!c || !c.id) return;
+        const k = String(c.id).replace(/^choice_/, '').replace(/_\d+$/, ''); (byBase[k] = byBase[k] || []).push(c); });
+      Object.keys(scenes).forEach(sid => {
+        const s = scenes[sid]; if(!s) return;
+        const key = sid.replace(/^scene_/, ''), base = key.replace(/_enter$/, '');
+        let cl = [];
+        if(Array.isArray(s.choices)) cl = s.choices.map(id => choices[id]).filter(Boolean);
+        if(!cl.length) cl = byBase[key] || byBase[base] || byBase[base + '_enter'] || [];
+        cl = cl.slice().sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric:true }));
+        const title = encNorm(s.title) || sid;
+        const x = { sid, tid, topic:tn, title, desc:s.description || '', bg:s.background || s.bg || '', icon:s.titleIcon || '', hidden:!!s.isHidden, choices:cl };
+        encL.push(x); encMap[tid + '|' + sid] = x; names[tn] = 1;
+      });
+    });
+    if(!encL.length) throw new Error('data encounter (choiceScenes) tidak ditemukan');
+    encL.sort((a, b) => a.topic.localeCompare(b.topic) || a.title.localeCompare(b.title));
+    Object.keys(names).forEach(n => kg('enc-topic').insertAdjacentHTML('beforeend', `<option value="${esc(n)}">${esc(n)}</option>`));
+    encS = 'ready'; renderEnc();
+  }catch(e){ console.error(e); encS = 'idle'; kg('enc-status').textContent = 'Gagal memuat encounter: ' + (e.message || e) + ' (dicoba lagi saat tab dibuka ulang).'; }
+}
+function encArt(x, big){
+  return `<div class="${big ? 'enc-hero' : 'enc-art'}"><span class="ph">${esc((x.title || '?').trim().charAt(0).toUpperCase())}</span>${imgTag(encSrcs(x))}</div>`;
+}
+function renderEnc(){
+  const q = kg('enc-search').value.trim().toLowerCase(), g = kg('enc-topic').value;
+  const l = encL.filter(x => (!g || x.topic === g) && (!q || x.title.toLowerCase().includes(q) || encNorm(x.desc).toLowerCase().includes(q) || x.choices.some(c => encNorm(c.title).toLowerCase().includes(q) || encNorm(c.description).toLowerCase().includes(q))));
+  const PS = 48, pages = Math.max(1, Math.ceil(l.length / PS)); encPage = Math.min(Math.max(encPage, 0), pages - 1);
+  kg('enc-status').textContent = l.length ? (encPage * PS + 1) + '–' + Math.min(l.length, (encPage + 1) * PS) + ' dari ' + l.length + ' encounter' : '0 encounter';
+  pagerRender(kg('enc-pager'), encPage, pages); kg('enc-grid').scrollTop = 0;
+  kg('enc-grid').innerHTML = l.slice(encPage * PS, (encPage + 1) * PS).map(x =>
+    `<div class="enc-card" tabindex="0" role="button" data-k="${esc(x.tid + '|' + x.sid)}">${encArt(x)}<div class="enc-info"><div class="n">${esc(x.title)}</div><div class="c">${esc(x.topic)}</div><span class="enc-badge">${x.choices.length} pilihan</span></div></div>`
+  ).join('') || '<div class="empty" style="grid-column:1/-1;">Tidak ada hasil.</div>';
+}
+document.getElementById('is-tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-ist]'); if(!b) return;
+  document.querySelectorAll('#is-tabs button').forEach(x => x.classList.toggle('on', x === b));
+  const enc = b.dataset.ist === 'enc';
+  kg('is-pane-relic').classList.toggle('hidden', enc); kg('is-pane-enc').classList.toggle('hidden', !enc);
+  if(enc) initEnc();
+});
+let encStack = [];
+function openEnc(k, push){
+  const x = encMap[k]; if(!x) return;
+  if(push) encStack.push(k);
+  const prev = encStack.length > 1 ? encMap[encStack[encStack.length - 2]] : null;
+  const ch = x.choices.map((c, i) => {
+    const nx = c.nextSceneId && encMap[x.tid + '|' + c.nextSceneId];
+    const tp = c.type && c.type !== 'NONE' ? `<span class="tp">${esc(String(c.type))}</span>` : '';
+    return `<div class="enc-choice"><div class="t"><span class="no">${i + 1}.</span><span>${fillDesc(encNorm(c.title) || c.id, [])}</span>${tp}</div>${c.description ? `<div class="d">${fillDesc(c.description, [])}</div>` : ''}${nx ? `<button class="enc-next" data-go="${esc(x.tid + '|' + c.nextSceneId)}">→ Lanjut ke: ${esc(nx.title)}</button>` : ''}</div>`;
+  }).join('') || '<div class="hint">Pilihan untuk encounter ini tidak ditemukan di data.</div>';
+  kg('enc-detail').innerHTML = encArt(x, true) + `<div class="enc-body">${prev ? `<button class="ghost enc-back" data-back="1">‹ Kembali ke ${esc(prev.title)}</button>` : ''}<h3 class="enc-title">${esc(x.title)}</h3><div class="enc-meta">${esc(x.topic)}${x.hidden ? ' · tersembunyi' : ''} · <span style="opacity:.7">${esc(x.sid)}</span></div>${x.desc ? `<div class="enc-desc">${fillDesc(x.desc, [])}</div>` : ''}<div class="enc-sec">Pilihan (${x.choices.length})</div>${ch}</div>`;
+  kg('enc-modal').classList.remove('hidden'); kg('enc-modal').querySelector('.modal-box').scrollTop = 0;
+}
+function closeEnc(){ kg('enc-modal').classList.add('hidden'); encStack = []; }
+kg('enc-grid').addEventListener('click', e => { const c = e.target.closest('.enc-card'); if(c){ encStack = []; openEnc(c.dataset.k, true); } });
+kg('enc-grid').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ const c = e.target.closest('.enc-card'); if(c){ e.preventDefault(); encStack = []; openEnc(c.dataset.k, true); } } });
+kg('enc-detail').addEventListener('click', e => {
+  const n = e.target.closest('[data-go]'); if(n){ openEnc(n.dataset.go, true); return; }
+  if(e.target.closest('[data-back]')){ encStack.pop(); openEnc(encStack[encStack.length - 1], false); }
+});
+kg('enc-close').addEventListener('click', closeEnc);
+kg('enc-modal').addEventListener('click', e => { if(e.target === kg('enc-modal')) closeEnc(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && !kg('enc-modal').classList.contains('hidden')) closeEnc(); });
+pagerBind(kg('enc-pager'), n => { encPage = n; renderEnc(); });
+kg('enc-search').addEventListener('input', () => { encPage = 0; if(encS === 'ready') renderEnc(); });
+kg('enc-topic').addEventListener('change', () => { encPage = 0; if(encS === 'ready') renderEnc(); });
+
 
 /* ---------- KALKULATOR BASE SKILL ---------- */
 let bsS = 'idle', bsData = null, bsSel = [];
@@ -4222,7 +4348,7 @@ kg('dp-result').addEventListener('click', async e => {
     { label:'Clear Log', icon:'clog',  views:[['riwayat','Riwayat','hist'], ['input','Input Clear','plus',true]] },
     { label:'Komunitas', icon:'users', views:[['members','Member','users'], ['niche','Niche Stat','pie'], ['myniche','My Niche','target'], ['streak','Streak','flame']] },
     { label:'Challenge', icon:'trophy',views:[['challenge','Challenge','trophy'], ['ach','Medal','medal']] },
-    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['story','Story','book'], ['is','IS','hist'], ['enemy','Musuh','target'], ['maps','Maps','map']] },
+    { label:'Database',  icon:'db',    views:[['stage','Stage','map'], ['operators','Operator','shield'], ['items','Item','box'], ['skins','Skin','shirt'], ['medalgame','Medal Game','medal'], ['lore','Lore','book'], ['story','Story','book'], ['is','Integrated Strategies','hist'], ['enemy','Musuh','target'], ['maps','Maps','map']] },
     { label:'Alat', icon:'calc', views:[['calc','Kalkulator','calc'], ['squad','Squad Acak','dice'], ['unused','Belum Dipakai','users'], ['baseskill','Base Skill','box'], ['basesim','Simulasi Base','map'], ['pity','Pity','star'], ['bookmark','Bookmark','star'], ['draft','Draft','shield']] },
     { label:'Extras', icon:'dice', views:[['extras','Minigames','dice'], ['links','Link','link']] }
   ];
