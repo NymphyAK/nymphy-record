@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<script>
+/* diagnostik: kalau script utama gagal, penyebabnya ditampilkan di layar login */
+(function(){
+  var errs = [];
+  function show(){ var e = document.getElementById('login-error'); if(e && errs.length) e.textContent = 'Masalah halaman: ' + errs.slice(-2).join(' | '); }
+  window.addEventListener('error', function(ev){
+    var t = ev.target;
+    if(t && t !== window && (t.src || t.href)) errs.push('gagal memuat ' + String(t.src || t.href).split('/').slice(-2).join('/'));
+    else errs.push((ev.message || 'error') + ' (baris ' + ev.lineno + ')');
+    show();
+  }, true);
+  window.addEventListener('unhandledrejection', function(ev){ errs.push('promise: ' + ((ev.reason && ev.reason.message) || ev.reason)); show(); });
+  setTimeout(function(){ if(!window.__nyBoot) errs.push('script utama tidak selesai dimuat'); show(); }, 4000);
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nymphy — Nicheknights Clear Log</title>
@@ -4275,3 +4291,192 @@ function mpEsc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ 
 function mpFmt(t){ return mpEsc(t).replace(/&#39;&#39;(.+?)&#39;&#39;|''(.+?)''/g, (m, a, b) => '<i>' + (a || b) + '</i>'); }
 function mpApply(){
   const st = document.getElementById('mp-stage'); if(!st) return;
+  st.style.transform = 'translate(' + mp.tx + 'px,' + mp.ty + 'px) scale(' + mp.k + ')';
+  st.style.setProperty('--inv', (1 / mp.k).toFixed(4));
+}
+function mpClamp(){
+  const vp = document.getElementById('mp-vp'), W = 2756 * mp.k, H = 3637 * mp.k, vw = vp.clientWidth, vh = vp.clientHeight, m = 80;
+  mp.tx = W <= vw ? (vw - W) / 2 : Math.min(m, Math.max(vw - W - m, mp.tx));
+  mp.ty = H <= vh ? (vh - H) / 2 : Math.min(m, Math.max(vh - H - m, mp.ty));
+}
+function mpZoom(f, cx, cy){
+  const vp = document.getElementById('mp-vp'); if(cx == null){ cx = vp.clientWidth / 2; cy = vp.clientHeight / 2; }
+  const nk = Math.min(2.5, Math.max(0.12, mp.k * f)), r = nk / mp.k;
+  mp.tx = cx - (cx - mp.tx) * r; mp.ty = cy - (cy - mp.ty) * r; mp.k = nk; mpClamp(); mpApply();
+}
+function mpFit(){
+  const vp = document.getElementById('mp-vp'), v = mp.pts.length ? mp.pts : [{ x:0, y:0 }, { x:2756, y:3637 }];
+  const x0 = Math.min(...v.map(p => p.x)) - 120, x1 = Math.max(...v.map(p => p.x)) + 120, y0 = Math.min(...v.map(p => p.y)) - 120, y1 = Math.max(...v.map(p => p.y)) + 120;
+  mp.k = Math.min(vp.clientWidth / (x1 - x0), vp.clientHeight / (y1 - y0));
+  mp.tx = (vp.clientWidth - (x1 - x0) * mp.k) / 2 - x0 * mp.k; mp.ty = (vp.clientHeight - (y1 - y0) * mp.k) / 2 - y0 * mp.k;
+  mpClamp(); mpApply();
+}
+function mpFocus(p){
+  const vp = document.getElementById('mp-vp'); mp.k = Math.max(mp.k, 0.7);
+  mp.tx = vp.clientWidth / 2 - p.x * mp.k; mp.ty = vp.clientHeight / 2 - p.y * mp.k; mpClamp(); mpApply(); mpSelect(p);
+}
+/* gambar lokasi: disimpan di Firestore koleksi "map_images" (doc id = slug nama lokasi); hanya adminbadag yang bisa upload/ganti/hapus */
+mp.imgs = {}; mp.descs = {}; mp.imgStarted = false;
+const mpKey = p => String(p.article || p.name).replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 120);
+const mpIsAdmin = () => { try{ return currentUser() === SUPER_ADMIN; }catch(e){ return false; } };
+function mpImgStart(){
+  if(mp.imgStarted || !clearsRef) return; mp.imgStarted = true;
+  firebase.firestore().collection('map_images').onSnapshot(q => { mp.imgs = {}; mp.descs = {}; q.docs.forEach(d => { const v = d.data(); if(v.url) mp.imgs[d.id] = v.url; if(v.desc) mp.descs[d.id] = v.desc; }); if(mp.sel && !document.getElementById('mp-desc-ed')) mpSelect(mp.sel); }, e => console.warn('map_images', e));
+}
+function mpShrink(file){
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => { const im = new Image(); im.onload = () => {
+      const k = Math.min(1, 1600 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      let q = .82, d = c.toDataURL('image/jpeg', q); while(d.length > 900000 && q > .4){ q -= .1; d = c.toDataURL('image/jpeg', q); } res(d);
+    }; im.onerror = rej; im.src = fr.result; };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+async function mpSaveImg(p, url){
+  if(!mpIsAdmin()){ alert('Hanya adminbadag yang bisa mengatur gambar.'); return; }
+  const ref = firebase.firestore().collection('map_images').doc(mpKey(p));
+  try{ await ref.set({ url: url || firebase.firestore.FieldValue.delete() }, { merge:true }); }
+  catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi map_images.'); }
+}
+async function mpSaveDesc(p, text){
+  if(!mpIsAdmin()){ alert('Hanya adminbadag yang bisa mengatur penjelasan.'); return; }
+  const ref = firebase.firestore().collection('map_images').doc(mpKey(p)); text = (text || '').trim().slice(0, 500);
+  try{ await ref.set({ desc: text || firebase.firestore.FieldValue.delete() }, { merge:true }); }
+  catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi map_images.'); }
+}
+function mpSelect(p){
+  mp.sel = p; const m = document.getElementById('mpx');
+  document.querySelectorAll('.mp-pin').forEach(el => el.classList.toggle('sel', mp.pts[+el.dataset.i] === p));
+  if(!p){ m.classList.remove('on'); document.body.style.overflow = ''; return; }
+  const g = MP_DATA.groups[p.g] || { name:p.g, pinColor:'#888' }, k = mpKey(p), u = mp.imgs[k], ds = mp.descs[k], adm = mpIsAdmin();
+  m.innerHTML = '<div class="mpx-box"><button class="mpx-x" aria-label="Tutup">×</button>' +
+    '<div class="mpx-img">' + (u ? '<img src="' + mpEsc(u) + '" alt="' + mpEsc(p.name) + '" referrerpolicy="no-referrer">' : '<div class="hint" style="padding:46px 0;">Belum ada gambar.</div>') + '</div>' +
+    '<div class="mpx-body"><h3>' + mpEsc(p.name) + '</h3><div class="mp-g"><i style="background:' + g.pinColor + '"></i>' + mpEsc(g.name) + '</div>' +
+    (ds ? '<div class="mpx-ds">' + mpEsc(ds).replace(/\n/g, '<br>') + '</div>' : '') +
+    (adm ? '<div class="mp-adm"><button class="ghost" data-a="up">' + (u ? 'Ganti' : 'Upload') + ' gambar</button><button class="ghost" data-a="url">Pakai link</button>' + (u ? '<button class="ghost" data-a="del">Hapus gambar</button>' : '') + '<button class="ghost" data-a="desc">' + (ds ? 'Edit' : 'Tambah') + ' penjelasan</button></div>' : '') +
+    '</div></div>';
+  m.classList.add('on'); document.body.style.overflow = 'hidden';
+  m.querySelector('.mpx-x').onclick = () => mpSelect(null);
+  m.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    if(a === 'desc'){
+      const w = m.querySelector('.mp-adm'); w.innerHTML = '<textarea id="mp-desc-ed" maxlength="500" rows="5" placeholder="Penjelasan singkat tentang tempat ini..."></textarea><div class="mp-adm"><button class="ghost" data-s="ok">Simpan</button><button class="ghost" data-s="no">Batal</button></div>';
+      const ta = w.querySelector('textarea'); ta.value = ds || ''; ta.focus();
+      w.querySelector('[data-s="no"]').onclick = () => mpSelect(p);
+      w.querySelector('[data-s="ok"]').onclick = async () => { await mpSaveDesc(p, ta.value); mpSelect(p); };
+    }else if(a === 'del'){ if(confirm('Hapus gambar ' + p.name + '?')) mpSaveImg(p, ''); }
+    else if(a === 'url'){ const v = prompt('Tempel link gambar (https://...):', u && u.indexOf('data:') !== 0 ? u : ''); if(v && v.trim()) mpSaveImg(p, v.trim()); }
+    else{ const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = async () => { if(!f.files[0]) return; try{ mpSaveImg(p, await mpShrink(f.files[0])); }catch(e){ alert('Gambar tidak bisa dibaca.'); } }; f.click(); }
+  });
+}
+function mpRender(){
+  const q = (document.getElementById('mp-search').value || '').trim().toLowerCase();
+  const vis = mp.pts.filter(p => !mp.off[p.g] && (!q || p.name.toLowerCase().includes(q) || (MP_DATA.groups[p.g].name || '').toLowerCase().includes(q)));
+  const st = document.getElementById('mp-stage');
+  st.querySelectorAll('.mp-pin,.mp-lbl').forEach(e => e.remove());
+  vis.forEach(p => {
+    const i = mp.pts.indexOf(p), g = MP_DATA.groups[p.g];
+    const b = document.createElement('button'); b.className = 'mp-pin' + (mp.sel === p ? ' sel' : ''); b.dataset.i = i; b.title = p.name;
+    b.style.left = p.x + 'px'; b.style.top = p.y + 'px'; b.style.background = g.pinColor;
+    b.addEventListener('click', e => { e.stopPropagation(); if(!mp.moved) mpSelect(p); });
+    const l = document.createElement('div'); l.className = 'mp-lbl'; l.textContent = p.name; l.style.left = p.x + 'px'; l.style.top = p.y + 'px';
+    st.append(l, b);
+  });
+  document.getElementById('mp-status').textContent = vis.length + ' dari ' + mp.pts.length + ' lokasi ditampilkan.';
+  const list = document.getElementById('mp-list');
+  list.innerHTML = vis.map(p => '<div class="mp-row" data-i="' + mp.pts.indexOf(p) + '"><i style="background:' + MP_DATA.groups[p.g].pinColor + '"></i><span>' + mpEsc(p.name) + '</span></div>').join('');
+  list.querySelectorAll('.mp-row').forEach(r => r.addEventListener('click', () => { mpFocus(mp.pts[+r.dataset.i]); document.getElementById('mp-vp').scrollIntoView({ block:'nearest', behavior:'smooth' }); }));
+}
+function initMaps(){
+  if(mp.inited){ mpImgStart(); setTimeout(() => { mpClamp(); mpApply(); }, 0); return; }
+  mp.inited = true; mpImgStart();
+  const mx = document.createElement('div'); mx.id = 'mpx'; document.body.appendChild(mx);
+  mx.addEventListener('click', e => { if(e.target === mx) mpSelect(null); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && mx.classList.contains('on') && !document.getElementById('mp-desc-ed')) mpSelect(null); });
+  Object.keys(MP_DATA.markers).forEach(g => MP_DATA.markers[g].forEach(m => mp.pts.push({ ...m, g })));
+  const vp = document.getElementById('mp-vp'), img = document.getElementById('mp-img'); let ii = 0;
+  img.onerror = () => { if(++ii < MP_IMGS.length) img.src = MP_IMGS[ii]; else document.getElementById('mp-status').textContent = 'Gambar peta gagal dimuat dari arknights.wiki.gg (pin tetap tampil).'; };
+  img.src = MP_IMGS[0];
+  const used = Object.keys(MP_DATA.markers);
+  document.getElementById('mp-chips').innerHTML = used.map(g => '<span class="mp-chip" data-g="' + g + '"><i style="background:' + MP_DATA.groups[g].pinColor + '"></i>' + mpEsc(MP_DATA.groups[g].name) + '</span>').join('');
+  document.querySelectorAll('.mp-chip').forEach(c => c.addEventListener('click', () => { mp.off[c.dataset.g] = !mp.off[c.dataset.g]; c.classList.toggle('off', !!mp.off[c.dataset.g]); mpRender(); }));
+  document.getElementById('mp-search').addEventListener('input', mpRender);
+  document.getElementById('mp-in').onclick = () => mpZoom(1.4);
+  document.getElementById('mp-out').onclick = () => mpZoom(1 / 1.4);
+  document.getElementById('mp-fit').onclick = () => { mpFit(); mpSelect(null); };
+  vp.addEventListener('wheel', e => { e.preventDefault(); const r = vp.getBoundingClientRect(); mpZoom(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top); }, { passive:false });
+  let pd = 0, p0 = null;
+  vp.addEventListener('pointerdown', e => {
+    if(e.target.closest('.mp-ctl,.mp-pop')) return;
+    mp.ptr.set(e.pointerId, { x:e.clientX, y:e.clientY }); vp.setPointerCapture(e.pointerId);
+    if(mp.ptr.size === 1){ mp.moved = false; vp.classList.add('drag'); }
+    if(mp.ptr.size === 2){ const [a, b] = [...mp.ptr.values()]; pd = Math.hypot(a.x - b.x, a.y - b.y); }
+  });
+  vp.addEventListener('pointermove', e => {
+    const o = mp.ptr.get(e.pointerId); if(!o) return;
+    if(mp.ptr.size === 1){
+      const dx = e.clientX - o.x, dy = e.clientY - o.y;
+      if(Math.abs(dx) + Math.abs(dy) > 0){ if(Math.abs(dx) + Math.abs(dy) > 3) mp.moved = true; mp.tx += dx; mp.ty += dy; mpClamp(); mpApply(); }
+      o.x = e.clientX; o.y = e.clientY;
+    }else if(mp.ptr.size === 2){
+      o.x = e.clientX; o.y = e.clientY; const [a, b] = [...mp.ptr.values()], d = Math.hypot(a.x - b.x, a.y - b.y), r = vp.getBoundingClientRect();
+      if(pd){ mp.moved = true; mpZoom(d / pd, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); } pd = d;
+    }
+  });
+  const up = e => { mp.ptr.delete(e.pointerId); if(mp.ptr.size < 2) pd = 0; if(!mp.ptr.size){ vp.classList.remove('drag'); setTimeout(() => { mp.moved = false; }, 0); } };
+  vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
+  vp.addEventListener('click', e => { if(!mp.moved && !e.target.closest('.mp-pin,.mp-pop,.mp-ctl')) mpSelect(null); });
+  window.addEventListener('resize', () => { if(vp.offsetParent){ mpClamp(); mpApply(); } });
+  mpRender(); setTimeout(mpFit, 0);
+}
+
+/* ---------- STORY READER ---------- */
+/* sumber: ArknightsAssets/ArknightsGamedata (EN) dan Kengxxiao/ArknightsGameData (CN): excel/story_review_table.json + story/*.txt */
+const SR_TYPE = { MAINLINE:'Main Theme', ACTIVITY:'Side Story', MINI_ACTIVITY:'Mini Story', NONE:'Lainnya' };
+const SR_SRC = {
+  en_US:[
+    'https://raw.githubusercontent.com/ArknightsAssets/ArknightsGamedata/main/en/gamedata/',
+    'https://raw.githubusercontent.com/ArknightsAssets/ArknightsGamedata/master/en/gamedata/',
+    'https://cdn.jsdelivr.net/gh/ArknightsAssets/ArknightsGamedata@main/en/gamedata/',
+    'https://cdn.jsdelivr.net/gh/ArknightsAssets/ArknightsGamedata@master/en/gamedata/'
+  ],
+  zh_CN:[
+    'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/',
+    'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData@master/zh_CN/gamedata/'
+  ]
+};
+const sr = { lang:'en_US', events:[], shown:[], ev:null, idx:0, state:'idle', token:0, rtoken:0, fs:16, bound:false, img:true, lines:[], vn:true, steps:[], pos:-1, hist:[], chosen:null, auto:false, timer:null, tw:null, typing:false, cur:null, bgCur:null, cgCur:null, sprTok:0, speed:1, snd:true, bgmA:null, bgmKey:null, audTok:0 };
+const srEl = id => document.getElementById(id);
+const srStore = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const srGood = {};   // sumber yang terakhir berhasil per bahasa (dicoba duluan)
+async function srGet(lang, path, asJson){
+  const bases = (SR_SRC[lang] || SR_SRC.en_US).slice(), errs = [];
+  if(srGood[lang]){ const i = bases.indexOf(srGood[lang]); if(i > 0) bases.unshift(bases.splice(i, 1)[0]); }
+  for(const b of bases){
+    try{
+      const r = await fetch(b + path); if(!r.ok) throw new Error('HTTP ' + r.status);
+      const v = asJson ? await r.json() : await r.text(); srGood[lang] = b; return v;
+    }catch(e){ console.warn('story gagal:', b + path, e); errs.push(b.replace(/^https:\/\//, '').split('/').slice(0, 4).join('/') + ' → ' + (e.message || e)); }
+  }
+  throw new Error('semua sumber gagal (' + errs.join('; ') + ')');
+}
+/* parser file story .txt -> daftar baris */
+function srParse(txt){
+  const out = [], opts = {};
+  let br = null, lastBg = '', curSp = '', curFoc = '';
+  const stg = {};
+  const atx = (s, k) => { const m = (s || '').match(new RegExp('(?:^|[\\s,(])' + k + '\\s*=\\s*(?:"([^"]*)"|([^,)\\s]+))', 'i')); return m ? (m[1] != null ? m[1] : m[2]) : ''; };
+  const has = (s, k) => new RegExp('(?:^|[\\s,(])' + k + '\\s*=', 'i').test(s || '');
+  const T = s => (s || '').replace(/<\/?[a-zA-Z][^>]*>/g, '').replace(/\{@?nickname\}/gi, 'Doctor').replace(/\\n/g, '\n').trim();
+  const at = (s, k) => { const m = (s || '').match(new RegExp('(?:^|[\\s,(])' + k + '\\s*=\\s*"([^"]*)"', 'i')); return m ? m[1] : ''; };
+  String(txt).replace(/^\uFEFF/, '').split(/\r?\n/).forEach(raw => {
+    const line = raw.trim();
+    if(!line || line.indexOf('//') === 0) return;
+    let m = line.match(/^\[\s*name\s*=\s*"([^"]*)"[^\]]*\]\s*(.*)$/i);
+    if(m){ const t = T(m[2]); if(t) out.push({ t:'say', who:T(m[1]), text:t, br, sp:curSp }); return; }
+    m = line.match(/^\[\s*(\w+)\s*(?:\((.*?)\))?\s*\]\s*(.*)$/);
