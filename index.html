@@ -640,6 +640,8 @@
   .mp-pop.on{display:block;}
   .mp-pop h3{margin:0 0 2px; font-size:16px;}
   .mp-pop img{display:block; width:100%; max-height:240px; object-fit:cover; border-radius:8px; margin-top:6px;}
+  .mp-ds{margin:8px 0 0; font-size:13px; line-height:1.5; white-space:normal;}
+  .mp-adm textarea{background:var(--panel2); color:var(--text); border:1px solid var(--line2); border-radius:8px; padding:8px; font:inherit; font-size:13px; resize:vertical;}
   .mp-adm{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
   .mp-pop .mp-g{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin-bottom:6px;}
   .mp-pop .mp-g i{width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid #fff;}
@@ -4286,12 +4288,12 @@ function mpFocus(p){
   mp.tx = vp.clientWidth / 2 - p.x * mp.k; mp.ty = vp.clientHeight / 2 - p.y * mp.k; mpClamp(); mpApply(); mpSelect(p);
 }
 /* gambar lokasi: disimpan di Firestore koleksi "map_images" (doc id = slug nama lokasi); hanya adminbadag yang bisa upload/ganti/hapus */
-mp.imgs = {}; mp.imgStarted = false;
+mp.imgs = {}; mp.descs = {}; mp.imgStarted = false;
 const mpKey = p => String(p.article || p.name).replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 120);
 const mpIsAdmin = () => { try{ return currentUser() === SUPER_ADMIN; }catch(e){ return false; } };
 function mpImgStart(){
   if(mp.imgStarted || !clearsRef) return; mp.imgStarted = true;
-  firebase.firestore().collection('map_images').onSnapshot(q => { mp.imgs = {}; q.docs.forEach(d => { mp.imgs[d.id] = d.data().url; }); if(mp.sel) mpSelect(mp.sel); }, e => console.warn('map_images', e));
+  firebase.firestore().collection('map_images').onSnapshot(q => { mp.imgs = {}; mp.descs = {}; q.docs.forEach(d => { const v = d.data(); if(v.url) mp.imgs[d.id] = v.url; if(v.desc) mp.descs[d.id] = v.desc; }); if(mp.sel && !document.getElementById('mp-desc-ed')) mpSelect(mp.sel); }, e => console.warn('map_images', e));
 }
 function mpShrink(file){
   return new Promise((res, rej) => {
@@ -4307,20 +4309,34 @@ function mpShrink(file){
 async function mpSaveImg(p, url){
   if(!mpIsAdmin()){ alert('Hanya adminbadag yang bisa mengatur gambar.'); return; }
   const ref = firebase.firestore().collection('map_images').doc(mpKey(p));
-  try{ if(url) await ref.set({ url }); else await ref.delete(); }
+  try{ await ref.set({ url: url || firebase.firestore.FieldValue.delete() }, { merge:true }); }
+  catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi map_images.'); }
+}
+async function mpSaveDesc(p, text){
+  if(!mpIsAdmin()){ alert('Hanya adminbadag yang bisa mengatur penjelasan.'); return; }
+  const ref = firebase.firestore().collection('map_images').doc(mpKey(p)); text = (text || '').trim().slice(0, 500);
+  try{ await ref.set({ desc: text || firebase.firestore.FieldValue.delete() }, { merge:true }); }
   catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi map_images.'); }
 }
 function mpSelect(p){
   mp.sel = p; const pop = document.getElementById('mp-pop');
   document.querySelectorAll('.mp-pin').forEach(el => el.classList.toggle('sel', mp.pts[+el.dataset.i] === p));
   if(!p){ pop.classList.remove('on'); return; }
-  const g = MP_DATA.groups[p.g] || { name:p.g, pinColor:'#888' }, u = mp.imgs[mpKey(p)], adm = mpIsAdmin();
+  const g = MP_DATA.groups[p.g] || { name:p.g, pinColor:'#888' }, u = mp.imgs[mpKey(p)], ds = mp.descs[mpKey(p)], adm = mpIsAdmin();
   pop.innerHTML = '<button class="mp-x" aria-label="Tutup">×</button><h3>' + mpEsc(p.name) + '</h3><div class="mp-g"><i style="background:' + g.pinColor + '"></i>' + mpEsc(g.name) + '</div>' +
     (u ? '<img src="' + mpEsc(u) + '" alt="' + mpEsc(p.name) + '" referrerpolicy="no-referrer">' : '<div class="hint">Belum ada gambar.</div>') +
-    (adm ? '<div class="mp-adm"><button class="ghost" data-a="up">' + (u ? 'Ganti' : 'Upload') + ' gambar</button><button class="ghost" data-a="url">Pakai link</button>' + (u ? '<button class="ghost" data-a="del">Hapus</button>' : '') + '</div>' : '');
+    (ds ? '<p class="mp-ds">' + mpEsc(ds).replace(/\n/g, '<br>') + '</p>' : '') +
+    (adm ? '<div class="mp-adm"><button class="ghost" data-a="up">' + (u ? 'Ganti' : 'Upload') + ' gambar</button><button class="ghost" data-a="url">Pakai link</button>' + (u ? '<button class="ghost" data-a="del">Hapus gambar</button>' : '') + '<button class="ghost" data-a="desc">' + (ds ? 'Edit' : 'Tambah') + ' penjelasan</button></div>' : '');
   pop.classList.add('on'); pop.querySelector('.mp-x').onclick = () => mpSelect(null);
   pop.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
     const a = b.dataset.a;
+    if(a === 'desc'){
+      const w = pop.querySelector('.mp-adm'); w.innerHTML = '<textarea id="mp-desc-ed" maxlength="500" rows="4" placeholder="Penjelasan singkat tentang tempat ini..." style="width:100%;"></textarea><div class="mp-adm" style="width:100%;"><button class="ghost" data-s="ok">Simpan</button><button class="ghost" data-s="no">Batal</button></div>';
+      const ta = w.querySelector('textarea'); ta.value = ds || ''; ta.focus();
+      w.querySelector('[data-s="no"]').onclick = () => mpSelect(p);
+      w.querySelector('[data-s="ok"]').onclick = async () => { await mpSaveDesc(p, ta.value); mpSelect(p); };
+      return;
+    }
     if(a === 'del'){ if(confirm('Hapus gambar ' + p.name + '?')) mpSaveImg(p, ''); }
     else if(a === 'url'){ const v = prompt('Tempel link gambar (https://...):', u && u.indexOf('data:') !== 0 ? u : ''); if(v && v.trim()) mpSaveImg(p, v.trim()); }
     else{ const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = async () => { if(!f.files[0]) return; try{ mpSaveImg(p, await mpShrink(f.files[0])); }catch(e){ alert('Gambar tidak bisa dibaca.'); } }; f.click(); }
