@@ -4496,3 +4496,26 @@ function mpSelect(p){
     const a = b.dataset.a;
     if(a === 'desc'){
       const w = m.querySelector('.mp-adm'); w.innerHTML = '<textarea id="mp-desc-ed" maxlength="500" rows="5" placeholder="Penjelasan singkat tentang tempat ini..."></textarea><div class="mp-adm"><button class="ghost" data-s="ok">Simpan</button><button class="ghost" data-s="no">Batal</button></div>';
+      const ta = w.querySelector('textarea'); ta.value = ds || ''; ta.focus();
+      w.querySelector('[data-s="no"]').onclick = () => mpSelect(p);
+      w.querySelector('[data-s="ok"]').onclick = async () => { await mpSaveDesc(p, ta.value); mpSelect(p); };
+    }else if(a === 'del'){ if(confirm('Hapus gambar ' + p.name + '?')) mpSaveImg(p, ''); }
+    else if(a === 'url'){ const v = prompt('Tempel link gambar (https://...):', u && u.indexOf('data:') !== 0 ? u : ''); if(v && v.trim()) mpSaveImg(p, v.trim()); }
+    else{ const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = async () => { if(!f.files[0]) return; try{ mpSaveImg(p, await mpShrink(f.files[0])); }catch(e){ alert('Gambar tidak bisa dibaca.'); } }; f.click(); }
+  });
+}
+function mpRender(){
+  const q = (document.getElementById('mp-search').value || '').trim().toLowerCase();
+  const vis = mp.pts.filter(p => !mp.off[p.g] && (!q || p.name.toLowerCase().includes(q) || (MP_DATA.groups[p.g].name || '').toLowerCase().includes(q)));
+  const st = document.getElementById('mp-stage');
+  st.querySelectorAll('.mp-pin,.mp-lbl').forEach(e => e.remove());
+  vis.forEach(p => {
+    const i = mp.pts.indexOf(p), g = MP_DATA.groups[p.g];
+    const b = document.createElement('button'); b.className = 'mp-pin' + (mp.sel === p ? ' sel' : ''); b.dataset.i = i; b.title = p.name;
+    b.style.left = p.x + 'px'; b.style.top = p.y + 'px'; b.style.background = g.pinColor;
+    b.addEventListener('click', e => { e.stopPropagation(); if(!mp.moved) mpSelect(p); });
+    const l = document.createElement('div'); l.className = 'mp-lbl'; l.textContent = p.name; l.style.left = p.x + 'px'; l.style.top = p.y + 'px';
+    st.append(l, b);
+  });
+  document.getElementById('mp-status').textContent = vis.length + ' dari ' + mp.pts.length + ' lokasi ditampilkan.';
+  const list = document.getElementById('mp-list');
