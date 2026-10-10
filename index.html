@@ -639,6 +639,7 @@
   .mp-pop{position:absolute; left:10px; bottom:10px; max-width:min(380px,calc(100% - 20px)); background:rgba(20,20,20,.94); border:1px solid var(--line2); border-radius:10px; padding:12px 14px; z-index:10; display:none;}
   .mp-pop.on{display:block;}
   .mp-pop h3{margin:0 0 2px; font-size:16px;}
+  .mp-pop img{display:block; width:100%; max-height:240px; object-fit:cover; border-radius:8px; margin-top:6px;}
   .mp-pop .mp-g{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin-bottom:6px;}
   .mp-pop .mp-g i{width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid #fff;}
   .mp-pop p{margin:0 0 8px; font-size:13px; line-height:1.5;}
@@ -986,7 +987,7 @@
   <div id="py-out" style="margin-top:14px;"></div><div class="hint">Asumsi: rate 6★ 2%, naik +2% per pull setelah pull ke-50 tanpa 6★ (pity). Perkiraan, bukan jaminan.</div></div></div>
       <div id="view-bookmark" class="view hidden"><div class="card"><h2>Bookmark</h2><input id="bm-search" placeholder="cari bookmark..."><div class="hint" id="bm-status"></div><div id="bm-grid" class="mini-grid" style="max-height:none;"></div></div></div>
       <div id="view-maps" class="view hidden"><div class="card"><h2>Peta Terra</h2>
-        <div class="hint">Peta dunia Arknights. Geser untuk menggeser, scroll / cubit untuk zoom, klik pin untuk detail lokasi. Data: arknights.wiki.gg.</div>
+        <div class="hint">Peta dunia Arknights. Geser untuk menggeser, scroll / cubit untuk zoom, klik pin untuk melihat gambar lokasi. Data: arknights.wiki.gg.</div>
         <input id="mp-search" placeholder="cari lokasi atau negara..." autocomplete="off" style="margin-top:10px;">
         <div class="mp-chips" id="mp-chips"></div>
         <div class="mp-vp" id="mp-vp">
@@ -4283,14 +4284,35 @@ function mpFocus(p){
   const vp = document.getElementById('mp-vp'); mp.k = Math.max(mp.k, 0.7);
   mp.tx = vp.clientWidth / 2 - p.x * mp.k; mp.ty = vp.clientHeight / 2 - p.y * mp.k; mpClamp(); mpApply(); mpSelect(p);
 }
+const mpImgCache = {};
+async function mpWikiImg(a, nm){
+  if(a in mpImgCache) return mpImgCache[a];
+  const api = 'https://arknights.wiki.gg/api.php?format=json&origin=*&redirects=1&', enc = encodeURIComponent(a); let url = null;
+  try{
+    let r = await (await fetch(api + 'action=query&prop=pageimages&piprop=thumbnail&pithumbsize=800&titles=' + enc)).json();
+    const pg = Object.values((r.query || {}).pages || {})[0]; if(pg && pg.thumbnail) url = pg.thumbnail.source;
+    if(!url){
+      r = await (await fetch(api + 'action=query&generator=images&gimlimit=40&prop=imageinfo&iiprop=url|size&iiurlwidth=800&titles=' + enc)).json();
+      const key = nm.toLowerCase().split(/[\s(]/)[0];
+      const list = Object.values((r.query || {}).pages || {}).filter(x => x.imageinfo && /\.(png|jpe?g|webp)$/i.test(x.title) && x.imageinfo[0].width >= 300 && !/icon|logo|flag|button|template/i.test(x.title))
+        .sort((x, y) => (+y.title.toLowerCase().includes(key) - +x.title.toLowerCase().includes(key)) || (y.imageinfo[0].width - x.imageinfo[0].width));
+      if(list.length) url = list[0].imageinfo[0].thumburl || list[0].imageinfo[0].url;
+    }
+  }catch(e){ console.warn('gambar lokasi gagal', e); }
+  return (mpImgCache[a] = url);
+}
 function mpSelect(p){
   mp.sel = p; const pop = document.getElementById('mp-pop');
   document.querySelectorAll('.mp-pin').forEach(el => el.classList.toggle('sel', mp.pts[+el.dataset.i] === p));
   if(!p){ pop.classList.remove('on'); return; }
-  const g = MP_DATA.groups[p.g] || { name:p.g, pinColor:'#888' };
-  pop.innerHTML = '<button class="mp-x" aria-label="Tutup">×</button><h3>' + mpEsc(p.name) + '</h3><div class="mp-g"><i style="background:' + g.pinColor + '"></i>' + mpEsc(g.name) + '</div><p>' + mpFmt(p.description) + '</p>' +
-    (p.article ? '<a target="_blank" rel="noopener noreferrer" href="https://arknights.wiki.gg/wiki/' + encodeURIComponent(p.article.replace(/ /g, '_')) + '">Buka di wiki ↗</a>' : '');
+  const g = MP_DATA.groups[p.g] || { name:p.g, pinColor:'#888' }, link = p.article ? 'https://arknights.wiki.gg/wiki/' + encodeURIComponent(p.article.replace(/ /g, '_')) : '';
+  pop.innerHTML = '<button class="mp-x" aria-label="Tutup">×</button><h3>' + mpEsc(p.name) + '</h3><div class="mp-g"><i style="background:' + g.pinColor + '"></i>' + mpEsc(g.name) + '</div><div class="mp-im hint">Memuat gambar...</div>';
   pop.classList.add('on'); pop.querySelector('.mp-x').onclick = () => mpSelect(null);
+  mpWikiImg(p.article || p.name, p.name).then(u => {
+    if(mp.sel !== p) return; const box = pop.querySelector('.mp-im'); if(!box) return;
+    box.classList.remove('hint');
+    box.innerHTML = u ? '<a target="_blank" rel="noopener noreferrer" href="' + mpEsc(link) + '"><img src="' + mpEsc(u) + '" alt="' + mpEsc(p.name) + '"></a>' : '<span class="hint">Gambar tidak ditemukan.</span> ' + (link ? '<a target="_blank" rel="noopener noreferrer" href="' + mpEsc(link) + '">Buka di wiki ↗</a>' : '');
+  });
 }
 function mpRender(){
   const q = (document.getElementById('mp-search').value || '').trim().toLowerCase();
