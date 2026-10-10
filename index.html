@@ -640,6 +640,7 @@
   .mp-pop.on{display:block;}
   .mp-pop h3{margin:0 0 2px; font-size:16px;}
   .mp-pop img{display:block; width:100%; max-height:240px; object-fit:cover; border-radius:8px; margin-top:6px;}
+  .mp-adm{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
   .mp-pop .mp-g{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin-bottom:6px;}
   .mp-pop .mp-g i{width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid #fff;}
   .mp-pop p{margin:0 0 8px; font-size:13px; line-height:1.5;}
@@ -987,7 +988,7 @@
   <div id="py-out" style="margin-top:14px;"></div><div class="hint">Asumsi: rate 6★ 2%, naik +2% per pull setelah pull ke-50 tanpa 6★ (pity). Perkiraan, bukan jaminan.</div></div></div>
       <div id="view-bookmark" class="view hidden"><div class="card"><h2>Bookmark</h2><input id="bm-search" placeholder="cari bookmark..."><div class="hint" id="bm-status"></div><div id="bm-grid" class="mini-grid" style="max-height:none;"></div></div></div>
       <div id="view-maps" class="view hidden"><div class="card"><h2>Peta Terra</h2>
-        <div class="hint">Peta dunia Arknights. Geser untuk menggeser, scroll / cubit untuk zoom, klik pin untuk melihat gambar lokasi. Data: arknights.wiki.gg.</div>
+        <div class="hint">Peta dunia Arknights. Geser untuk menggeser, scroll / cubit untuk zoom, klik pin untuk melihat gambar lokasi.</div>
         <input id="mp-search" placeholder="cari lokasi atau negara..." autocomplete="off" style="margin-top:10px;">
         <div class="mp-chips" id="mp-chips"></div>
         <div class="mp-vp" id="mp-vp">
@@ -4284,34 +4285,45 @@ function mpFocus(p){
   const vp = document.getElementById('mp-vp'); mp.k = Math.max(mp.k, 0.7);
   mp.tx = vp.clientWidth / 2 - p.x * mp.k; mp.ty = vp.clientHeight / 2 - p.y * mp.k; mpClamp(); mpApply(); mpSelect(p);
 }
-const mpImgCache = {};
-async function mpWikiImg(a, nm){
-  if(a in mpImgCache) return mpImgCache[a];
-  const api = 'https://arknights.wiki.gg/api.php?format=json&origin=*&redirects=1&', enc = encodeURIComponent(a); let url = null;
-  try{
-    let r = await (await fetch(api + 'action=query&prop=pageimages&piprop=thumbnail&pithumbsize=800&titles=' + enc)).json();
-    const pg = Object.values((r.query || {}).pages || {})[0]; if(pg && pg.thumbnail) url = pg.thumbnail.source;
-    if(!url){
-      r = await (await fetch(api + 'action=query&generator=images&gimlimit=40&prop=imageinfo&iiprop=url|size&iiurlwidth=800&titles=' + enc)).json();
-      const key = nm.toLowerCase().split(/[\s(]/)[0];
-      const list = Object.values((r.query || {}).pages || {}).filter(x => x.imageinfo && /\.(png|jpe?g|webp)$/i.test(x.title) && x.imageinfo[0].width >= 300 && !/icon|logo|flag|button|template/i.test(x.title))
-        .sort((x, y) => (+y.title.toLowerCase().includes(key) - +x.title.toLowerCase().includes(key)) || (y.imageinfo[0].width - x.imageinfo[0].width));
-      if(list.length) url = list[0].imageinfo[0].thumburl || list[0].imageinfo[0].url;
-    }
-  }catch(e){ console.warn('gambar lokasi gagal', e); }
-  return (mpImgCache[a] = url);
+/* gambar lokasi: disimpan di Firestore koleksi "map_images" (doc id = slug nama lokasi); hanya adminbadag yang bisa upload/ganti/hapus */
+mp.imgs = {}; mp.imgStarted = false;
+const mpKey = p => String(p.article || p.name).replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 120);
+const mpIsAdmin = () => { try{ return currentUser() === SUPER_ADMIN; }catch(e){ return false; } };
+function mpImgStart(){
+  if(mp.imgStarted || !clearsRef) return; mp.imgStarted = true;
+  firebase.firestore().collection('map_images').onSnapshot(q => { mp.imgs = {}; q.docs.forEach(d => { mp.imgs[d.id] = d.data().url; }); if(mp.sel) mpSelect(mp.sel); }, e => console.warn('map_images', e));
+}
+function mpShrink(file){
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => { const im = new Image(); im.onload = () => {
+      const k = Math.min(1, 1000 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      let q = .82, d = c.toDataURL('image/jpeg', q); while(d.length > 900000 && q > .4){ q -= .1; d = c.toDataURL('image/jpeg', q); } res(d);
+    }; im.onerror = rej; im.src = fr.result; };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+async function mpSaveImg(p, url){
+  if(!mpIsAdmin()){ alert('Hanya adminbadag yang bisa mengatur gambar.'); return; }
+  const ref = firebase.firestore().collection('map_images').doc(mpKey(p));
+  try{ if(url) await ref.set({ url }); else await ref.delete(); }
+  catch(err){ console.error(err); alert('Gagal menyimpan. Cek Firestore Rules untuk koleksi map_images.'); }
 }
 function mpSelect(p){
   mp.sel = p; const pop = document.getElementById('mp-pop');
   document.querySelectorAll('.mp-pin').forEach(el => el.classList.toggle('sel', mp.pts[+el.dataset.i] === p));
   if(!p){ pop.classList.remove('on'); return; }
-  const g = MP_DATA.groups[p.g] || { name:p.g, pinColor:'#888' }, link = p.article ? 'https://arknights.wiki.gg/wiki/' + encodeURIComponent(p.article.replace(/ /g, '_')) : '';
-  pop.innerHTML = '<button class="mp-x" aria-label="Tutup">×</button><h3>' + mpEsc(p.name) + '</h3><div class="mp-g"><i style="background:' + g.pinColor + '"></i>' + mpEsc(g.name) + '</div><div class="mp-im hint">Memuat gambar...</div>';
+  const g = MP_DATA.groups[p.g] || { name:p.g, pinColor:'#888' }, u = mp.imgs[mpKey(p)], adm = mpIsAdmin();
+  pop.innerHTML = '<button class="mp-x" aria-label="Tutup">×</button><h3>' + mpEsc(p.name) + '</h3><div class="mp-g"><i style="background:' + g.pinColor + '"></i>' + mpEsc(g.name) + '</div>' +
+    (u ? '<img src="' + mpEsc(u) + '" alt="' + mpEsc(p.name) + '" referrerpolicy="no-referrer">' : '<div class="hint">Belum ada gambar.</div>') +
+    (adm ? '<div class="mp-adm"><button class="ghost" data-a="up">' + (u ? 'Ganti' : 'Upload') + ' gambar</button><button class="ghost" data-a="url">Pakai link</button>' + (u ? '<button class="ghost" data-a="del">Hapus</button>' : '') + '</div>' : '');
   pop.classList.add('on'); pop.querySelector('.mp-x').onclick = () => mpSelect(null);
-  mpWikiImg(p.article || p.name, p.name).then(u => {
-    if(mp.sel !== p) return; const box = pop.querySelector('.mp-im'); if(!box) return;
-    box.classList.remove('hint');
-    box.innerHTML = u ? '<a target="_blank" rel="noopener noreferrer" href="' + mpEsc(link) + '"><img src="' + mpEsc(u) + '" alt="' + mpEsc(p.name) + '"></a>' : '<span class="hint">Gambar tidak ditemukan.</span> ' + (link ? '<a target="_blank" rel="noopener noreferrer" href="' + mpEsc(link) + '">Buka di wiki ↗</a>' : '');
+  pop.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
+    const a = b.dataset.a;
+    if(a === 'del'){ if(confirm('Hapus gambar ' + p.name + '?')) mpSaveImg(p, ''); }
+    else if(a === 'url'){ const v = prompt('Tempel link gambar (https://...):', u && u.indexOf('data:') !== 0 ? u : ''); if(v && v.trim()) mpSaveImg(p, v.trim()); }
+    else{ const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = async () => { if(!f.files[0]) return; try{ mpSaveImg(p, await mpShrink(f.files[0])); }catch(e){ alert('Gambar tidak bisa dibaca.'); } }; f.click(); }
   });
 }
 function mpRender(){
@@ -4333,8 +4345,8 @@ function mpRender(){
   list.querySelectorAll('.mp-row').forEach(r => r.addEventListener('click', () => { mpFocus(mp.pts[+r.dataset.i]); document.getElementById('mp-vp').scrollIntoView({ block:'nearest', behavior:'smooth' }); }));
 }
 function initMaps(){
-  if(mp.inited){ setTimeout(() => { mpClamp(); mpApply(); }, 0); return; }
-  mp.inited = true;
+  if(mp.inited){ mpImgStart(); setTimeout(() => { mpClamp(); mpApply(); }, 0); return; }
+  mp.inited = true; mpImgStart();
   Object.keys(MP_DATA.markers).forEach(g => MP_DATA.markers[g].forEach(m => mp.pts.push({ ...m, g })));
   const vp = document.getElementById('mp-vp'), img = document.getElementById('mp-img'); let ii = 0;
   img.onerror = () => { if(++ii < MP_IMGS.length) img.src = MP_IMGS[ii]; else document.getElementById('mp-status').textContent = 'Gambar peta gagal dimuat dari arknights.wiki.gg (pin tetap tampil).'; };
