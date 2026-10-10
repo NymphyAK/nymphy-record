@@ -3511,7 +3511,7 @@ async function initISPick(){
       .sort((a, b) => ((+(a.match(/(\d+)$/) || [])[1]) || 0) - ((+(b.match(/(\d+)$/) || [])[1]) || 0));
     if(!ids.length) throw new Error('daftar IS tidak ditemukan di data');
     kg('is-pick-grid').innerHTML = ids.map(id => {
-      const n = (id.match(/(\d+)$/) || [])[1], nm = (tp[id] && tp[id].name) || id;
+      const n0 = (id.match(/(\d+)$/) || [])[1], n = n0 === undefined ? '' : String(+n0 + 1), nm = (tp[id] && tp[id].name) || id;
       return `<button class="is-pick" data-tid="${esc(id)}" data-name="${esc(nm)}"><span class="no">${n ? 'IS#' + n : esc(id)}</span><span class="nm">${esc(nm)}</span></button>`;
     }).join('');
     hint.textContent = 'Pilih Integrated Strategies yang mau dilihat:'; isPickS = 'ready';
@@ -3569,7 +3569,14 @@ const ENC_IMG_BASES = [
 const encSrcs = x => {
   const ks = [...new Set([x.bg, x.icon, x.sid].filter(Boolean).map(k => encodeURIComponent(String(k).replace(/\.png$/i, ''))))], out = [];
   ks.slice(0, 2).forEach(k => ENC_IMG_BASES.slice(0, 4).forEach(b => out.push(b + k + '.png')));
-  if(x.title){ const t = String(x.title).trim(); out.push(WIKI + wikiName('IS-' + t) + '.png', WIKI + wikiName('IS ' + t) + '.png'); }
+  if(x.title){
+    const t0 = String(x.title).replace(/[\u2018\u2019\u02BC]/g, "'").replace(/\s+/g, ' ').trim();
+    const small = /^(a|an|the|of|in|on|at|to|for|and|or|but|from|by|with|as)$/i;
+    const tc = t0.split(' ').map((w, i) => (i && small.test(w)) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const vs = [...new Set([t0, tc])];
+    vs.forEach(t => out.push(WIKI + wikiName('IS-' + t) + '.png'));
+    vs.forEach(t => out.push(WIKI + wikiName(t) + '.png'));
+  }
   ks.forEach(k => ENC_IMG_BASES.slice(4).forEach(b => out.push(b + k + '.png')));
   return [...new Set(out)];
 };
